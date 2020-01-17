@@ -1,0 +1,33 @@
+sudo: false
+
+os:
+  - linux
+  - osx
+
+cache:
+  directories:
+    - test/elm-stuff/build-artifacts
+
+language: node_js
+
+env:
+  matrix:
+    - TARGET_NODE_VERSION=node
+    - TARGET_NODE_VERSION=10.9
+
+before_install:
+  - if [ ${TRAVIS_OS_NAME} == "osx" ];
+    then brew update; brew install nvm; mkdir ~/.nvm; export NVM_DIR=~/.nvm; source $(brew --prefix nvm)/nvm.sh;
+    fi
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+
+install:
+  - nvm install $TARGET_NODE_VERSION
+  - nvm use $TARGET_NODE_VERSION
+  - node --version
+  - npm --version
+  - npm install
+
+script:
+  - npm test
