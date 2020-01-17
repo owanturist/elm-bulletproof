@@ -1,13 +1,17 @@
 module Main exposing (main)
 
 import Browser
+import Bulletproof
 import Counter
 
 
-main : Program () Counter.Model Counter.Msg
+main : Bulletproof.Program
 main =
-    Browser.sandbox
-        { init = Counter.initial
-        , update = Counter.update
-        , view = Counter.view
-        }
+    Bulletproof.program
+        [ Bulletproof.storyOf "Counter initial" <|
+            \_ ->
+                Counter.view 0
+        , Bulletproof.storyOf "Counter positive" <|
+            \_ ->
+                Counter.view 10
+        ]
