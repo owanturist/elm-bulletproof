@@ -2,19 +2,18 @@ module Main exposing (main)
 
 import Browser
 import Bulletproof
+import Bulletproof.Knob
 import Counter
 
 
-main : Bulletproof.Program (Bulletproof.WithKnobs {})
+main : Bulletproof.Program
 main =
     Bulletproof.program
-        { knobs = Bulletproof.initialKnobs
-        }
         [ (\count ->
             Counter.view count
           )
             |> Bulletproof.storyOf "Counter positive"
-            |> Bulletproof.int "count" 10
+            |> Bulletproof.Knob.int "count" 10
 
         --
         , Counter.view 0

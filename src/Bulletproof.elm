@@ -1,18 +1,10 @@
-module Bulletproof exposing
-    ( Program
-    , WithKnobs
-    , initialKnobs
-    , int
-    , program
-    , storyOf
-    , string
-    )
+module Bulletproof exposing (Program, program, storyOf)
 
-import AVL.Dict as Dict exposing (Dict)
 import Browser
 import Browser.Navigation
 import Html exposing (Html, a, div, nav, text)
 import Html.Attributes exposing (style)
+import Internal exposing (Addons, initialAddons)
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing (Parser)
@@ -63,15 +55,18 @@ toPath route =
 -- M O D E L
 
 
-type alias Model state =
+type alias State =
     { navigationKey : Browser.Navigation.Key
     , current : Maybe String
-    , state : state
     }
 
 
-init : Maybe String -> state -> () -> Url -> Browser.Navigation.Key -> ( Model state, Cmd Msg )
-init firstStoryID initialState () url navigationKey =
+type Model
+    = Model Addons State
+
+
+init : Maybe String -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init firstStoryID () url navigationKey =
     let
         initialCurrent =
             case parseUrl url of
@@ -81,10 +76,11 @@ init firstStoryID initialState () url navigationKey =
                 ToStory storyID ->
                     Just storyID
     in
-    ( { navigationKey = navigationKey
-      , current = initialCurrent
-      , state = initialState
-      }
+    ( Model
+        initialAddons
+        { navigationKey = navigationKey
+        , current = initialCurrent
+        }
     , Cmd.none
     )
 
@@ -99,38 +95,38 @@ type Msg
     | StoryMsg
 
 
-update : Msg -> Model state -> ( Model state, Cmd Msg )
-update msg model =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg (Model addons state) =
     case msg of
         UrlRequested (Browser.Internal url) ->
-            ( model
-            , Browser.Navigation.pushUrl model.navigationKey (Url.toString url)
+            ( Model addons state
+            , Browser.Navigation.pushUrl state.navigationKey (Url.toString url)
             )
 
         UrlRequested (Browser.External path) ->
-            ( model
+            ( Model addons state
             , Browser.Navigation.load path
             )
 
         UrlChanged url ->
             ( case parseUrl url of
                 ToHome ->
-                    { model | current = Nothing }
+                    Model addons { state | current = Nothing }
 
                 ToStory storyID ->
-                    { model | current = Just storyID }
+                    Model addons { state | current = Just storyID }
             , Cmd.none
             )
 
         StoryMsg ->
-            ( model, Cmd.none )
+            ( Model addons state, Cmd.none )
 
 
 
 -- S U B S C R I P T I O N S
 
 
-subscriptions : Model state -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
 
@@ -144,10 +140,10 @@ viewLink route attrs children =
     a (Html.Attributes.href (toPath route) :: attrs) children
 
 
-viewItem : Maybe String -> Story state view -> Html Msg
-viewItem current story =
+viewItem : Maybe String -> Internal.Story view -> Html Msg
+viewItem currentID (Internal.Story story) =
     div
-        [ style "background" (ifelse (current == Just story.title) "#ccc" "fff")
+        [ style "background" (ifelse (currentID == Just story.title) "#ccc" "fff")
         ]
         [ viewLink (ToStory story.title)
             []
@@ -156,7 +152,7 @@ viewItem current story =
         ]
 
 
-viewNavigation : Maybe String -> List (Story state view) -> Html Msg
+viewNavigation : Maybe String -> List (Story view) -> Html Msg
 viewNavigation current =
     nav
         [ style "float" "left"
@@ -165,13 +161,13 @@ viewNavigation current =
         << List.map (viewItem current)
 
 
-viewStory : state -> Story state (Html msg) -> Html Msg
-viewStory state story =
+viewStory : Addons -> Internal.Story (Html msg) -> Html Msg
+viewStory addons (Internal.Story story) =
     div
         [ style "float" "left"
         , style "width" "70%"
         ]
-        [ Html.map (always StoryMsg) (story.view state)
+        [ Html.map (always StoryMsg) (story.view addons)
         ]
 
 
@@ -180,20 +176,21 @@ viewEmpty =
     text "Nothing to show"
 
 
-view : List (Story state (Html msg)) -> Model state -> Browser.Document Msg
-view stories model =
+view : List (Story (Html msg)) -> Model -> Browser.Document Msg
+view stories (Model addons state) =
     Browser.Document "Bulletproof"
-        [ viewNavigation model.current stories
-        , case model.current of
+        [ viewNavigation state.current stories
+        , case state.current of
             Nothing ->
                 viewEmpty
 
             Just current ->
-                stories
-                    |> List.filter ((==) current << .title)
-                    |> List.head
-                    |> Maybe.map (viewStory model.state)
-                    |> Maybe.withDefault viewEmpty
+                case List.filter (\(Internal.Story story) -> story.title == current) stories of
+                    [] ->
+                        viewEmpty
+
+                    currentStory :: _ ->
+                        viewStory addons currentStory
         ]
 
 
@@ -201,105 +198,39 @@ view stories model =
 -- A P I
 
 
-type alias Story state view =
-    { title : String
-    , view : state -> view
-    }
+type alias Story view =
+    Internal.Story view
 
 
-storyOf : String -> view -> Story state view
+storyOf : String -> view -> Story view
 storyOf title view_ =
-    Story title (always view_)
+    Internal.Story
+        { title = title
+        , knobs = []
+        , view = always view_
+        }
 
 
-type alias Program state =
-    Platform.Program () (Model state) Msg
+type alias Program =
+    Platform.Program () Model Msg
 
 
-program : state -> List (Story state (Html msg)) -> Program state
-program initialState stories =
+program : List (Story (Html msg)) -> Program
+program stories =
+    let
+        firstStoryID =
+            case stories of
+                [] ->
+                    Nothing
+
+                (Internal.Story story) :: _ ->
+                    Just story.title
+    in
     Browser.application
-        { init = init (Maybe.map .title <| List.head stories) initialState
+        { init = init firstStoryID
         , update = update
         , view = view stories
         , subscriptions = subscriptions
         , onUrlRequest = UrlRequested
         , onUrlChange = UrlChanged
         }
-
-
-
--- K N O B S
-
-
-type Knob
-    = KnobInt Int
-    | KnobString String
-
-
-type alias KnobState =
-    Dict String (Dict String Knob)
-
-
-type alias WithKnobs state =
-    { state | knobs : KnobState }
-
-
-extractKnob : String -> String -> KnobState -> Maybe Knob
-extractKnob title name state =
-    state
-        |> Dict.get title
-        |> Maybe.andThen (Dict.get name)
-
-
-initialKnobs : KnobState
-initialKnobs =
-    Dict.empty
-
-
-int : String -> Int -> Story (WithKnobs state) (Int -> a) -> Story (WithKnobs state) a
-int name defaultValue story =
-    Story story.title
-        (\state ->
-            case extractKnob story.title name state.knobs of
-                Just (KnobInt value) ->
-                    story.view state value
-
-                _ ->
-                    story.view state defaultValue
-        )
-
-
-string : String -> String -> Story (WithKnobs state) (String -> a) -> Story (WithKnobs state) a
-string name defaultValue story =
-    Story story.title
-        (\state ->
-            case extractKnob story.title name state.knobs of
-                Just (KnobString value) ->
-                    story.view state value
-
-                _ ->
-                    story.view state defaultValue
-        )
-
-
-storyWithKnobs : Story (WithKnobs state) (Html msg)
-storyWithKnobs =
-    (\number str ->
-        div []
-            [ text (String.fromInt number)
-            , text str
-            ]
-    )
-        |> storyOf "Counter initial"
-        |> int "int" 0
-        |> string "str" "initial"
-
-
-programWithKnobs : Program (WithKnobs {})
-programWithKnobs =
-    program
-        { knobs = initialKnobs
-        }
-        [ storyWithKnobs
-        ]
