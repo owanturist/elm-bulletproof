@@ -2,9 +2,10 @@ module Bulletproof exposing (Program, program, storyOf)
 
 import Browser
 import Browser.Navigation
-import Html exposing (Html, a, div, nav, text)
+import Html exposing (Html, a, div, hr, nav, text)
 import Html.Attributes exposing (style)
 import Internal exposing (Addons, initialAddons)
+import Internal.Knob as Knob
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing (Parser)
@@ -93,6 +94,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | StoryMsg
+    | KnobMsg Knob.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -120,6 +122,11 @@ update msg (Model addons state) =
 
         StoryMsg ->
             ( Model addons state, Cmd.none )
+
+        KnobMsg knobMsg ->
+            ( Model { addons | knobs = Knob.update knobMsg addons.knobs } state
+            , Cmd.none
+            )
 
 
 
@@ -168,6 +175,8 @@ viewStory addons (Internal.Story story) =
         , style "width" "70%"
         ]
         [ Html.map (always StoryMsg) (story.view addons)
+        , hr [] []
+        , Html.map KnobMsg (Knob.view story.title story.knobs addons.knobs)
         ]
 
 

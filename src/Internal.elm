@@ -1,16 +1,17 @@
-module Internal exposing (Addons, Knob(..), KnobsState, Story(..), StoryPayload, initialAddons)
+module Internal exposing (Addons, Story(..), StoryPayload, initialAddons)
 
-import AVL.Dict as Dict exposing (Dict)
+import Internal.Knob exposing (Knob)
 
 
 type alias Addons =
-    { knobs : KnobsState
+    { knobs : Internal.Knob.State
     }
 
 
 initialAddons : Addons
 initialAddons =
-    Addons Dict.empty
+    { knobs = Internal.Knob.initial
+    }
 
 
 type Story view
@@ -22,16 +23,3 @@ type alias StoryPayload view =
     , knobs : List ( String, Knob )
     , view : Addons -> view
     }
-
-
-
--- K N O B S
-
-
-type Knob
-    = KnobInt Int
-    | KnobString String
-
-
-type alias KnobsState =
-    Dict String (Dict String Knob)
