@@ -5,13 +5,18 @@ import Bulletproof
 import Counter
 
 
-main : Bulletproof.Program
+main : Bulletproof.Program (Bulletproof.WithKnobs {})
 main =
     Bulletproof.program
-        [ Bulletproof.storyOf "Counter initial" <|
-            \_ ->
-                Counter.view 0
-        , Bulletproof.storyOf "Counter positive" <|
-            \_ ->
-                Counter.view 10
+        { knobs = Bulletproof.initialKnobs
+        }
+        [ (\count ->
+            Counter.view count
+          )
+            |> Bulletproof.storyOf "Counter positive"
+            |> Bulletproof.int "count" 10
+
+        --
+        , Counter.view 0
+            |> Bulletproof.storyOf "Counter initial"
         ]
