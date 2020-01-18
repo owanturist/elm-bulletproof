@@ -10,9 +10,10 @@ module Internal.Knob exposing
     )
 
 import AVL.Dict as Dict exposing (Dict)
-import Html exposing (Html, div, input, label, option, select, text, textarea)
+import Html exposing (Html, div, input, label, option, text, textarea)
 import Html.Attributes
 import Html.Events
+import Html.Keyed
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode as Encode exposing (Value, encode)
 
@@ -132,10 +133,12 @@ viewKnobFloat storyID name value =
 
 viewKnobRadio : String -> String -> List String -> String -> Html Msg
 viewKnobRadio storyID name options current =
-    div []
+    Html.Keyed.node "div"
+        []
         (List.map
             (\value ->
-                div []
+                ( value
+                , div []
                     [ label []
                         [ input
                             [ Html.Attributes.type_ "radio"
@@ -148,6 +151,7 @@ viewKnobRadio storyID name options current =
                         , text value
                         ]
                     ]
+                )
             )
             options
         )
@@ -155,18 +159,20 @@ viewKnobRadio storyID name options current =
 
 viewKnobSelect : String -> String -> List String -> String -> Html Msg
 viewKnobSelect storyID name options current =
-    select
+    Html.Keyed.node "select"
         [ Html.Attributes.name name
         , Html.Events.onInput (UpdateChoice storyID name)
         ]
         (List.map
             (\value ->
-                option
+                ( value
+                , option
                     [ Html.Attributes.value value
                     , Html.Attributes.selected (value == current)
                     ]
                     [ text value
                     ]
+                )
             )
             options
         )
