@@ -2,6 +2,7 @@ module Bulletproof.Knob exposing (float, int, string)
 
 import Internal exposing (Story(..))
 import Internal.Knob exposing (Knob(..), extract)
+import Json.Decode as Decode
 
 
 string : String -> String -> Story (String -> a) -> Story a
@@ -11,12 +12,10 @@ string name defaultValue (Story story) =
         , knobs = ( name, String defaultValue ) :: story.knobs
         , view =
             \state ->
-                case extract story.title name state.knobs of
-                    Just (String value) ->
-                        story.view state value
-
-                    _ ->
-                        story.view state defaultValue
+                state.knobs
+                    |> extract Decode.string story.title name
+                    |> Maybe.withDefault defaultValue
+                    |> story.view state
         }
 
 
@@ -27,12 +26,10 @@ int name defaultValue (Story story) =
         , knobs = ( name, Int defaultValue ) :: story.knobs
         , view =
             \state ->
-                case extract story.title name state.knobs of
-                    Just (Int value) ->
-                        story.view state value
-
-                    _ ->
-                        story.view state defaultValue
+                state.knobs
+                    |> extract Decode.int story.title name
+                    |> Maybe.withDefault defaultValue
+                    |> story.view state
         }
 
 
@@ -43,10 +40,8 @@ float name defaultValue (Story story) =
         , knobs = ( name, Float defaultValue ) :: story.knobs
         , view =
             \state ->
-                case extract story.title name state.knobs of
-                    Just (Float value) ->
-                        story.view state value
-
-                    _ ->
-                        story.view state defaultValue
+                state.knobs
+                    |> extract Decode.float story.title name
+                    |> Maybe.withDefault defaultValue
+                    |> story.view state
         }

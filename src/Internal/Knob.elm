@@ -1,9 +1,11 @@
 module Internal.Knob exposing (Knob(..), Msg, State, extract, initial, update, view)
 
 import AVL.Dict as Dict exposing (Dict)
-import Html exposing (Html, div, input, text)
+import Html exposing (Html, div, input, text, textarea)
 import Html.Attributes
 import Html.Events
+import Json.Decode as Decode exposing (Decoder, decodeString)
+import Json.Encode as Encode exposing (Value, encode)
 
 
 type Knob
@@ -13,7 +15,7 @@ type Knob
 
 
 type alias State =
-    Dict String (Dict String Knob)
+    Dict String (Dict String String)
 
 
 initial : State
@@ -21,20 +23,21 @@ initial =
     Dict.empty
 
 
-extract : String -> String -> State -> Maybe Knob
-extract storyID name state =
+extract : Decoder value -> String -> String -> State -> Maybe value
+extract decoder storyID name state =
     state
         |> Dict.get storyID
         |> Maybe.andThen (Dict.get name)
+        |> Maybe.andThen (Result.toMaybe << decodeString decoder)
 
 
-insert : String -> String -> Knob -> State -> State
-insert storyID name knob state =
+insert : (value -> Value) -> String -> String -> value -> State -> State
+insert encoder storyID name value state =
     Dict.insert storyID
         (state
             |> Dict.get storyID
             |> Maybe.withDefault Dict.empty
-            |> Dict.insert name knob
+            |> Dict.insert name (encode 0 (encoder value))
         )
         state
 
@@ -53,7 +56,7 @@ update : Msg -> State -> State
 update msg state =
     case msg of
         UpdateString storyID name next ->
-            insert storyID name (String next) state
+            insert Encode.string storyID name next state
 
         UpdateInt storyID name str ->
             case String.toInt str of
@@ -61,7 +64,7 @@ update msg state =
                     state
 
                 Just next ->
-                    insert storyID name (Int next) state
+                    insert Encode.int storyID name next state
 
         UpdateFloat storyID name str ->
             case String.toFloat str of
@@ -69,7 +72,7 @@ update msg state =
                     state
 
                 Just next ->
-                    insert storyID name (Float next) state
+                    insert Encode.float storyID name next state
 
 
 
@@ -78,9 +81,8 @@ update msg state =
 
 viewKnobString : String -> String -> String -> Html Msg
 viewKnobString storyID name value =
-    input
-        [ Html.Attributes.type_ "text"
-        , Html.Attributes.name name
+    textarea
+        [ Html.Attributes.name name
         , Html.Attributes.value value
         , Html.Events.onInput (UpdateString storyID name)
         ]
@@ -120,15 +122,24 @@ viewKnobRow name knob =
 
 viewKnob : String -> State -> ( String, Knob ) -> Html Msg
 viewKnob storyID state ( name, knob ) =
-    case Maybe.withDefault knob (extract storyID name state) of
-        String value ->
-            viewKnobRow name (viewKnobString storyID name value)
+    case knob of
+        String initialValue ->
+            extract Decode.string storyID name state
+                |> Maybe.withDefault initialValue
+                |> viewKnobString storyID name
+                |> viewKnobRow name
 
-        Int value ->
-            viewKnobRow name (viewKnobInt storyID name value)
+        Int initialValue ->
+            extract Decode.int storyID name state
+                |> Maybe.withDefault initialValue
+                |> viewKnobInt storyID name
+                |> viewKnobRow name
 
-        Float value ->
-            viewKnobRow name (viewKnobFloat storyID name value)
+        Float initialValue ->
+            extract Decode.float storyID name state
+                |> Maybe.withDefault initialValue
+                |> viewKnobFloat storyID name
+                |> viewKnobRow name
 
 
 view : String -> List ( String, Knob ) -> State -> Html Msg
