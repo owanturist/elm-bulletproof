@@ -51,7 +51,7 @@ main =
                     ]
             )
             |> Bulletproof.Knob.int "count" 10
-            |> Bulletproof.Knob.float "float" 10
+            |> Bulletproof.Knob.float "float" 10.123
             |> Bulletproof.Knob.string "text" "Counter example!"
             |> Bulletproof.Knob.radio "radio"
                 [ ( "Red", Red )

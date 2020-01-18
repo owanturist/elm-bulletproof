@@ -75,6 +75,9 @@ update msg state =
         UpdateString storyID name next ->
             insert Encode.string storyID name next state
 
+        UpdateInt storyID name "" ->
+            insert Encode.string storyID name "" state
+
         UpdateInt storyID name str ->
             case String.toInt str of
                 Nothing ->
@@ -82,6 +85,9 @@ update msg state =
 
                 Just next ->
                     insert Encode.int storyID name next state
+
+        UpdateFloat storyID name "" ->
+            insert Encode.string storyID name "" state
 
         UpdateFloat storyID name str ->
             case String.toFloat str of
@@ -109,23 +115,23 @@ viewKnobString storyID name value =
         []
 
 
-viewKnobInt : String -> String -> Int -> Html Msg
+viewKnobInt : String -> String -> String -> Html Msg
 viewKnobInt storyID name value =
     input
         [ Html.Attributes.type_ "number"
         , Html.Attributes.name name
-        , Html.Attributes.value (String.fromInt value)
+        , Html.Attributes.value value
         , Html.Events.onInput (UpdateInt storyID name)
         ]
         []
 
 
-viewKnobFloat : String -> String -> Float -> Html Msg
+viewKnobFloat : String -> String -> String -> Html Msg
 viewKnobFloat storyID name value =
     input
         [ Html.Attributes.type_ "number"
         , Html.Attributes.name name
-        , Html.Attributes.value (String.fromFloat value)
+        , Html.Attributes.value value
         , Html.Events.onInput (UpdateFloat storyID name)
         ]
         []
@@ -197,16 +203,32 @@ viewKnob storyID state ( name, knob ) =
                 |> viewKnobRow name
 
         Int initialValue ->
-            extract Decode.int storyID name state
-                |> Maybe.withDefault initialValue
-                |> viewKnobInt storyID name
-                |> viewKnobRow name
+            let
+                value =
+                    case extract Decode.int storyID name state of
+                        Nothing ->
+                            Maybe.withDefault
+                                (String.fromInt initialValue)
+                                (extract Decode.string storyID name state)
+
+                        Just int ->
+                            String.fromInt int
+            in
+            viewKnobRow name (viewKnobInt storyID name value)
 
         Float initialValue ->
-            extract Decode.float storyID name state
-                |> Maybe.withDefault initialValue
-                |> viewKnobFloat storyID name
-                |> viewKnobRow name
+            let
+                value =
+                    case extract Decode.float storyID name state of
+                        Nothing ->
+                            Maybe.withDefault
+                                (String.fromFloat initialValue)
+                                (extract Decode.string storyID name state)
+
+                        Just float ->
+                            String.fromFloat float
+            in
+            viewKnobRow name (viewKnobFloat storyID name value)
 
         Choice _ [] ->
             viewKnobRow name (text "No Options available")
