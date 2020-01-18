@@ -9,6 +9,7 @@ import Html.Events
 type Knob
     = String String
     | Int Int
+    | Float Float
 
 
 type alias State =
@@ -43,13 +44,17 @@ insert storyID name knob state =
 
 
 type Msg
-    = UpdateInt String String String
-    | UpdateString String String String
+    = UpdateString String String String
+    | UpdateInt String String String
+    | UpdateFloat String String String
 
 
 update : Msg -> State -> State
 update msg state =
     case msg of
+        UpdateString storyID name next ->
+            insert storyID name (String next) state
+
         UpdateInt storyID name str ->
             case String.toInt str of
                 Nothing ->
@@ -58,12 +63,28 @@ update msg state =
                 Just next ->
                     insert storyID name (Int next) state
 
-        UpdateString storyID name next ->
-            insert storyID name (String next) state
+        UpdateFloat storyID name str ->
+            case String.toFloat str of
+                Nothing ->
+                    state
+
+                Just next ->
+                    insert storyID name (Float next) state
 
 
 
 -- V I E W
+
+
+viewKnobString : String -> String -> String -> Html Msg
+viewKnobString storyID name value =
+    input
+        [ Html.Attributes.type_ "text"
+        , Html.Attributes.name name
+        , Html.Attributes.value value
+        , Html.Events.onInput (UpdateString storyID name)
+        ]
+        []
 
 
 viewKnobInt : String -> String -> Int -> Html Msg
@@ -77,13 +98,13 @@ viewKnobInt storyID name value =
         []
 
 
-viewKnobString : String -> String -> String -> Html Msg
-viewKnobString storyID name value =
+viewKnobFloat : String -> String -> Float -> Html Msg
+viewKnobFloat storyID name value =
     input
-        [ Html.Attributes.type_ "text"
+        [ Html.Attributes.type_ "number"
         , Html.Attributes.name name
-        , Html.Attributes.value value
-        , Html.Events.onInput (UpdateString storyID name)
+        , Html.Attributes.value (String.fromFloat value)
+        , Html.Events.onInput (UpdateFloat storyID name)
         ]
         []
 
@@ -100,11 +121,14 @@ viewKnobRow name knob =
 viewKnob : String -> State -> ( String, Knob ) -> Html Msg
 viewKnob storyID state ( name, knob ) =
     case Maybe.withDefault knob (extract storyID name state) of
+        String value ->
+            viewKnobRow name (viewKnobString storyID name value)
+
         Int value ->
             viewKnobRow name (viewKnobInt storyID name value)
 
-        String value ->
-            viewKnobRow name (viewKnobString storyID name value)
+        Float value ->
+            viewKnobRow name (viewKnobFloat storyID name value)
 
 
 view : String -> List ( String, Knob ) -> State -> Html Msg
