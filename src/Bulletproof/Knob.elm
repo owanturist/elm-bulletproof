@@ -1,7 +1,7 @@
-module Bulletproof.Knob exposing (float, int, radio, string)
+module Bulletproof.Knob exposing (float, int, radio, select, string)
 
 import Internal exposing (Story(..))
-import Internal.Knob exposing (Knob(..), extract)
+import Internal.Knob exposing (Choice(..), Knob(..), extract)
 import Json.Decode as Decode
 
 
@@ -56,15 +56,15 @@ float name defaultValue (Story story) =
         }
 
 
-radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
-radio name options (Story story) =
+makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
+makeChoice choice choiceName name options (Story story) =
     Story
         { title = story.title
-        , knobs = ( name, Radio (List.map Tuple.first options) ) :: story.knobs
+        , knobs = ( name, Choice choice (List.map Tuple.first options) ) :: story.knobs
         , view =
             case List.head options of
                 Nothing ->
-                    Err ("Radio Knob '" ++ name ++ "' expects at least one option")
+                    Err (choiceName ++ " Knob '" ++ name ++ "' expects at least one option")
 
                 Just ( firstLabel, firstValue ) ->
                     Result.map
@@ -84,3 +84,13 @@ radio name options (Story story) =
                         )
                         story.view
         }
+
+
+radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
+radio =
+    makeChoice Radio "Radio"
+
+
+select : String -> List ( String, option ) -> Story (option -> a) -> Story a
+select =
+    makeChoice Select "Select"

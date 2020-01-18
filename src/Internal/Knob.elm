@@ -1,7 +1,16 @@
-module Internal.Knob exposing (Knob(..), Msg, State, extract, initial, update, view)
+module Internal.Knob exposing
+    ( Choice(..)
+    , Knob(..)
+    , Msg
+    , State
+    , extract
+    , initial
+    , update
+    , view
+    )
 
 import AVL.Dict as Dict exposing (Dict)
-import Html exposing (Html, div, input, label, text, textarea)
+import Html exposing (Html, div, input, label, option, select, text, textarea)
 import Html.Attributes
 import Html.Events
 import Json.Decode as Decode exposing (Decoder, decodeString)
@@ -12,7 +21,12 @@ type Knob
     = String String
     | Int Int
     | Float Float
-    | Radio (List String)
+    | Choice Choice (List String)
+
+
+type Choice
+    = Radio
+    | Select
 
 
 type alias State =
@@ -51,7 +65,7 @@ type Msg
     = UpdateString String String String
     | UpdateInt String String String
     | UpdateFloat String String String
-    | UpdateRadio String String String
+    | UpdateChoice String String String
 
 
 update : Msg -> State -> State
@@ -76,7 +90,7 @@ update msg state =
                 Just next ->
                     insert Encode.float storyID name next state
 
-        UpdateRadio storyID name next ->
+        UpdateChoice storyID name next ->
             insert Encode.string storyID name next state
 
 
@@ -117,22 +131,41 @@ viewKnobFloat storyID name value =
 
 
 viewKnobRadio : String -> String -> List String -> String -> Html Msg
-viewKnobRadio storyID name options selected =
+viewKnobRadio storyID name options current =
     div []
         (List.map
-            (\option ->
+            (\value ->
                 div []
                     [ label []
                         [ input
                             [ Html.Attributes.type_ "radio"
                             , Html.Attributes.name name
-                            , Html.Attributes.value option
-                            , Html.Attributes.checked (option == selected)
-                            , Html.Events.onCheck (\_ -> UpdateRadio storyID name option)
+                            , Html.Attributes.value value
+                            , Html.Attributes.checked (value == current)
+                            , Html.Events.onCheck (\_ -> UpdateChoice storyID name value)
                             ]
                             []
-                        , text option
+                        , text value
                         ]
+                    ]
+            )
+            options
+        )
+
+
+viewKnobSelect : String -> String -> List String -> String -> Html Msg
+viewKnobSelect storyID name options current =
+    select
+        [ Html.Attributes.name name
+        , Html.Events.onInput (UpdateChoice storyID name)
+        ]
+        (List.map
+            (\value ->
+                option
+                    [ Html.Attributes.value value
+                    , Html.Attributes.selected (value == current)
+                    ]
+                    [ text value
                     ]
             )
             options
@@ -169,13 +202,19 @@ viewKnob storyID state ( name, knob ) =
                 |> viewKnobFloat storyID name
                 |> viewKnobRow name
 
-        Radio [] ->
+        Choice _ [] ->
             viewKnobRow name (text "No Options available")
 
-        Radio (firstOption :: restOptions) ->
+        Choice Radio (firstOption :: restOptions) ->
             extract Decode.string storyID name state
                 |> Maybe.withDefault firstOption
                 |> viewKnobRadio storyID name (firstOption :: restOptions)
+                |> viewKnobRow name
+
+        Choice Select (firstOption :: restOptions) ->
+            extract Decode.string storyID name state
+                |> Maybe.withDefault firstOption
+                |> viewKnobSelect storyID name (firstOption :: restOptions)
                 |> viewKnobRow name
 
 

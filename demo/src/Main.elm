@@ -12,6 +12,8 @@ type Color
     = Red
     | Green
     | Blue
+    | Black
+    | White
 
 
 colorToHex : Color -> String
@@ -26,14 +28,21 @@ colorToHex color =
         Blue ->
             "#00f"
 
+        Black ->
+            "#000"
+
+        White ->
+            "#fff"
+
 
 main : Bulletproof.Program
 main =
     Bulletproof.program
         [ Bulletproof.storyOf "Counter positive"
-            (\count fl str color ->
+            (\count fl str bg color ->
                 div
-                    [ style "background" (colorToHex color)
+                    [ style "background" (colorToHex bg)
+                    , style "color" (colorToHex color)
                     ]
                     [ text str
                     , br [] []
@@ -48,6 +57,10 @@ main =
                 [ ( "Red", Red )
                 , ( "Green", Green )
                 , ( "Blue", Blue )
+                ]
+            |> Bulletproof.Knob.select "select"
+                [ ( "Black", Black )
+                , ( "White", White )
                 ]
 
         --
