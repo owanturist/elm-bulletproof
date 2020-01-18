@@ -1,6 +1,7 @@
 module Internal.Knob exposing
     ( Choice(..)
     , Knob(..)
+    , Limits
     , Msg
     , State
     , extract
@@ -23,6 +24,15 @@ type Knob
     | Int Int
     | Float Float
     | Choice Choice (List String)
+    | RangeInt Int (Limits Int)
+    | RangeFloat Float (Limits Float)
+
+
+type alias Limits x =
+    { min : x
+    , max : x
+    , step : x
+    }
 
 
 type Choice
@@ -184,6 +194,17 @@ viewKnobSelect storyID name options current =
         )
 
 
+viewKnobRange : (String -> msg) -> (number -> String) -> String -> String -> Limits number -> number -> Html msg
+viewKnobRange msg numberToString storyID name limits number =
+    input
+        [ Html.Attributes.type_ "number"
+        , Html.Attributes.name name
+        , Html.Attributes.value (numberToString number)
+        , Html.Events.onInput msg
+        ]
+        []
+
+
 viewKnobRow : String -> Html msg -> Html msg
 viewKnobRow name knob =
     div
@@ -196,19 +217,19 @@ viewKnobRow name knob =
 viewKnob : String -> State -> ( String, Knob ) -> Html Msg
 viewKnob storyID state ( name, knob ) =
     case knob of
-        String initialValue ->
+        String defaultValue ->
             extract Decode.string storyID name state
-                |> Maybe.withDefault initialValue
+                |> Maybe.withDefault defaultValue
                 |> viewKnobString storyID name
                 |> viewKnobRow name
 
-        Int initialValue ->
+        Int defaultValue ->
             let
                 value =
                     case extract Decode.int storyID name state of
                         Nothing ->
                             Maybe.withDefault
-                                (String.fromInt initialValue)
+                                (String.fromInt defaultValue)
                                 (extract Decode.string storyID name state)
 
                         Just int ->
@@ -216,13 +237,13 @@ viewKnob storyID state ( name, knob ) =
             in
             viewKnobRow name (viewKnobInt storyID name value)
 
-        Float initialValue ->
+        Float defaultValue ->
             let
                 value =
                     case extract Decode.float storyID name state of
                         Nothing ->
                             Maybe.withDefault
-                                (String.fromFloat initialValue)
+                                (String.fromFloat defaultValue)
                                 (extract Decode.string storyID name state)
 
                         Just float ->
@@ -243,6 +264,18 @@ viewKnob storyID state ( name, knob ) =
             extract Decode.string storyID name state
                 |> Maybe.withDefault firstOption
                 |> viewKnobSelect storyID name (firstOption :: restOptions)
+                |> viewKnobRow name
+
+        RangeInt defaultValue limits ->
+            extract Decode.int storyID name state
+                |> Maybe.withDefault defaultValue
+                |> viewKnobRange String.fromInt storyID name limits
+                |> viewKnobRow name
+
+        RangeFloat defaultValue limits ->
+            extract Decode.float storyID name state
+                |> Maybe.withDefault defaultValue
+                |> viewKnobRange String.fromFloat storyID name limits
                 |> viewKnobRow name
 
 

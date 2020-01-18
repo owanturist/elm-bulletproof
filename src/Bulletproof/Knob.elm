@@ -1,8 +1,8 @@
-module Bulletproof.Knob exposing (float, int, radio, select, string)
+module Bulletproof.Knob exposing (float, int, radio, rangeFloat, rangeInt, select, string)
 
 import Internal exposing (Story(..))
-import Internal.Knob exposing (Choice(..), Knob(..), extract)
-import Json.Decode as Decode
+import Internal.Knob exposing (Choice(..), Knob(..), Limits, extract)
+import Json.Decode as Decode exposing (Decoder)
 
 
 string : String -> String -> Story (String -> a) -> Story a
@@ -54,6 +54,33 @@ float name defaultValue (Story story) =
                 )
                 story.view
         }
+
+
+makeRange : (number -> Limits number -> Knob) -> Decoder number -> String -> number -> Limits number -> Story (number -> a) -> Story a
+makeRange knob decoder name defaultValue limits (Story story) =
+    Story
+        { title = story.title
+        , knobs = ( name, knob defaultValue limits ) :: story.knobs
+        , view =
+            Result.map
+                (\view state ->
+                    state.knobs
+                        |> extract decoder story.title name
+                        |> Maybe.withDefault defaultValue
+                        |> view state
+                )
+                story.view
+        }
+
+
+rangeInt : String -> Int -> { min : Int, max : Int, step : Int } -> Story (Int -> a) -> Story a
+rangeInt =
+    makeRange RangeInt Decode.int
+
+
+rangeFloat : String -> Float -> { min : Float, max : Float, step : Float } -> Story (Float -> a) -> Story a
+rangeFloat =
+    makeRange RangeFloat Decode.float
 
 
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
