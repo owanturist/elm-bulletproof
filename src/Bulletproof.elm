@@ -174,7 +174,12 @@ viewStory addons (Internal.Story story) =
         [ style "float" "left"
         , style "width" "70%"
         ]
-        [ Html.map (always StoryMsg) (story.view addons)
+        [ case story.view of
+            Err error ->
+                text error
+
+            Ok storyView ->
+                Html.map (always StoryMsg) (storyView addons)
         , hr [] []
         , Html.map KnobMsg (Knob.view story.title story.knobs addons.knobs)
         ]
@@ -216,7 +221,7 @@ storyOf title view_ =
     Internal.Story
         { title = title
         , knobs = []
-        , view = always view_
+        , view = Ok (\_ -> view_)
         }
 
 

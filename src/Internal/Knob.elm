@@ -1,7 +1,7 @@
 module Internal.Knob exposing (Knob(..), Msg, State, extract, initial, update, view)
 
 import AVL.Dict as Dict exposing (Dict)
-import Html exposing (Html, div, input, text, textarea)
+import Html exposing (Html, div, input, label, text, textarea)
 import Html.Attributes
 import Html.Events
 import Json.Decode as Decode exposing (Decoder, decodeString)
@@ -12,6 +12,7 @@ type Knob
     = String String
     | Int Int
     | Float Float
+    | Radio (List String)
 
 
 type alias State =
@@ -50,6 +51,7 @@ type Msg
     = UpdateString String String String
     | UpdateInt String String String
     | UpdateFloat String String String
+    | UpdateRadio String String String
 
 
 update : Msg -> State -> State
@@ -73,6 +75,9 @@ update msg state =
 
                 Just next ->
                     insert Encode.float storyID name next state
+
+        UpdateRadio storyID name next ->
+            insert Encode.string storyID name next state
 
 
 
@@ -111,6 +116,29 @@ viewKnobFloat storyID name value =
         []
 
 
+viewKnobRadio : String -> String -> List String -> String -> Html Msg
+viewKnobRadio storyID name options selected =
+    div []
+        (List.map
+            (\option ->
+                div []
+                    [ label []
+                        [ input
+                            [ Html.Attributes.type_ "radio"
+                            , Html.Attributes.name name
+                            , Html.Attributes.value option
+                            , Html.Attributes.checked (option == selected)
+                            , Html.Events.onCheck (\_ -> UpdateRadio storyID name option)
+                            ]
+                            []
+                        , text option
+                        ]
+                    ]
+            )
+            options
+        )
+
+
 viewKnobRow : String -> Html msg -> Html msg
 viewKnobRow name knob =
     div
@@ -139,6 +167,15 @@ viewKnob storyID state ( name, knob ) =
             extract Decode.float storyID name state
                 |> Maybe.withDefault initialValue
                 |> viewKnobFloat storyID name
+                |> viewKnobRow name
+
+        Radio [] ->
+            viewKnobRow name (text "No Options available")
+
+        Radio (firstOption :: restOptions) ->
+            extract Decode.string storyID name state
+                |> Maybe.withDefault firstOption
+                |> viewKnobRadio storyID name (firstOption :: restOptions)
                 |> viewKnobRow name
 
 

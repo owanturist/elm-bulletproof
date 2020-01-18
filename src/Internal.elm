@@ -21,5 +21,5 @@ type Story view
 type alias StoryPayload view =
     { title : String
     , knobs : List ( String, Knob )
-    , view : Addons -> view
+    , view : Result String (Addons -> view)
     }
