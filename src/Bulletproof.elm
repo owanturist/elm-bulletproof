@@ -1,11 +1,12 @@
 module Bulletproof exposing (Program, program, storyOf)
 
-import AVL.Dict as Dict exposing (Dict)
 import Browser
 import Browser.Navigation
-import Html exposing (Html, div, nav, text)
+import Html exposing (Html, a, div, nav, text)
 import Html.Attributes exposing (style)
 import Url exposing (Url)
+import Url.Builder
+import Url.Parser exposing (Parser)
 
 
 ifelse : Bool -> x -> x -> x
@@ -26,18 +27,53 @@ type Route
     | ToStory String
 
 
+urlParser : Parser (Route -> a) a
+urlParser =
+    Url.Parser.oneOf
+        [ Url.Parser.map ToHome Url.Parser.top
+        , Url.Parser.map ToStory Url.Parser.string
+        ]
+
+
+parseUrl : Url -> Route
+parseUrl =
+    Maybe.withDefault ToHome << Url.Parser.parse urlParser
+
+
+toPath : Route -> String
+toPath route =
+    case route of
+        ToHome ->
+            Url.Builder.absolute [] []
+
+        ToStory storyID ->
+            Url.Builder.absolute [ storyID ] []
+
+
 
 -- M O D E L
 
 
 type alias Model =
-    { current : Maybe String
+    { navigationKey : Browser.Navigation.Key
+    , current : Maybe String
     }
 
 
 init : Maybe String -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init storyID () url navigationKey =
-    ( Model storyID
+init firstStoryID () url navigationKey =
+    let
+        initialCurrent =
+            case parseUrl url of
+                ToHome ->
+                    firstStoryID
+
+                ToStory storyID ->
+                    Just storyID
+    in
+    ( { navigationKey = navigationKey
+      , current = initialCurrent
+      }
     , Cmd.none
     )
 
@@ -54,7 +90,29 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        UrlRequested (Browser.Internal url) ->
+            ( model
+            , Browser.Navigation.pushUrl model.navigationKey (Url.toString url)
+            )
+
+        UrlRequested (Browser.External path) ->
+            ( model
+            , Browser.Navigation.load path
+            )
+
+        UrlChanged url ->
+            ( case parseUrl url of
+                ToHome ->
+                    { model | current = Nothing }
+
+                ToStory storyID ->
+                    { model | current = Just storyID }
+            , Cmd.none
+            )
+
+        StoryMsg ->
+            ( model, Cmd.none )
 
 
 
@@ -62,7 +120,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -70,12 +128,20 @@ subscriptions model =
 -- V I E W
 
 
+viewLink : Route -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+viewLink route attrs children =
+    a (Html.Attributes.href (toPath route) :: attrs) children
+
+
 viewItem : Maybe String -> Story -> Html Msg
 viewItem current story =
     div
         [ style "background" (ifelse (current == Just story.title) "#ccc" "fff")
         ]
-        [ text story.title
+        [ viewLink (ToStory story.title)
+            []
+            [ text story.title
+            ]
         ]
 
 
