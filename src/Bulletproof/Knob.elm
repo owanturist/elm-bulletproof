@@ -1,8 +1,10 @@
 module Bulletproof.Knob exposing
     ( Color
+    , Date
     , Limits
     , bool
     , color
+    , date
     , float
     , floatRange
     , int
@@ -14,8 +16,10 @@ module Bulletproof.Knob exposing
 
 import Internal exposing (Story(..))
 import Internal.Color as Color
+import Internal.Date as Date
 import Internal.Knob exposing (Choice(..), Knob(..), extract)
 import Json.Decode as Decode exposing (Decoder)
+import Time
 
 
 type alias Limits number =
@@ -24,6 +28,10 @@ type alias Limits number =
 
 type alias Color =
     Color.Color
+
+
+type alias Date =
+    Date.Date
 
 
 bool : String -> Bool -> Story (Bool -> a) -> Story a
@@ -179,5 +187,27 @@ color name defaultValue (Story story) =
                         |> view state
                 )
                 defaultColor
+                story.view
+        }
+
+
+date : String -> String -> Story (Date -> a) -> Story a
+date name defaultValue (Story story) =
+    let
+        defaultDate =
+            Date.parse defaultValue
+    in
+    Story
+        { title = story.title
+        , knobs = ( name, Date (Maybe.map (Time.posixToMillis << .posix) defaultDate) ) :: story.knobs
+        , view =
+            Result.map2
+                (\default view state ->
+                    state.knobs
+                        |> extract Date.decoder story.title name
+                        |> Maybe.withDefault default
+                        |> view state
+                )
+                (Result.fromMaybe ("Date in '" ++ name ++ "' is invalid.") defaultDate)
                 story.view
         }

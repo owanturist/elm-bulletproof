@@ -39,7 +39,7 @@ main : Bulletproof.Program
 main =
     Bulletproof.program
         [ Bulletproof.storyOf "Counter positive"
-            (\show count fl str bg color rangeint rangefloat clr ->
+            (\show count fl str bg color rangeint rangefloat clr date ->
                 div
                     [ style "background" (colorToHex bg)
                     , style "color" (colorToHex color)
@@ -61,6 +61,12 @@ main =
 
                       else
                         text ""
+                    , text
+                        (String.join ", "
+                            [ "Day " ++ String.fromInt date.day
+                            , "Year " ++ String.fromInt date.year
+                            ]
+                        )
                     ]
             )
             |> Bulletproof.Knob.bool "Bool" True
@@ -79,6 +85,7 @@ main =
             |> Bulletproof.Knob.intRange "range int" 10 { min = 0, max = 100, step = 5 }
             |> Bulletproof.Knob.floatRange "range float" 1.5 { min = 0.5, max = 10.5, step = 0.5 }
             |> Bulletproof.Knob.color "Color" "#cce"
+            |> Bulletproof.Knob.date "Date" "10-2-2011"
 
         --
         , Counter.view 0

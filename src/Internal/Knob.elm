@@ -16,8 +16,10 @@ import Html.Attributes
 import Html.Events
 import Html.Keyed
 import Internal.Color as Color exposing (Color)
+import Internal.Date as Date
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode as Encode exposing (Value, encode)
+import Time
 
 
 type Knob
@@ -28,7 +30,8 @@ type Knob
     | Choice Choice (List String)
     | IntRange Int (Limits Int)
     | FloatRange Float (Limits Float)
-    | Color Color.Color
+    | Color Color
+    | Date (Maybe Int)
 
 
 type alias Limits x =
@@ -80,6 +83,7 @@ type Msg
     | UpdateString String String String
     | UpdateInt String String String
     | UpdateFloat String String String
+    | UpdateDate String String String
 
 
 update : Msg -> State -> State
@@ -112,6 +116,14 @@ update msg state =
 
                 Just next ->
                     insert Encode.float storyID name next state
+
+        UpdateDate storyID name str ->
+            case Date.fromString str of
+                Nothing ->
+                    state
+
+                Just date ->
+                    insert Encode.int storyID name (Time.posixToMillis date.posix) state
 
 
 
@@ -233,6 +245,17 @@ viewKnobColor storyID name color =
         []
 
 
+viewKnobDate : String -> String -> String -> Html Msg
+viewKnobDate storyID name value =
+    input
+        [ Html.Attributes.type_ "date"
+        , Html.Attributes.name name
+        , Html.Attributes.value value
+        , Html.Events.onInput (UpdateDate storyID name)
+        ]
+        []
+
+
 viewKnobRow : String -> Html msg -> Html msg
 viewKnobRow name knob =
     div
@@ -316,6 +339,17 @@ viewKnob storyID state ( name, knob ) =
             extract Color.decoder storyID name state
                 |> Maybe.withDefault defaultValue
                 |> viewKnobColor storyID name
+                |> viewKnobRow name
+
+        Date Nothing ->
+            viewKnobRow name (viewKnobDate storyID name "")
+
+        Date (Just defaultValue) ->
+            extract Decode.int storyID name state
+                |> Maybe.withDefault defaultValue
+                |> Date.fromInt
+                |> Date.toString
+                |> viewKnobDate storyID name
                 |> viewKnobRow name
 
 
