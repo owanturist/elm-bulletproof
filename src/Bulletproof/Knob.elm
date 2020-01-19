@@ -177,7 +177,7 @@ color name defaultValue (Story story) =
     in
     Story
         { title = story.title
-        , knobs = ( name, Color (Result.withDefault Color.black defaultColor) ) :: story.knobs
+        , knobs = ( name, Color defaultColor ) :: story.knobs
         , view =
             Result.map2
                 (\default view state ->
@@ -186,7 +186,7 @@ color name defaultValue (Story story) =
                         |> Maybe.withDefault default
                         |> view state
                 )
-                defaultColor
+                (Result.fromMaybe ("Color in '" ++ name ++ "' is invalid.") defaultColor)
                 story.view
         }
 

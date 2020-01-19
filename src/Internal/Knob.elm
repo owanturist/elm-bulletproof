@@ -30,7 +30,7 @@ type Knob
     | Choice Choice (List String)
     | IntRange Int (Limits Int)
     | FloatRange Float (Limits Float)
-    | Color Color
+    | Color (Maybe Color)
     | Date (Maybe Int)
 
 
@@ -234,12 +234,12 @@ viewKnobRange msg numberToString name limits number =
         []
 
 
-viewKnobColor : String -> String -> Color -> Html Msg
+viewKnobColor : String -> String -> String -> Html Msg
 viewKnobColor storyID name color =
     input
         [ Html.Attributes.type_ "color"
         , Html.Attributes.name name
-        , Html.Attributes.value color.hex
+        , Html.Attributes.value color
         , Html.Events.onInput (UpdateString storyID name)
         ]
         []
@@ -335,9 +335,13 @@ viewKnob storyID state ( name, knob ) =
                 |> viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits
                 |> viewKnobRow name
 
-        Color defaultValue ->
+        Color Nothing ->
+            viewKnobRow name (viewKnobColor storyID name "")
+
+        Color (Just defaultValue) ->
             extract Color.decoder storyID name state
                 |> Maybe.withDefault defaultValue
+                |> .hex
                 |> viewKnobColor storyID name
                 |> viewKnobRow name
 
