@@ -289,145 +289,105 @@ viewKnob : String -> State -> String -> Knob -> Html Msg
 viewKnob storyID state name knob =
     case knob of
         Bool defaultValue ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (BoolValue bool) ->
-                            bool
+            case extract storyID name state of
+                Just (BoolValue bool) ->
+                    viewKnobBool storyID name bool
 
-                        _ ->
-                            defaultValue
-            in
-            viewKnobBool storyID name value
+                _ ->
+                    viewKnobBool storyID name defaultValue
 
         String defaultValue ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (StringValue string) ->
-                            string
+            case extract storyID name state of
+                Just (StringValue string) ->
+                    viewKnobString storyID name string
 
-                        _ ->
-                            defaultValue
-            in
-            viewKnobString storyID name value
+                _ ->
+                    viewKnobString storyID name defaultValue
 
         Int defaultValue ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (IntValue Nothing) ->
-                            ""
+            case extract storyID name state of
+                Just (IntValue Nothing) ->
+                    viewKnobInt storyID name ""
 
-                        Just (IntValue (Just int)) ->
-                            String.fromInt int
+                Just (IntValue (Just int)) ->
+                    viewKnobInt storyID name (String.fromInt int)
 
-                        _ ->
-                            String.fromInt defaultValue
-            in
-            viewKnobInt storyID name value
+                _ ->
+                    viewKnobInt storyID name (String.fromInt defaultValue)
 
         Float defaultValue ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (FloatValue Nothing) ->
-                            ""
+            case extract storyID name state of
+                Just (FloatValue Nothing) ->
+                    viewKnobFloat storyID name ""
 
-                        Just (FloatValue (Just float)) ->
-                            String.fromFloat float
+                Just (FloatValue (Just float)) ->
+                    viewKnobFloat storyID name (String.fromFloat float)
 
-                        _ ->
-                            String.fromFloat defaultValue
-            in
-            viewKnobFloat storyID name value
+                _ ->
+                    viewKnobFloat storyID name (String.fromFloat defaultValue)
 
         Choice _ [] ->
             text "No Options available"
 
-        Choice Radio (firstOption :: restOptions) ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (StringValue string) ->
-                            string
+        Choice Radio ((defaultValue :: _) as options) ->
+            case extract storyID name state of
+                Just (StringValue string) ->
+                    viewKnobRadio storyID name options string
 
-                        _ ->
-                            firstOption
-            in
-            viewKnobRadio storyID name (firstOption :: restOptions) value
+                _ ->
+                    viewKnobRadio storyID name options defaultValue
 
-        Choice Select (firstOption :: restOptions) ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (StringValue string) ->
-                            string
+        Choice Select ((defaultValue :: _) as options) ->
+            case extract storyID name state of
+                Just (StringValue string) ->
+                    viewKnobSelect storyID name options string
 
-                        _ ->
-                            firstOption
-            in
-            viewKnobSelect storyID name (firstOption :: restOptions) value
+                _ ->
+                    viewKnobSelect storyID name options defaultValue
 
         IntRange defaultValue limits ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (IntValue (Just int)) ->
-                            int
+            case extract storyID name state of
+                Just (IntValue (Just int)) ->
+                    viewKnobRange (UpdateInt storyID name) String.fromInt name limits int
 
-                        _ ->
-                            defaultValue
-            in
-            viewKnobRange (UpdateInt storyID name) String.fromInt name limits value
+                _ ->
+                    viewKnobRange (UpdateInt storyID name) String.fromInt name limits defaultValue
 
         FloatRange defaultValue limits ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (FloatValue (Just float)) ->
-                            float
+            case extract storyID name state of
+                Just (FloatValue (Just float)) ->
+                    viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits float
 
-                        _ ->
-                            defaultValue
-            in
-            viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits value
+                _ ->
+                    viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits defaultValue
 
         Color Nothing ->
             viewKnobColor storyID name ""
 
         Color (Just defaultValue) ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (ColorValue Nothing) ->
-                            ""
+            case extract storyID name state of
+                Just (ColorValue Nothing) ->
+                    viewKnobColor storyID name ""
 
-                        Just (ColorValue (Just color)) ->
-                            color.hex
+                Just (ColorValue (Just color)) ->
+                    viewKnobColor storyID name color.hex
 
-                        _ ->
-                            defaultValue.hex
-            in
-            viewKnobColor storyID name value
+                _ ->
+                    viewKnobColor storyID name defaultValue.hex
 
         Date Nothing ->
             viewKnobDate storyID name ""
 
         Date (Just defaultValue) ->
-            let
-                value =
-                    case extract storyID name state of
-                        Just (DateValue Nothing) ->
-                            ""
+            case extract storyID name state of
+                Just (DateValue Nothing) ->
+                    viewKnobDate storyID name ""
 
-                        Just (DateValue (Just date)) ->
-                            Date.toString date
+                Just (DateValue (Just date)) ->
+                    viewKnobDate storyID name (Date.toString date)
 
-                        _ ->
-                            Date.toString defaultValue
-            in
-            viewKnobDate storyID name value
+                _ ->
+                    viewKnobDate storyID name (Date.toString defaultValue)
 
 
 view : String -> List ( String, Knob ) -> State -> Html Msg
