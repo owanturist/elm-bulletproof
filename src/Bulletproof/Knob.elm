@@ -1,6 +1,7 @@
 module Bulletproof.Knob exposing
     ( Color
     , Limits
+    , bool
     , color
     , float
     , floatRange
@@ -23,6 +24,23 @@ type alias Limits number =
 
 type alias Color =
     Color.Color
+
+
+bool : String -> Bool -> Story (Bool -> a) -> Story a
+bool name defaultValue (Story story) =
+    Story
+        { title = story.title
+        , knobs = ( name, Bool defaultValue ) :: story.knobs
+        , view =
+            Result.map
+                (\view state ->
+                    state.knobs
+                        |> extract Decode.bool story.title name
+                        |> Maybe.withDefault defaultValue
+                        |> view state
+                )
+                story.view
+        }
 
 
 string : String -> String -> Story (String -> a) -> Story a

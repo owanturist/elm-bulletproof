@@ -21,7 +21,8 @@ import Json.Encode as Encode exposing (Value, encode)
 
 
 type Knob
-    = String String
+    = Bool Bool
+    | String String
     | Int Int
     | Float Float
     | Choice Choice (List String)
@@ -75,7 +76,8 @@ insert encoder storyID name value state =
 
 
 type Msg
-    = UpdateString String String String
+    = UpdateBool String String Bool
+    | UpdateString String String String
     | UpdateInt String String String
     | UpdateFloat String String String
 
@@ -83,6 +85,9 @@ type Msg
 update : Msg -> State -> State
 update msg state =
     case msg of
+        UpdateBool storyID name next ->
+            insert Encode.bool storyID name next state
+
         UpdateString storyID name next ->
             insert Encode.string storyID name next state
 
@@ -111,6 +116,17 @@ update msg state =
 
 
 -- V I E W
+
+
+viewKnobBool : String -> String -> Bool -> Html Msg
+viewKnobBool storyID name checked =
+    input
+        [ Html.Attributes.type_ "checkbox"
+        , Html.Attributes.name name
+        , Html.Attributes.checked checked
+        , Html.Events.onCheck (UpdateBool storyID name)
+        ]
+        []
 
 
 viewKnobString : String -> String -> String -> Html Msg
@@ -229,6 +245,12 @@ viewKnobRow name knob =
 viewKnob : String -> State -> ( String, Knob ) -> Html Msg
 viewKnob storyID state ( name, knob ) =
     case knob of
+        Bool defaultValue ->
+            extract Decode.bool storyID name state
+                |> Maybe.withDefault defaultValue
+                |> viewKnobBool storyID name
+                |> viewKnobRow name
+
         String defaultValue ->
             extract Decode.string storyID name state
                 |> Maybe.withDefault defaultValue
