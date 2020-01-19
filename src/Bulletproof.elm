@@ -1,4 +1,8 @@
-module Bulletproof exposing (Program, program, storyOf)
+module Bulletproof exposing
+    ( Program
+    , program
+    , storyOf
+    )
 
 import Browser
 import Browser.Navigation
@@ -147,7 +151,7 @@ viewLink route attrs children =
     a (Html.Attributes.href (toPath route) :: attrs) children
 
 
-viewItem : Maybe String -> Internal.Story view -> Html Msg
+viewItem : Maybe String -> Internal.Story a -> Html Msg
 viewItem currentID (Internal.Story story) =
     div
         [ style "background" (ifelse (currentID == Just story.title) "#ccc" "fff")
@@ -159,7 +163,7 @@ viewItem currentID (Internal.Story story) =
         ]
 
 
-viewNavigation : Maybe String -> List (Story view) -> Html Msg
+viewNavigation : Maybe String -> List (Story a) -> Html Msg
 viewNavigation current =
     nav
         [ style "float" "left"
@@ -229,7 +233,7 @@ type alias Program =
     Platform.Program () Model Msg
 
 
-program : List (Story (Html msg)) -> Program
+program : List (Story (Html Msg)) -> Program
 program stories =
     let
         firstStoryID =

@@ -7,6 +7,7 @@ import Counter
 import File
 import Html exposing (br, div, text)
 import Html.Attributes exposing (style)
+import Incrementor
 
 
 type Color
@@ -99,6 +100,6 @@ main =
             |> Bulletproof.Knob.files "File"
 
         --
-        , Counter.view 0
-            |> Bulletproof.storyOf "Counter initial"
+        , Incrementor.view 0
+            |> Bulletproof.storyOf "Incrementor initial"
         ]
