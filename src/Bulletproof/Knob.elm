@@ -1,10 +1,12 @@
 module Bulletproof.Knob exposing
     ( Color
     , Date
+    , File
     , Limits
     , bool
     , color
     , date
+    , files
     , float
     , floatRange
     , int
@@ -14,10 +16,15 @@ module Bulletproof.Knob exposing
     , string
     )
 
+import File
 import Internal exposing (Story(..))
 import Internal.Color as Color
 import Internal.Date as Date
 import Internal.Knob exposing (Choice(..), Knob(..), Value(..), extract)
+
+
+type alias File =
+    File.File
 
 
 type alias Limits number =
@@ -226,12 +233,31 @@ date name defaultValue (Story story) =
             Result.map2
                 (\default view state ->
                     case extract story.title name state.knobs of
-                        Just (DateValue (Just posix)) ->
-                            view state (Date.fromPosix posix)
+                        Just (DateValue (Just value)) ->
+                            view state (Date.fromPosix value)
 
                         _ ->
                             view state (Date.fromPosix default)
                 )
                 (Result.fromMaybe ("Date in '" ++ name ++ "' is invalid.") defaultDate)
+                story.view
+        }
+
+
+files : String -> Story (List File -> a) -> Story a
+files name (Story story) =
+    Story
+        { title = story.title
+        , knobs = ( name, Files ) :: story.knobs
+        , view =
+            Result.map
+                (\view state ->
+                    case extract story.title name state.knobs of
+                        Just (FileValue value) ->
+                            view state value
+
+                        _ ->
+                            view state []
+                )
                 story.view
         }

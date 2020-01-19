@@ -12,12 +12,14 @@ module Internal.Knob exposing
     )
 
 import AVL.Dict as Dict exposing (Dict)
+import File exposing (File)
 import Html exposing (Html, div, input, label, option, text, textarea)
 import Html.Attributes
 import Html.Events
 import Html.Keyed
 import Internal.Color as Color exposing (Color)
 import Internal.Date as Date exposing (Date)
+import Json.Decode as Decode exposing (Decoder)
 import Time
 
 
@@ -31,6 +33,7 @@ type Knob
     | FloatRange Float (Limits Float)
     | Color (Maybe Color)
     | Date (Maybe Time.Posix)
+    | Files
 
 
 type alias Limits x =
@@ -52,6 +55,7 @@ type Value
     | FloatValue (Maybe Float)
     | ColorValue (Maybe Color)
     | DateValue (Maybe Time.Posix)
+    | FileValue (List File)
 
 
 type alias State =
@@ -90,6 +94,7 @@ type Msg
     | UpdateFloat String String String
     | UpdateColor String String String
     | UpdateDate String String String
+    | UpdateFiles String String (List File)
 
 
 update : Msg -> State -> State
@@ -144,6 +149,9 @@ update msg state =
 
                 Just date ->
                     insert storyID name (DateValue (Just date)) state
+
+        UpdateFiles storyID name files ->
+            insert storyID name (FileValue files) state
 
 
 
@@ -276,6 +284,22 @@ viewKnobDate storyID name value =
         []
 
 
+filesDecoder : Decoder (List File)
+filesDecoder =
+    Decode.at [ "target", "files" ] (Decode.list File.decoder)
+
+
+viewKnobFile : String -> String -> Html Msg
+viewKnobFile storyID name =
+    input
+        [ Html.Attributes.type_ "file"
+        , Html.Attributes.multiple True
+        , Html.Attributes.name name
+        , Html.Events.on "change" (Decode.map (UpdateFiles storyID name) filesDecoder)
+        ]
+        []
+
+
 viewKnobRow : String -> Html msg -> Html msg
 viewKnobRow name knob =
     div
@@ -388,6 +412,9 @@ viewKnob storyID state name knob =
 
                 _ ->
                     viewKnobDate storyID name (Date.toString defaultValue)
+
+        Files ->
+            viewKnobFile storyID name
 
 
 view : String -> List ( String, Knob ) -> State -> Html Msg

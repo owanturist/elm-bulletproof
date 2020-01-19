@@ -4,6 +4,7 @@ import Browser
 import Bulletproof
 import Bulletproof.Knob
 import Counter
+import File
 import Html exposing (br, div, text)
 import Html.Attributes exposing (style)
 
@@ -39,7 +40,7 @@ main : Bulletproof.Program
 main =
     Bulletproof.program
         [ Bulletproof.storyOf "Counter positive"
-            (\show count fl str bg color rangeint rangefloat clr date ->
+            (\show count fl str bg color rangeint rangefloat clr date files ->
                 div
                     [ style "background" (colorToHex bg)
                     , style "color" (colorToHex color)
@@ -67,6 +68,8 @@ main =
                             , "Year " ++ String.fromInt date.year
                             ]
                         )
+                    , br [] []
+                    , text ("Files count :" ++ String.fromInt (List.length files))
                     ]
             )
             |> Bulletproof.Knob.bool "Bool" True
@@ -86,6 +89,7 @@ main =
             |> Bulletproof.Knob.floatRange "range float" 1.5 { min = 0.5, max = 10.5, step = 0.5 }
             |> Bulletproof.Knob.color "Color" "#cce"
             |> Bulletproof.Knob.date "Date" "10-2-2011"
+            |> Bulletproof.Knob.files "File"
 
         --
         , Counter.view 0
