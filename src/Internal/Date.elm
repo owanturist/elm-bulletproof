@@ -1,70 +1,24 @@
 module Internal.Date exposing
     ( Date
-    , Month
-    , Posix
-    , Weekday
-    , decoder
-    , fromInt
+    , fromPosix
     , fromString
-    , parse
+    , toPosix
     , toString
     )
 
 import DateTime exposing (DateTime)
-import Json.Decode as Decode exposing (Decoder)
 import Time
 
 
-type alias Posix =
-    Time.Posix
-
-
-type alias Month =
-    Time.Month
-
-
-type alias Weekday =
-    Time.Weekday
-
-
 type alias Date =
-    { posix : Posix
+    { posix : Time.Posix
     , year : Int
-    , month : Month
-    , monthIndex : Int
+    , month : Int
     , day : Int
-    , weekday : Weekday
-    , weekdayIndex : Int
     }
 
 
-fromInt : Int -> Date
-fromInt int =
-    let
-        posix =
-            Time.millisToPosix int
-
-        month =
-            Time.toMonth Time.utc posix
-
-        weekday =
-            Time.toWeekday Time.utc posix
-    in
-    Date posix
-        (Time.toYear Time.utc posix)
-        month
-        (monthToIndex month)
-        (Time.toDay Time.utc posix)
-        weekday
-        (weekdayToIndex weekday)
-
-
-decoder : Decoder Date
-decoder =
-    Decode.map fromInt Decode.int
-
-
-monthFromIndex : Int -> Maybe Month
+monthFromIndex : Int -> Maybe Time.Month
 monthFromIndex index =
     case index of
         1 ->
@@ -107,7 +61,7 @@ monthFromIndex index =
             Nothing
 
 
-monthToIndex : Month -> Int
+monthToIndex : Time.Month -> Int
 monthToIndex month =
     case month of
         Time.Jan ->
@@ -147,32 +101,7 @@ monthToIndex month =
             12
 
 
-weekdayToIndex : Weekday -> Int
-weekdayToIndex weekday =
-    case weekday of
-        Time.Mon ->
-            1
-
-        Time.Tue ->
-            2
-
-        Time.Wed ->
-            3
-
-        Time.Thu ->
-            4
-
-        Time.Fri ->
-            5
-
-        Time.Sat ->
-            6
-
-        Time.Sun ->
-            7
-
-
-toDateTime : Int -> Int -> Month -> Maybe DateTime
+toDateTime : Int -> Int -> Time.Month -> Maybe DateTime
 toDateTime day year month =
     DateTime.fromRawParts
         { day = day, month = month, year = year }
@@ -193,13 +122,13 @@ parseWithDelimiter delimiter str =
             Nothing
 
 
-parse : String -> Maybe Date
-parse str =
+toPosix : String -> Maybe Time.Posix
+toPosix str =
     List.foldl
         (\delimiter result ->
             case result of
                 Nothing ->
-                    Maybe.map (fromInt << DateTime.toMillis) (parseWithDelimiter delimiter str)
+                    Maybe.map DateTime.toPosix (parseWithDelimiter delimiter str)
 
                 just ->
                     just
@@ -208,22 +137,37 @@ parse str =
         [ '-', '/' ]
 
 
-fromString : String -> Maybe Date
+fromPosix : Time.Posix -> Date
+fromPosix posix =
+    Date posix
+        (Time.toYear Time.utc posix)
+        (monthToIndex (Time.toMonth Time.utc posix))
+        (Time.toDay Time.utc posix)
+
+
+fromString : String -> Maybe Time.Posix
 fromString str =
     case List.map String.toInt (String.split "-" str) of
         [ Just year, Just monthIndex, Just day ] ->
             monthFromIndex monthIndex
                 |> Maybe.andThen (toDateTime day year)
-                |> Maybe.map (fromInt << DateTime.toMillis)
+                |> Maybe.map DateTime.toPosix
 
         _ ->
             Nothing
 
 
-toString : Date -> String
-toString date =
+toString : Time.Posix -> String
+toString posix =
     String.join "-"
-        [ String.padLeft 4 '0' (String.fromInt date.year)
-        , String.padLeft 2 '0' (String.fromInt (monthToIndex date.month))
-        , String.padLeft 2 '0' (String.fromInt date.day)
+        [ Time.toYear Time.utc posix
+            |> String.fromInt
+            |> String.padLeft 4 '0'
+        , Time.toMonth Time.utc posix
+            |> monthToIndex
+            |> String.fromInt
+            |> String.padLeft 2 '0'
+        , Time.toDay Time.utc posix
+            |> String.fromInt
+            |> String.padLeft 2 '0'
         ]

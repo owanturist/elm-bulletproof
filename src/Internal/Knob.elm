@@ -4,6 +4,7 @@ module Internal.Knob exposing
     , Limits
     , Msg
     , State
+    , Value(..)
     , extract
     , initial
     , update
@@ -16,9 +17,7 @@ import Html.Attributes
 import Html.Events
 import Html.Keyed
 import Internal.Color as Color exposing (Color)
-import Internal.Date as Date
-import Json.Decode as Decode exposing (Decoder, decodeString)
-import Json.Encode as Encode exposing (Value, encode)
+import Internal.Date as Date exposing (Date)
 import Time
 
 
@@ -31,7 +30,7 @@ type Knob
     | IntRange Int (Limits Int)
     | FloatRange Float (Limits Float)
     | Color (Maybe Color)
-    | Date (Maybe Int)
+    | Date (Maybe Time.Posix)
 
 
 type alias Limits x =
@@ -46,8 +45,17 @@ type Choice
     | Select
 
 
+type Value
+    = BoolValue Bool
+    | StringValue String
+    | IntValue (Maybe Int)
+    | FloatValue (Maybe Float)
+    | ColorValue (Maybe Color)
+    | DateValue (Maybe Time.Posix)
+
+
 type alias State =
-    Dict String (Dict String String)
+    Dict String (Dict String Value)
 
 
 initial : State
@@ -55,21 +63,18 @@ initial =
     Dict.empty
 
 
-extract : Decoder value -> String -> String -> State -> Maybe value
-extract decoder storyID name state =
-    state
-        |> Dict.get storyID
-        |> Maybe.andThen (Dict.get name)
-        |> Maybe.andThen (Result.toMaybe << decodeString decoder)
+extract : String -> String -> State -> Maybe Value
+extract storyID name state =
+    Maybe.andThen (Dict.get name) (Dict.get storyID state)
 
 
-insert : (value -> Value) -> String -> String -> value -> State -> State
-insert encoder storyID name value state =
+insert : String -> String -> Value -> State -> State
+insert storyID name value state =
     Dict.insert storyID
         (state
             |> Dict.get storyID
             |> Maybe.withDefault Dict.empty
-            |> Dict.insert name (encode 0 (encoder value))
+            |> Dict.insert name value
         )
         state
 
@@ -83,39 +88,54 @@ type Msg
     | UpdateString String String String
     | UpdateInt String String String
     | UpdateFloat String String String
+    | UpdateColor String String String
     | UpdateDate String String String
 
 
 update : Msg -> State -> State
 update msg state =
     case msg of
-        UpdateBool storyID name next ->
-            insert Encode.bool storyID name next state
+        UpdateBool storyID name bool ->
+            insert storyID name (BoolValue bool) state
 
-        UpdateString storyID name next ->
-            insert Encode.string storyID name next state
+        UpdateString storyID name string ->
+            insert storyID name (StringValue string) state
 
         UpdateInt storyID name "" ->
-            insert Encode.string storyID name "" state
+            insert storyID name (IntValue Nothing) state
 
         UpdateInt storyID name str ->
             case String.toInt str of
                 Nothing ->
                     state
 
-                Just next ->
-                    insert Encode.int storyID name next state
+                Just int ->
+                    insert storyID name (IntValue (Just int)) state
 
         UpdateFloat storyID name "" ->
-            insert Encode.string storyID name "" state
+            insert storyID name (FloatValue Nothing) state
 
         UpdateFloat storyID name str ->
             case String.toFloat str of
                 Nothing ->
                     state
 
-                Just next ->
-                    insert Encode.float storyID name next state
+                Just float ->
+                    insert storyID name (FloatValue (Just float)) state
+
+        UpdateColor storyID name "" ->
+            insert storyID name (ColorValue Nothing) state
+
+        UpdateColor storyID name str ->
+            case Color.fromString str of
+                Nothing ->
+                    state
+
+                Just color ->
+                    insert storyID name (ColorValue (Just color)) state
+
+        UpdateDate storyID name "" ->
+            insert storyID name (DateValue Nothing) state
 
         UpdateDate storyID name str ->
             case Date.fromString str of
@@ -123,7 +143,7 @@ update msg state =
                     state
 
                 Just date ->
-                    insert Encode.int storyID name (Time.posixToMillis date.posix) state
+                    insert storyID name (DateValue (Just date)) state
 
 
 
@@ -240,7 +260,7 @@ viewKnobColor storyID name color =
         [ Html.Attributes.type_ "color"
         , Html.Attributes.name name
         , Html.Attributes.value color
-        , Html.Events.onInput (UpdateString storyID name)
+        , Html.Events.onInput (UpdateColor storyID name)
         ]
         []
 
@@ -265,98 +285,154 @@ viewKnobRow name knob =
         ]
 
 
-viewKnob : String -> State -> ( String, Knob ) -> Html Msg
-viewKnob storyID state ( name, knob ) =
+viewKnob : String -> State -> String -> Knob -> Html Msg
+viewKnob storyID state name knob =
     case knob of
         Bool defaultValue ->
-            extract Decode.bool storyID name state
-                |> Maybe.withDefault defaultValue
-                |> viewKnobBool storyID name
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (BoolValue bool) ->
+                            bool
+
+                        _ ->
+                            defaultValue
+            in
+            viewKnobBool storyID name value
 
         String defaultValue ->
-            extract Decode.string storyID name state
-                |> Maybe.withDefault defaultValue
-                |> viewKnobString storyID name
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (StringValue string) ->
+                            string
+
+                        _ ->
+                            defaultValue
+            in
+            viewKnobString storyID name value
 
         Int defaultValue ->
             let
                 value =
-                    case extract Decode.int storyID name state of
-                        Nothing ->
-                            Maybe.withDefault
-                                (String.fromInt defaultValue)
-                                (extract Decode.string storyID name state)
+                    case extract storyID name state of
+                        Just (IntValue Nothing) ->
+                            ""
 
-                        Just int ->
+                        Just (IntValue (Just int)) ->
                             String.fromInt int
+
+                        _ ->
+                            String.fromInt defaultValue
             in
-            viewKnobRow name (viewKnobInt storyID name value)
+            viewKnobInt storyID name value
 
         Float defaultValue ->
             let
                 value =
-                    case extract Decode.float storyID name state of
-                        Nothing ->
-                            Maybe.withDefault
-                                (String.fromFloat defaultValue)
-                                (extract Decode.string storyID name state)
+                    case extract storyID name state of
+                        Just (FloatValue Nothing) ->
+                            ""
 
-                        Just float ->
+                        Just (FloatValue (Just float)) ->
                             String.fromFloat float
+
+                        _ ->
+                            String.fromFloat defaultValue
             in
-            viewKnobRow name (viewKnobFloat storyID name value)
+            viewKnobFloat storyID name value
 
         Choice _ [] ->
-            viewKnobRow name (text "No Options available")
+            text "No Options available"
 
         Choice Radio (firstOption :: restOptions) ->
-            extract Decode.string storyID name state
-                |> Maybe.withDefault firstOption
-                |> viewKnobRadio storyID name (firstOption :: restOptions)
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (StringValue string) ->
+                            string
+
+                        _ ->
+                            firstOption
+            in
+            viewKnobRadio storyID name (firstOption :: restOptions) value
 
         Choice Select (firstOption :: restOptions) ->
-            extract Decode.string storyID name state
-                |> Maybe.withDefault firstOption
-                |> viewKnobSelect storyID name (firstOption :: restOptions)
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (StringValue string) ->
+                            string
+
+                        _ ->
+                            firstOption
+            in
+            viewKnobSelect storyID name (firstOption :: restOptions) value
 
         IntRange defaultValue limits ->
-            extract Decode.int storyID name state
-                |> Maybe.withDefault defaultValue
-                |> viewKnobRange (UpdateInt storyID name) String.fromInt name limits
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (IntValue (Just int)) ->
+                            int
+
+                        _ ->
+                            defaultValue
+            in
+            viewKnobRange (UpdateInt storyID name) String.fromInt name limits value
 
         FloatRange defaultValue limits ->
-            extract Decode.float storyID name state
-                |> Maybe.withDefault defaultValue
-                |> viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (FloatValue (Just float)) ->
+                            float
+
+                        _ ->
+                            defaultValue
+            in
+            viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits value
 
         Color Nothing ->
-            viewKnobRow name (viewKnobColor storyID name "")
+            viewKnobColor storyID name ""
 
         Color (Just defaultValue) ->
-            extract Color.decoder storyID name state
-                |> Maybe.withDefault defaultValue
-                |> .hex
-                |> viewKnobColor storyID name
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (ColorValue Nothing) ->
+                            ""
+
+                        Just (ColorValue (Just color)) ->
+                            color.hex
+
+                        _ ->
+                            defaultValue.hex
+            in
+            viewKnobColor storyID name value
 
         Date Nothing ->
-            viewKnobRow name (viewKnobDate storyID name "")
+            viewKnobDate storyID name ""
 
         Date (Just defaultValue) ->
-            extract Decode.int storyID name state
-                |> Maybe.withDefault defaultValue
-                |> Date.fromInt
-                |> Date.toString
-                |> viewKnobDate storyID name
-                |> viewKnobRow name
+            let
+                value =
+                    case extract storyID name state of
+                        Just (DateValue Nothing) ->
+                            ""
+
+                        Just (DateValue (Just date)) ->
+                            Date.toString date
+
+                        _ ->
+                            Date.toString defaultValue
+            in
+            viewKnobDate storyID name value
 
 
 view : String -> List ( String, Knob ) -> State -> Html Msg
 view storyID knobs state =
-    div [] (List.foldl ((::) << viewKnob storyID state) [] knobs)
+    knobs
+        |> List.reverse
+        |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob storyID state name knob))
+        |> div []

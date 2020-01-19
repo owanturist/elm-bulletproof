@@ -17,9 +17,7 @@ module Bulletproof.Knob exposing
 import Internal exposing (Story(..))
 import Internal.Color as Color
 import Internal.Date as Date
-import Internal.Knob exposing (Choice(..), Knob(..), extract)
-import Json.Decode as Decode exposing (Decoder)
-import Time
+import Internal.Knob exposing (Choice(..), Knob(..), Value(..), extract)
 
 
 type alias Limits number =
@@ -42,10 +40,12 @@ bool name defaultValue (Story story) =
         , view =
             Result.map
                 (\view state ->
-                    state.knobs
-                        |> extract Decode.bool story.title name
-                        |> Maybe.withDefault defaultValue
-                        |> view state
+                    case extract story.title name state.knobs of
+                        Just (BoolValue value) ->
+                            view state value
+
+                        _ ->
+                            view state defaultValue
                 )
                 story.view
         }
@@ -59,10 +59,12 @@ string name defaultValue (Story story) =
         , view =
             Result.map
                 (\view state ->
-                    state.knobs
-                        |> extract Decode.string story.title name
-                        |> Maybe.withDefault defaultValue
-                        |> view state
+                    case extract story.title name state.knobs of
+                        Just (StringValue value) ->
+                            view state value
+
+                        _ ->
+                            view state defaultValue
                 )
                 story.view
         }
@@ -76,10 +78,12 @@ int name defaultValue (Story story) =
         , view =
             Result.map
                 (\view state ->
-                    state.knobs
-                        |> extract Decode.int story.title name
-                        |> Maybe.withDefault defaultValue
-                        |> view state
+                    case extract story.title name state.knobs of
+                        Just (IntValue (Just value)) ->
+                            view state value
+
+                        _ ->
+                            view state defaultValue
                 )
                 story.view
         }
@@ -93,40 +97,53 @@ float name defaultValue (Story story) =
         , view =
             Result.map
                 (\view state ->
-                    state.knobs
-                        |> extract Decode.float story.title name
-                        |> Maybe.withDefault defaultValue
-                        |> view state
-                )
-                story.view
-        }
+                    case extract story.title name state.knobs of
+                        Just (FloatValue (Just value)) ->
+                            view state value
 
-
-makeRange : (number -> Limits number -> Knob) -> Decoder number -> String -> number -> Limits number -> Story (number -> a) -> Story a
-makeRange knob decoder name defaultValue limits (Story story) =
-    Story
-        { title = story.title
-        , knobs = ( name, knob defaultValue limits ) :: story.knobs
-        , view =
-            Result.map
-                (\view state ->
-                    state.knobs
-                        |> extract decoder story.title name
-                        |> Maybe.withDefault defaultValue
-                        |> view state
+                        _ ->
+                            view state defaultValue
                 )
                 story.view
         }
 
 
 intRange : String -> Int -> { min : Int, max : Int, step : Int } -> Story (Int -> a) -> Story a
-intRange =
-    makeRange IntRange Decode.int
+intRange name defaultValue limits (Story story) =
+    Story
+        { title = story.title
+        , knobs = ( name, IntRange defaultValue limits ) :: story.knobs
+        , view =
+            Result.map
+                (\view state ->
+                    case extract story.title name state.knobs of
+                        Just (IntValue (Just value)) ->
+                            view state value
+
+                        _ ->
+                            view state defaultValue
+                )
+                story.view
+        }
 
 
 floatRange : String -> Float -> { min : Float, max : Float, step : Float } -> Story (Float -> a) -> Story a
-floatRange =
-    makeRange FloatRange Decode.float
+floatRange name defaultValue limits (Story story) =
+    Story
+        { title = story.title
+        , knobs = ( name, FloatRange defaultValue limits ) :: story.knobs
+        , view =
+            Result.map
+                (\view state ->
+                    case extract story.title name state.knobs of
+                        Just (FloatValue (Just value)) ->
+                            view state value
+
+                        _ ->
+                            view state defaultValue
+                )
+                story.view
+        }
 
 
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -144,9 +161,12 @@ makeChoice choice choiceName name options (Story story) =
                         (\view state ->
                             let
                                 selected =
-                                    state.knobs
-                                        |> extract Decode.string story.title name
-                                        |> Maybe.withDefault firstLabel
+                                    case extract story.title name state.knobs of
+                                        Just (StringValue value) ->
+                                            value
+
+                                        _ ->
+                                            firstLabel
                             in
                             options
                                 |> List.filter ((==) selected << Tuple.first)
@@ -181,10 +201,12 @@ color name defaultValue (Story story) =
         , view =
             Result.map2
                 (\default view state ->
-                    state.knobs
-                        |> extract Color.decoder story.title name
-                        |> Maybe.withDefault default
-                        |> view state
+                    case extract story.title name state.knobs of
+                        Just (ColorValue (Just value)) ->
+                            view state value
+
+                        _ ->
+                            view state default
                 )
                 (Result.fromMaybe ("Color in '" ++ name ++ "' is invalid.") defaultColor)
                 story.view
@@ -195,18 +217,20 @@ date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue (Story story) =
     let
         defaultDate =
-            Date.parse defaultValue
+            Date.toPosix defaultValue
     in
     Story
         { title = story.title
-        , knobs = ( name, Date (Maybe.map (Time.posixToMillis << .posix) defaultDate) ) :: story.knobs
+        , knobs = ( name, Date defaultDate ) :: story.knobs
         , view =
             Result.map2
                 (\default view state ->
-                    state.knobs
-                        |> extract Date.decoder story.title name
-                        |> Maybe.withDefault default
-                        |> view state
+                    case extract story.title name state.knobs of
+                        Just (DateValue (Just posix)) ->
+                            view state (Date.fromPosix posix)
+
+                        _ ->
+                            view state (Date.fromPosix default)
                 )
                 (Result.fromMaybe ("Date in '" ++ name ++ "' is invalid.") defaultDate)
                 story.view

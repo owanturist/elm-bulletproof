@@ -1,7 +1,6 @@
-module Internal.Color exposing (Color, decoder, fromString)
+module Internal.Color exposing (Color, fromString)
 
 import Hex
-import Json.Decode as Decode exposing (Decoder)
 
 
 type alias Color =
@@ -49,17 +48,3 @@ fromString str =
 
         _ ->
             Nothing
-
-
-decoder : Decoder Color
-decoder =
-    Decode.andThen
-        (\str ->
-            case fromString str of
-                Nothing ->
-                    Decode.fail "Color is invalid"
-
-                Just color ->
-                    Decode.succeed color
-        )
-        Decode.string
