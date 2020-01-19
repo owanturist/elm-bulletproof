@@ -3,6 +3,7 @@ module Bulletproof.Knob exposing
     , Date
     , File
     , Limits
+    , Time
     , bool
     , color
     , date
@@ -14,6 +15,7 @@ module Bulletproof.Knob exposing
     , radio
     , select
     , string
+    , time
     )
 
 import File
@@ -37,6 +39,10 @@ type alias Color =
 
 type alias Date =
     Date.Date
+
+
+type alias Time =
+    Date.Time
 
 
 bool : String -> Bool -> Story (Bool -> a) -> Story a
@@ -224,7 +230,7 @@ date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue (Story story) =
     let
         defaultDate =
-            Date.toPosix defaultValue
+            Date.parseStringToPosix defaultValue
     in
     Story
         { title = story.title
@@ -234,12 +240,36 @@ date name defaultValue (Story story) =
                 (\default view state ->
                     case extract story.title name state.knobs of
                         Just (DateValue (Just value)) ->
-                            view state (Date.fromPosix value)
+                            view state (Date.dateFromPosix value)
 
                         _ ->
-                            view state (Date.fromPosix default)
+                            view state (Date.dateFromPosix default)
                 )
                 (Result.fromMaybe ("Date in '" ++ name ++ "' is invalid.") defaultDate)
+                story.view
+        }
+
+
+time : String -> String -> Story (Time -> a) -> Story a
+time name defaultValue (Story story) =
+    let
+        defaultTime =
+            Date.timeFromString defaultValue
+    in
+    Story
+        { title = story.title
+        , knobs = ( name, Time defaultTime ) :: story.knobs
+        , view =
+            Result.map2
+                (\default view state ->
+                    case extract story.title name state.knobs of
+                        Just (TimeValue (Just value)) ->
+                            view state value
+
+                        _ ->
+                            view state default
+                )
+                (Result.fromMaybe ("Time in '" ++ name ++ "' is invalid.") defaultTime)
                 story.view
         }
 

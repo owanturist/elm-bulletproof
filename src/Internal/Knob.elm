@@ -18,7 +18,7 @@ import Html.Attributes
 import Html.Events
 import Html.Keyed
 import Internal.Color as Color exposing (Color)
-import Internal.Date as Date exposing (Date)
+import Internal.Date as Date exposing (Date, Time)
 import Json.Decode as Decode exposing (Decoder)
 import Time
 
@@ -33,6 +33,7 @@ type Knob
     | FloatRange Float (Limits Float)
     | Color (Maybe Color)
     | Date (Maybe Time.Posix)
+    | Time (Maybe Time)
     | Files
 
 
@@ -55,6 +56,7 @@ type Value
     | FloatValue (Maybe Float)
     | ColorValue (Maybe Color)
     | DateValue (Maybe Time.Posix)
+    | TimeValue (Maybe Time)
     | FileValue (List File)
 
 
@@ -94,6 +96,7 @@ type Msg
     | UpdateFloat String String String
     | UpdateColor String String String
     | UpdateDate String String String
+    | UpdateTime String String String
     | UpdateFiles String String (List File)
 
 
@@ -143,12 +146,23 @@ update msg state =
             insert storyID name (DateValue Nothing) state
 
         UpdateDate storyID name str ->
-            case Date.fromString str of
+            case Date.posixFromString str of
                 Nothing ->
                     state
 
                 Just date ->
                     insert storyID name (DateValue (Just date)) state
+
+        UpdateTime storyID name "" ->
+            insert storyID name (TimeValue Nothing) state
+
+        UpdateTime storyID name str ->
+            case Date.timeFromString str of
+                Nothing ->
+                    state
+
+                Just time ->
+                    insert storyID name (TimeValue (Just time)) state
 
         UpdateFiles storyID name files ->
             insert storyID name (FileValue files) state
@@ -284,6 +298,17 @@ viewKnobDate storyID name value =
         []
 
 
+viewKnobTime : String -> String -> String -> Html Msg
+viewKnobTime storyID name value =
+    input
+        [ Html.Attributes.type_ "time"
+        , Html.Attributes.name name
+        , Html.Attributes.value value
+        , Html.Events.onInput (UpdateTime storyID name)
+        ]
+        []
+
+
 filesDecoder : Decoder (List File)
 filesDecoder =
     Decode.at [ "target", "files" ] (Decode.list File.decoder)
@@ -408,10 +433,24 @@ viewKnob storyID state name knob =
                     viewKnobDate storyID name ""
 
                 Just (DateValue (Just date)) ->
-                    viewKnobDate storyID name (Date.toString date)
+                    viewKnobDate storyID name (Date.posixToString date)
 
                 _ ->
-                    viewKnobDate storyID name (Date.toString defaultValue)
+                    viewKnobDate storyID name (Date.posixToString defaultValue)
+
+        Time Nothing ->
+            viewKnobTime storyID name ""
+
+        Time (Just defaultValue) ->
+            case extract storyID name state of
+                Just (TimeValue Nothing) ->
+                    viewKnobTime storyID name ""
+
+                Just (TimeValue (Just time)) ->
+                    viewKnobTime storyID name (Date.timeToString time)
+
+                _ ->
+                    viewKnobTime storyID name (Date.timeToString defaultValue)
 
         Files ->
             viewKnobFile storyID name

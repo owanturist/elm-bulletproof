@@ -40,7 +40,7 @@ main : Bulletproof.Program
 main =
     Bulletproof.program
         [ Bulletproof.storyOf "Counter positive"
-            (\show count fl str bg color rangeint rangefloat clr date files ->
+            (\show count fl str bg color rangeint rangefloat clr date time files ->
                 div
                     [ style "background" (colorToHex bg)
                     , style "color" (colorToHex color)
@@ -62,12 +62,18 @@ main =
 
                       else
                         text ""
-                    , text
-                        (String.join ", "
-                            [ "Day " ++ String.fromInt date.day
-                            , "Year " ++ String.fromInt date.year
-                            ]
-                        )
+                    , [ "Day " ++ String.fromInt date.day
+                      , "Month " ++ String.fromInt date.month
+                      , "Year " ++ String.fromInt date.year
+                      ]
+                        |> String.join ", "
+                        |> text
+                    , br [] []
+                    , [ "Hours " ++ String.fromInt time.hours
+                      , "Minutes " ++ String.fromInt time.minutes
+                      ]
+                        |> String.join ", "
+                        |> text
                     , br [] []
                     , text ("Files count :" ++ String.fromInt (List.length files))
                     ]
@@ -89,6 +95,7 @@ main =
             |> Bulletproof.Knob.floatRange "range float" 1.5 { min = 0.5, max = 10.5, step = 0.5 }
             |> Bulletproof.Knob.color "Color" "#cce"
             |> Bulletproof.Knob.date "Date" "10-2-2011"
+            |> Bulletproof.Knob.time "Time" "12:2"
             |> Bulletproof.Knob.files "File"
 
         --

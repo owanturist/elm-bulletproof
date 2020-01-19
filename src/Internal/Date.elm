@@ -1,13 +1,20 @@
 module Internal.Date exposing
     ( Date
-    , fromPosix
-    , fromString
-    , toPosix
-    , toString
+    , Time
+    , dateFromPosix
+    , parseStringToPosix
+    , posixFromString
+    , posixToString
+    , timeFromString
+    , timeToString
     )
 
 import DateTime exposing (DateTime)
 import Time
+
+
+
+-- D A T E
 
 
 type alias Date =
@@ -122,8 +129,8 @@ parseWithDelimiter delimiter str =
             Nothing
 
 
-toPosix : String -> Maybe Time.Posix
-toPosix str =
+parseStringToPosix : String -> Maybe Time.Posix
+parseStringToPosix str =
     List.foldl
         (\delimiter result ->
             case result of
@@ -137,16 +144,16 @@ toPosix str =
         [ '-', '/' ]
 
 
-fromPosix : Time.Posix -> Date
-fromPosix posix =
+dateFromPosix : Time.Posix -> Date
+dateFromPosix posix =
     Date posix
         (Time.toYear Time.utc posix)
         (monthToIndex (Time.toMonth Time.utc posix))
         (Time.toDay Time.utc posix)
 
 
-fromString : String -> Maybe Time.Posix
-fromString str =
+posixFromString : String -> Maybe Time.Posix
+posixFromString str =
     case List.map String.toInt (String.split "-" str) of
         [ Just year, Just monthIndex, Just day ] ->
             monthFromIndex monthIndex
@@ -157,8 +164,8 @@ fromString str =
             Nothing
 
 
-toString : Time.Posix -> String
-toString posix =
+posixToString : Time.Posix -> String
+posixToString posix =
     String.join "-"
         [ Time.toYear Time.utc posix
             |> String.fromInt
@@ -170,4 +177,36 @@ toString posix =
         , Time.toDay Time.utc posix
             |> String.fromInt
             |> String.padLeft 2 '0'
+        ]
+
+
+
+-- T I M E
+
+
+type alias Time =
+    { hours : Int
+    , minutes : Int
+    }
+
+
+timeFromString : String -> Maybe Time
+timeFromString str =
+    case List.map String.toInt (String.split ":" str) of
+        [ Just hours, Just minutes ] ->
+            if hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 then
+                Just (Time hours minutes)
+
+            else
+                Nothing
+
+        _ ->
+            Nothing
+
+
+timeToString : Time -> String
+timeToString time =
+    String.join ":"
+        [ String.padLeft 2 '0' (String.fromInt time.hours)
+        , String.padLeft 2 '0' (String.fromInt time.minutes)
         ]
