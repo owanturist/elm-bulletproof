@@ -1,8 +1,28 @@
-module Bulletproof.Knob exposing (float, floatRange, int, intRange, radio, select, string)
+module Bulletproof.Knob exposing
+    ( Color
+    , Limits
+    , color
+    , float
+    , floatRange
+    , int
+    , intRange
+    , radio
+    , select
+    , string
+    )
 
 import Internal exposing (Story(..))
-import Internal.Knob exposing (Choice(..), Knob(..), Limits, extract)
+import Internal.Color as Color
+import Internal.Knob exposing (Choice(..), Knob(..), extract)
 import Json.Decode as Decode exposing (Decoder)
+
+
+type alias Limits number =
+    Internal.Knob.Limits number
+
+
+type alias Color =
+    Color.Color
 
 
 string : String -> String -> Story (String -> a) -> Story a
@@ -121,3 +141,25 @@ radio =
 select : String -> List ( String, option ) -> Story (option -> a) -> Story a
 select =
     makeChoice Select "Select"
+
+
+color : String -> String -> Story (Color -> a) -> Story a
+color name defaultValue (Story story) =
+    let
+        defaultColor =
+            Color.fromString defaultValue
+    in
+    Story
+        { title = story.title
+        , knobs = ( name, Color (Result.withDefault Color.black defaultColor) ) :: story.knobs
+        , view =
+            Result.map2
+                (\default view state ->
+                    state.knobs
+                        |> extract Color.decoder story.title name
+                        |> Maybe.withDefault default
+                        |> view state
+                )
+                defaultColor
+                story.view
+        }

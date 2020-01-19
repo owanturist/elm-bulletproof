@@ -15,6 +15,7 @@ import Html exposing (Html, div, input, label, option, text, textarea)
 import Html.Attributes
 import Html.Events
 import Html.Keyed
+import Internal.Color as Color exposing (Color)
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode as Encode exposing (Value, encode)
 
@@ -26,6 +27,7 @@ type Knob
     | Choice Choice (List String)
     | IntRange Int (Limits Int)
     | FloatRange Float (Limits Float)
+    | Color Color.Color
 
 
 type alias Limits x =
@@ -76,7 +78,6 @@ type Msg
     = UpdateString String String String
     | UpdateInt String String String
     | UpdateFloat String String String
-    | UpdateChoice String String String
 
 
 update : Msg -> State -> State
@@ -106,9 +107,6 @@ update msg state =
 
                 Just next ->
                     insert Encode.float storyID name next state
-
-        UpdateChoice storyID name next ->
-            insert Encode.string storyID name next state
 
 
 
@@ -161,7 +159,7 @@ viewKnobRadio storyID name options current =
                             , Html.Attributes.name name
                             , Html.Attributes.value value
                             , Html.Attributes.checked (value == current)
-                            , Html.Events.onCheck (\_ -> UpdateChoice storyID name value)
+                            , Html.Events.onCheck (\_ -> UpdateString storyID name value)
                             ]
                             []
                         , text value
@@ -177,7 +175,7 @@ viewKnobSelect : String -> String -> List String -> String -> Html Msg
 viewKnobSelect storyID name options current =
     Html.Keyed.node "select"
         [ Html.Attributes.name name
-        , Html.Events.onInput (UpdateChoice storyID name)
+        , Html.Events.onInput (UpdateString storyID name)
         ]
         (List.map
             (\value ->
@@ -204,6 +202,17 @@ viewKnobRange msg numberToString name limits number =
         , Html.Attributes.step (numberToString limits.step)
         , Html.Attributes.value (numberToString number)
         , Html.Events.onInput msg
+        ]
+        []
+
+
+viewKnobColor : String -> String -> Color -> Html Msg
+viewKnobColor storyID name color =
+    input
+        [ Html.Attributes.type_ "color"
+        , Html.Attributes.name name
+        , Html.Attributes.value color.hex
+        , Html.Events.onInput (UpdateString storyID name)
         ]
         []
 
@@ -279,6 +288,12 @@ viewKnob storyID state ( name, knob ) =
             extract Decode.float storyID name state
                 |> Maybe.withDefault defaultValue
                 |> viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits
+                |> viewKnobRow name
+
+        Color defaultValue ->
+            extract Color.decoder storyID name state
+                |> Maybe.withDefault defaultValue
+                |> viewKnobColor storyID name
                 |> viewKnobRow name
 
 

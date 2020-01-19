@@ -39,7 +39,7 @@ main : Bulletproof.Program
 main =
     Bulletproof.program
         [ Bulletproof.storyOf "Counter positive"
-            (\count fl str bg color rangeint rangefloat ->
+            (\count fl str bg color rangeint rangefloat clr ->
                 div
                     [ style "background" (colorToHex bg)
                     , style "color" (colorToHex color)
@@ -51,6 +51,12 @@ main =
                     , br [] []
                     , text ("rangeint: " ++ String.fromInt rangeint)
                     , text ("rangefloat: " ++ String.fromFloat rangefloat)
+                    , div
+                        [ style "width" "100px"
+                        , style "height" "100px"
+                        , style "background" clr.hex
+                        ]
+                        []
                     ]
             )
             |> Bulletproof.Knob.int "count" 10
@@ -67,6 +73,7 @@ main =
                 ]
             |> Bulletproof.Knob.intRange "range int" 10 { min = 0, max = 100, step = 5 }
             |> Bulletproof.Knob.floatRange "range float" 1.5 { min = 0.5, max = 10.5, step = 0.5 }
+            |> Bulletproof.Knob.color "Color" "#cce"
 
         --
         , Counter.view 0

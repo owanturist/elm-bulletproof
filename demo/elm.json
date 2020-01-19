@@ -12,7 +12,8 @@
             "elm/html": "1.0.0",
             "elm/json": "1.1.3",
             "elm/url": "1.0.0",
-            "owanturist/elm-avl-dict": "2.0.0"
+            "owanturist/elm-avl-dict": "2.0.0",
+            "rtfeldman/elm-hex": "1.0.0"
         },
         "indirect": {
             "elm/time": "1.0.0",
