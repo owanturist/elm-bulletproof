@@ -65,8 +65,8 @@ main =
                 [ ( "Black", Black )
                 , ( "White", White )
                 ]
-            |> Bulletproof.Knob.rangeInt "range int" 10 { min = 0, max = 100, step = 5 }
-            |> Bulletproof.Knob.rangeFloat "range float" 1.123 { min = 0.5, max = 10.5, step = 0.5 }
+            |> Bulletproof.Knob.intRange "range int" 10 { min = 0, max = 100, step = 5 }
+            |> Bulletproof.Knob.floatRange "range float" 1.5 { min = 0.5, max = 10.5, step = 0.5 }
 
         --
         , Counter.view 0

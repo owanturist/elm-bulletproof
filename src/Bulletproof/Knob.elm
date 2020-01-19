@@ -1,4 +1,4 @@
-module Bulletproof.Knob exposing (float, int, radio, rangeFloat, rangeInt, select, string)
+module Bulletproof.Knob exposing (float, floatRange, int, intRange, radio, select, string)
 
 import Internal exposing (Story(..))
 import Internal.Knob exposing (Choice(..), Knob(..), Limits, extract)
@@ -73,14 +73,14 @@ makeRange knob decoder name defaultValue limits (Story story) =
         }
 
 
-rangeInt : String -> Int -> { min : Int, max : Int, step : Int } -> Story (Int -> a) -> Story a
-rangeInt =
-    makeRange RangeInt Decode.int
+intRange : String -> Int -> { min : Int, max : Int, step : Int } -> Story (Int -> a) -> Story a
+intRange =
+    makeRange IntRange Decode.int
 
 
-rangeFloat : String -> Float -> { min : Float, max : Float, step : Float } -> Story (Float -> a) -> Story a
-rangeFloat =
-    makeRange RangeFloat Decode.float
+floatRange : String -> Float -> { min : Float, max : Float, step : Float } -> Story (Float -> a) -> Story a
+floatRange =
+    makeRange FloatRange Decode.float
 
 
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a

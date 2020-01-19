@@ -24,8 +24,8 @@ type Knob
     | Int Int
     | Float Float
     | Choice Choice (List String)
-    | RangeInt Int (Limits Int)
-    | RangeFloat Float (Limits Float)
+    | IntRange Int (Limits Int)
+    | FloatRange Float (Limits Float)
 
 
 type alias Limits x =
@@ -194,11 +194,14 @@ viewKnobSelect storyID name options current =
         )
 
 
-viewKnobRange : (String -> msg) -> (number -> String) -> String -> String -> Limits number -> number -> Html msg
-viewKnobRange msg numberToString storyID name limits number =
+viewKnobRange : (String -> msg) -> (number -> String) -> String -> Limits number -> number -> Html msg
+viewKnobRange msg numberToString name limits number =
     input
-        [ Html.Attributes.type_ "number"
+        [ Html.Attributes.type_ "range"
         , Html.Attributes.name name
+        , Html.Attributes.min (numberToString limits.min)
+        , Html.Attributes.max (numberToString limits.max)
+        , Html.Attributes.step (numberToString limits.step)
         , Html.Attributes.value (numberToString number)
         , Html.Events.onInput msg
         ]
@@ -266,16 +269,16 @@ viewKnob storyID state ( name, knob ) =
                 |> viewKnobSelect storyID name (firstOption :: restOptions)
                 |> viewKnobRow name
 
-        RangeInt defaultValue limits ->
+        IntRange defaultValue limits ->
             extract Decode.int storyID name state
                 |> Maybe.withDefault defaultValue
-                |> viewKnobRange String.fromInt storyID name limits
+                |> viewKnobRange (UpdateInt storyID name) String.fromInt name limits
                 |> viewKnobRow name
 
-        RangeFloat defaultValue limits ->
+        FloatRange defaultValue limits ->
             extract Decode.float storyID name state
                 |> Maybe.withDefault defaultValue
-                |> viewKnobRange String.fromFloat storyID name limits
+                |> viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits
                 |> viewKnobRow name
 
 
