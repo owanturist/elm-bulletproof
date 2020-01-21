@@ -12,7 +12,7 @@ import Browser.Navigation
 import Html exposing (Html, div, hr, nav, text)
 import Html.Attributes exposing (style)
 import Internal exposing (Addons, initialAddons)
-import Internal.Knob as Knob
+import Knob
 import Link exposing (link)
 import Router
 import Url exposing (Url)

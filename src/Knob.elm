@@ -1,4 +1,4 @@
-module Internal.Knob exposing
+module Knob exposing
     ( Choice(..)
     , Knob(..)
     , Limits

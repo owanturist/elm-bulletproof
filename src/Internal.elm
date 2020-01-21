@@ -1,16 +1,16 @@
 module Internal exposing (Addons, Story(..), StoryPayload, initialAddons)
 
-import Internal.Knob exposing (Knob)
+import Knob exposing (Knob)
 
 
 type alias Addons =
-    { knobs : Internal.Knob.State
+    { knobs : Knob.State
     }
 
 
 initialAddons : Addons
 initialAddons =
-    { knobs = Internal.Knob.initial
+    { knobs = Knob.initial
     }
 
 

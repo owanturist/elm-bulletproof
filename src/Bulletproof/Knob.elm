@@ -22,7 +22,7 @@ import Color
 import Date
 import File
 import Internal exposing (Story(..))
-import Internal.Knob exposing (Choice(..), Knob(..), Value(..), extract)
+import Knob exposing (Choice(..), Knob(..), Value(..), extract)
 
 
 type alias File =
@@ -30,7 +30,7 @@ type alias File =
 
 
 type alias Limits number =
-    Internal.Knob.Limits number
+    Knob.Limits number
 
 
 type alias Color =
