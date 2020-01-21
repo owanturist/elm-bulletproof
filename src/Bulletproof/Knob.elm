@@ -24,7 +24,7 @@ import Color
 import Date
 import File
 import Internal exposing (Story(..))
-import Knob exposing (Choice(..), Knob(..), NumberPayload, Value(..), extract)
+import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
 
 
 type alias File =
@@ -108,34 +108,38 @@ step =
     Step
 
 
-propertyToNumberPayload : Property number -> NumberPayload number -> NumberPayload number
-propertyToNumberPayload property payload =
+propertyToNumberPayload : Property number -> ( Bool, Limits number ) -> ( Bool, Limits number )
+propertyToNumberPayload property ( range_, limits ) =
     case property of
         Range x ->
-            { payload | range = x }
+            ( x, limits )
 
         Min num ->
-            { payload | min = Just num }
+            ( range_, { limits | min = Just num } )
 
         Max num ->
-            { payload | max = Just num }
+            ( range_, { limits | max = Just num } )
 
         Step num ->
-            { payload | step = Just num }
+            ( range_, { limits | step = Just num } )
 
 
-propertiesToNumberPayload : List (Property number) -> NumberPayload number
+propertiesToNumberPayload : List (Property number) -> ( Bool, Limits number )
 propertiesToNumberPayload =
     List.foldl
         propertyToNumberPayload
-        (NumberPayload False Nothing Nothing Nothing)
+        ( False, Limits Nothing Nothing Nothing )
 
 
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties (Story story) =
+    let
+        ( range_, limits ) =
+            propertiesToNumberPayload properties
+    in
     Story
         { title = story.title
-        , knobs = ( name, Int defaultValue (propertiesToNumberPayload properties) ) :: story.knobs
+        , knobs = ( name, Int range_ defaultValue limits ) :: story.knobs
         , view =
             Result.map
                 (\view state ->
@@ -152,9 +156,13 @@ int name defaultValue properties (Story story) =
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties (Story story) =
+    let
+        ( range_, limits ) =
+            propertiesToNumberPayload properties
+    in
     Story
         { title = story.title
-        , knobs = ( name, Float defaultValue (propertiesToNumberPayload properties) ) :: story.knobs
+        , knobs = ( name, Float range_ defaultValue limits ) :: story.knobs
         , view =
             Result.map
                 (\view state ->

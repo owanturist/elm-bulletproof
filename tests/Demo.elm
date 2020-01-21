@@ -8,6 +8,7 @@ import Html.Attributes exposing (style)
 import Incrementor
 import Story.Checkbox
 import Story.Link
+import Story.Range
 
 
 type Color
@@ -42,6 +43,7 @@ main =
     Bulletproof.program
         [ Story.Link.story
         , Story.Checkbox.story
+        , Story.Range.story
         , Bulletproof.storyOf "Counter positive"
             (\show count fl str bg color rangeint rangefloat clr date time files ->
                 div
@@ -107,7 +109,7 @@ main =
             |> Bulletproof.Knob.float "range float"
                 1.5
                 [ Bulletproof.Knob.range True
-                , Bulletproof.Knob.step 0.1
+                , Bulletproof.Knob.step 0.5
                 ]
             |> Bulletproof.Knob.color "Color" "#cce"
             |> Bulletproof.Knob.date "Date" "10-2-2011"

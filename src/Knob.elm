@@ -1,8 +1,8 @@
 module Knob exposing
     ( Choice(..)
     , Knob(..)
+    , Limits
     , Msg
-    , NumberPayload
     , State
     , Value(..)
     , extract
@@ -21,15 +21,15 @@ import Html.Attributes
 import Html.Events
 import Html.Keyed
 import Json.Decode as Decode exposing (Decoder)
+import Range exposing (range)
 import Time
-import Utils exposing (ifelse)
 
 
 type Knob
     = Bool Bool
     | String String
-    | Int Int (NumberPayload Int)
-    | Float Float (NumberPayload Float)
+    | Int Bool Int (Limits Int)
+    | Float Bool Float (Limits Float)
     | Choice Choice (List String)
     | Color (Maybe Color)
     | Date (Maybe Time.Posix)
@@ -37,9 +37,8 @@ type Knob
     | Files
 
 
-type alias NumberPayload x =
-    { range : Bool
-    , min : Maybe x
+type alias Limits x =
+    { min : Maybe x
     , max : Maybe x
     , step : Maybe x
     }
@@ -198,11 +197,11 @@ viewKnobNumber :
     -> String
     -> String
     -> Maybe number
-    -> NumberPayload number
+    -> Limits number
     -> Html msg
 viewKnobNumber msg numberToString storyID name number payload =
     input
-        (Html.Attributes.type_ (ifelse payload.range "range" "number")
+        (Html.Attributes.type_ "number"
             :: Html.Attributes.name name
             :: Html.Attributes.value (Maybe.withDefault "" (Maybe.map numberToString number))
             :: Html.Events.onInput (msg storyID name)
@@ -339,7 +338,7 @@ viewKnob storyID state name knob =
                 _ ->
                     viewKnobString storyID name defaultValue
 
-        Int defaultValue payload ->
+        Int False defaultValue payload ->
             case extract storyID name state of
                 Just (IntValue value) ->
                     viewKnobNumber UpdateInt String.fromInt storyID name value payload
@@ -347,13 +346,51 @@ viewKnob storyID state name knob =
                 _ ->
                     viewKnobNumber UpdateInt String.fromInt storyID name (Just defaultValue) payload
 
-        Float defaultValue payload ->
+        Int True defaultValue payload ->
+            let
+                value =
+                    case extract storyID name state of
+                        Just (IntValue (Just int)) ->
+                            int
+
+                        _ ->
+                            defaultValue
+            in
+            range (UpdateInt storyID name)
+                name
+                String.fromInt
+                { min = Maybe.withDefault 0 payload.min
+                , max = Maybe.withDefault 100 payload.max
+                , step = Maybe.withDefault 1 payload.step
+                , value = value
+                }
+
+        Float False defaultValue payload ->
             case extract storyID name state of
                 Just (FloatValue value) ->
                     viewKnobNumber UpdateFloat String.fromFloat storyID name value payload
 
                 _ ->
                     viewKnobNumber UpdateFloat String.fromFloat storyID name (Just defaultValue) payload
+
+        Float True defaultValue payload ->
+            let
+                value =
+                    case extract storyID name state of
+                        Just (FloatValue (Just float)) ->
+                            float
+
+                        _ ->
+                            defaultValue
+            in
+            range (UpdateFloat storyID name)
+                name
+                String.fromFloat
+                { min = Maybe.withDefault 0 payload.min
+                , max = Maybe.withDefault 100 payload.max
+                , step = Maybe.withDefault 1 payload.step
+                , value = value
+                }
 
         Choice _ [] ->
             text "No Options available"
