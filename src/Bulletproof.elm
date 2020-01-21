@@ -2,7 +2,7 @@ module Bulletproof exposing
     ( Program
     , Renderer
     , Story
-    , componentOf
+    , groupOf
     , html
     , program
     , storyOf
@@ -47,7 +47,7 @@ extractFirstStoryID stories =
                     Story.Story payload ->
                         Just payload.title
 
-                    Story.Component _ substories ->
+                    Story.Group _ substories ->
                         extractFirstStoryID substories
 
                     Story.Empty ->
@@ -150,7 +150,7 @@ viewItem currentID story =
                     ]
                 ]
 
-        Story.Component title stories ->
+        Story.Group title stories ->
             div
                 []
                 [ text title
@@ -212,7 +212,7 @@ findCurrentStory currentStoryID stories =
                         else
                             Nothing
 
-                    Story.Component _ substories ->
+                    Story.Group _ substories ->
                         findCurrentStory currentStoryID substories
 
                     Story.Empty ->
@@ -266,9 +266,9 @@ storyOf title view_ =
         }
 
 
-componentOf : String -> List Story -> Story
-componentOf title stories =
-    Story.Component title stories
+groupOf : String -> List Story -> Story
+groupOf title stories =
+    Story.Group title stories
 
 
 type alias Program =

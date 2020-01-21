@@ -6,7 +6,7 @@ import Knob exposing (Knob)
 
 type Story view
     = Story (Payload view)
-    | Component String (List (Story view))
+    | Group String (List (Story view))
     | Empty
 
 

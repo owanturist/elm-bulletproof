@@ -7,7 +7,7 @@ import Range exposing (range)
 
 story : Bulletproof.Story
 story =
-    Bulletproof.componentOf "Range"
+    Bulletproof.groupOf "Range"
         [ Bulletproof.storyOf "integer"
             (\min max step value ->
                 range (always ())
@@ -42,4 +42,7 @@ story =
             |> Bulletproof.Knob.float "Max" 5 []
             |> Bulletproof.Knob.float "Step" 0.05 []
             |> Bulletproof.Knob.float "Value" 3 []
+
+        --
+        , Bulletproof.groupOf "oo" []
         ]
