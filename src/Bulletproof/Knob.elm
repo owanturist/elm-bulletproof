@@ -23,8 +23,8 @@ module Bulletproof.Knob exposing
 import Color
 import Date
 import File
-import Internal exposing (Story(..))
 import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
+import Story exposing (Story(..))
 
 
 type alias File =

@@ -7,14 +7,15 @@ module Bulletproof exposing
     , storyOf
     )
 
+import Addons exposing (Addons)
 import Browser
 import Browser.Navigation
 import Html exposing (Html, div, hr, nav, text)
 import Html.Attributes exposing (style)
-import Internal exposing (Addons, initialAddons)
 import Knob
 import Link exposing (link)
 import Router
+import Story exposing (Story)
 import Url exposing (Url)
 import Utils exposing (ifelse)
 
@@ -49,7 +50,7 @@ init firstStoryID () url navigationKey =
                     ( Just storyID, Cmd.none )
     in
     ( Model
-        initialAddons
+        Addons.initial
         { navigationKey = navigationKey
         , current = initialStoryID
         }
@@ -113,8 +114,8 @@ subscriptions _ =
 -- V I E W
 
 
-viewItem : Maybe String -> Internal.Story a -> Html Msg
-viewItem currentID (Internal.Story story) =
+viewItem : Maybe String -> Story.Story a -> Html Msg
+viewItem currentID (Story.Story story) =
     div
         [ style "background" (ifelse (currentID == Just story.title) "#ccc" "#fff")
         ]
@@ -125,7 +126,7 @@ viewItem currentID (Internal.Story story) =
         ]
 
 
-viewNavigation : Maybe String -> List (Internal.Story a) -> Html Msg
+viewNavigation : Maybe String -> List (Story.Story a) -> Html Msg
 viewNavigation current =
     nav
         [ style "float" "left"
@@ -134,8 +135,8 @@ viewNavigation current =
         << List.map (viewItem current)
 
 
-viewStory : Addons -> Internal.Story Renderer -> Html Msg
-viewStory addons (Internal.Story story) =
+viewStory : Addons -> Story.Story Renderer -> Html Msg
+viewStory addons (Story.Story story) =
     div
         [ style "float" "left"
         , style "width" "70%"
@@ -169,7 +170,7 @@ view stories (Model addons state) =
                 viewEmpty
 
             Just current ->
-                case List.filter (\(Internal.Story story) -> story.title == current) stories of
+                case List.filter (\(Story.Story story) -> story.title == current) stories of
                     [ currentStoryID ] ->
                         viewStory addons currentStoryID
 
@@ -192,12 +193,12 @@ html layout =
 
 
 type alias Story =
-    Internal.Story Renderer
+    Story.Story Renderer
 
 
-storyOf : String -> view -> Internal.Story view
+storyOf : String -> view -> Story.Story view
 storyOf title view_ =
-    Internal.Story
+    Story.Story
         { title = title
         , knobs = []
         , view = Ok (\_ -> view_)
@@ -216,7 +217,7 @@ program stories =
                 [] ->
                     Nothing
 
-                (Internal.Story story) :: _ ->
+                (Story.Story story) :: _ ->
                     Just story.title
     in
     Browser.application
