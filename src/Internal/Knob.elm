@@ -12,13 +12,13 @@ module Internal.Knob exposing
     )
 
 import AVL.Dict as Dict exposing (Dict)
+import Color exposing (Color)
+import Date exposing (Date, Time)
 import File exposing (File)
 import Html exposing (Html, div, input, label, option, text, textarea)
 import Html.Attributes
 import Html.Events
 import Html.Keyed
-import Internal.Color as Color exposing (Color)
-import Internal.Date as Date exposing (Date, Time)
 import Json.Decode as Decode exposing (Decoder)
 import Time
 

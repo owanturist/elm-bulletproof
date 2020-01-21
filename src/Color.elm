@@ -1,4 +1,4 @@
-module Internal.Color exposing (Color, fromString)
+module Color exposing (Color, fromString)
 
 import Hex
 

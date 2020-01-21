@@ -39,7 +39,7 @@ urlParser : Parser (Route -> a) a
 urlParser =
     Url.Parser.oneOf
         [ Url.Parser.map ToHome Url.Parser.top
-        , Url.Parser.map ToStory Url.Parser.string
+        , Url.Parser.map (Maybe.withDefault ToHome << Maybe.map ToStory << Url.percentDecode) Url.Parser.string
         ]
 
 
@@ -210,11 +210,11 @@ view stories (Model addons state) =
 
             Just current ->
                 case List.filter (\(Internal.Story story) -> story.title == current) stories of
-                    [] ->
-                        viewEmpty
+                    [ currentStoryID ] ->
+                        viewStory addons currentStoryID
 
-                    currentStory :: _ ->
-                        viewStory addons currentStory
+                    _ ->
+                        viewEmpty
         ]
 
 

@@ -1,4 +1,4 @@
-module Internal.Date exposing
+module Date exposing
     ( Date
     , Time
     , dateFromPosix

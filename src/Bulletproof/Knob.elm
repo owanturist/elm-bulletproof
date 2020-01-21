@@ -19,10 +19,10 @@ module Bulletproof.Knob exposing
     , time
     )
 
+import Color
+import Date
 import File
 import Internal exposing (Story(..))
-import Internal.Color as Color
-import Internal.Date as Date
 import Internal.Knob exposing (Choice(..), Knob(..), Value(..), extract)
 
 
