@@ -6,6 +6,7 @@ import Counter
 import Html exposing (br, div, text)
 import Html.Attributes exposing (style)
 import Incrementor
+import Story.Checkbox
 import Story.Link
 
 
@@ -40,6 +41,7 @@ main : Bulletproof.Program
 main =
     Bulletproof.program
         [ Story.Link.story
+        , Story.Checkbox.story
         , Bulletproof.storyOf "Counter positive"
             (\show count fl str bg color rangeint rangefloat clr date time files ->
                 div

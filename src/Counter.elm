@@ -13,6 +13,10 @@ type alias Model =
     Int
 
 
+foo =
+    "String"
+
+
 initial : Model
 initial =
     0

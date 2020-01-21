@@ -12,6 +12,7 @@ module Internal.Knob exposing
     )
 
 import AVL.Dict as Dict exposing (Dict)
+import Checkbox exposing (checkbox)
 import Color exposing (Color)
 import Date exposing (Date, Time)
 import File exposing (File)
@@ -174,13 +175,11 @@ update msg state =
 
 viewKnobBool : String -> String -> Bool -> Html Msg
 viewKnobBool storyID name checked =
-    input
-        [ Html.Attributes.type_ "checkbox"
-        , Html.Attributes.name name
+    checkbox
+        [ Html.Attributes.name name
         , Html.Attributes.checked checked
         , Html.Events.onCheck (UpdateBool storyID name)
         ]
-        []
 
 
 viewKnobString : String -> String -> String -> Html Msg
