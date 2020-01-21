@@ -1,10 +1,8 @@
-module Main exposing (main)
+module Demo exposing (main)
 
-import Browser
 import Bulletproof
 import Bulletproof.Knob
 import Counter
-import File
 import Html exposing (br, div, text)
 import Html.Attributes exposing (style)
 import Incrementor
