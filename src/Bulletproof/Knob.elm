@@ -12,7 +12,6 @@ module Bulletproof.Knob exposing
     , floatRange
     , int
     , intRange
-    , int_
     , radio
     , select
     , string
@@ -292,22 +291,3 @@ files name (Story story) =
                 )
                 story.view
         }
-
-
-int_ : String -> Int -> view -> Story view -> Story (Int -> view)
-int_ name defaultValue view (Story story) =
-    -- Story
-    --     { title = story.title
-    --     , knobs = ( name, Int defaultValue ) :: story.knobs
-    --     , view =
-    --         Result.map
-    --             (\view state ->
-    --                 case extract story.title name state.knobs of
-    --                     Just (IntValue (Just value)) ->
-    --                         view state value
-    --                     _ ->
-    --                         view state defaultValue
-    --             )
-    --             story.view
-    --     }
-    Debug.todo ""

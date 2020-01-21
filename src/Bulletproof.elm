@@ -12,9 +12,8 @@ import Html exposing (Html, a, div, hr, nav, text)
 import Html.Attributes exposing (style)
 import Internal exposing (Addons, initialAddons)
 import Internal.Knob as Knob
+import Router
 import Url exposing (Url)
-import Url.Builder
-import Url.Parser exposing (Parser)
 
 
 ifelse : Bool -> x -> x -> x
@@ -24,38 +23,6 @@ ifelse bool onTrue onFalse =
 
     else
         onFalse
-
-
-
--- R O U T E R
-
-
-type Route
-    = ToHome
-    | ToStory String
-
-
-urlParser : Parser (Route -> a) a
-urlParser =
-    Url.Parser.oneOf
-        [ Url.Parser.map ToHome Url.Parser.top
-        , Url.Parser.map (Maybe.withDefault ToHome << Maybe.map ToStory << Url.percentDecode) Url.Parser.string
-        ]
-
-
-parseUrl : Url -> Route
-parseUrl =
-    Maybe.withDefault ToHome << Url.Parser.parse urlParser
-
-
-toPath : Route -> String
-toPath route =
-    case route of
-        ToHome ->
-            Url.Builder.absolute [] []
-
-        ToStory storyID ->
-            Url.Builder.absolute [ storyID ] []
 
 
 
@@ -75,20 +42,24 @@ type Model
 init : Maybe String -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init firstStoryID () url navigationKey =
     let
-        initialCurrent =
-            case parseUrl url of
-                ToHome ->
-                    firstStoryID
+        ( initialStoryID, initialCmd ) =
+            case Router.parse url of
+                Router.ToHome ->
+                    ( firstStoryID
+                    , firstStoryID
+                        |> Maybe.map (Router.replace navigationKey << Router.ToStory)
+                        |> Maybe.withDefault Cmd.none
+                    )
 
-                ToStory storyID ->
-                    Just storyID
+                Router.ToStory storyID ->
+                    ( Just storyID, Cmd.none )
     in
     ( Model
         initialAddons
         { navigationKey = navigationKey
-        , current = initialCurrent
+        , current = initialStoryID
         }
-    , Cmd.none
+    , initialCmd
     )
 
 
@@ -117,11 +88,11 @@ update msg (Model addons state) =
             )
 
         UrlChanged url ->
-            ( case parseUrl url of
-                ToHome ->
+            ( case Router.parse url of
+                Router.ToHome ->
                     Model addons { state | current = Nothing }
 
-                ToStory storyID ->
+                Router.ToStory storyID ->
                     Model addons { state | current = Just storyID }
             , Cmd.none
             )
@@ -148,9 +119,9 @@ subscriptions _ =
 -- V I E W
 
 
-viewLink : Route -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+viewLink : Router.Route -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 viewLink route attrs children =
-    a (Html.Attributes.href (toPath route) :: attrs) children
+    a (Html.Attributes.href (Router.toString route) :: attrs) children
 
 
 viewItem : Maybe String -> Internal.Story a -> Html Msg
@@ -158,7 +129,7 @@ viewItem currentID (Internal.Story story) =
     div
         [ style "background" (ifelse (currentID == Just story.title) "#ccc" "fff")
         ]
-        [ viewLink (ToStory story.title)
+        [ viewLink (Router.ToStory story.title)
             []
             [ text story.title
             ]
