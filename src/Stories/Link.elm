@@ -1,4 +1,4 @@
-module Story.Link exposing (story)
+module Stories.Link exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob

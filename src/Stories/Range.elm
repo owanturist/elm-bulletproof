@@ -1,4 +1,4 @@
-module Story.Range exposing (story)
+module Stories.Range exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob

@@ -1,4 +1,4 @@
-module Story.Checkbox exposing (story)
+module Stories.Checkbox exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
