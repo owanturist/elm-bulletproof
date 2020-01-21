@@ -25,6 +25,21 @@ viewBorder =
         ]
 
 
+trailingZeros : String -> String -> String
+trailingZeros step value =
+    case String.split "." step of
+        [ _, rightStep ] ->
+            case String.split "." value of
+                [ leftValue, rightValue ] ->
+                    leftValue ++ "." ++ rightValue ++ String.repeat (max 0 (String.length rightStep - String.length rightValue)) "0"
+
+                _ ->
+                    value ++ "." ++ String.repeat (String.length rightStep) "0"
+
+        _ ->
+            value
+
+
 range :
     (String -> msg)
     -> String
@@ -38,11 +53,14 @@ range :
     -> Html msg
 range msg name numToString { min, max, step, value } =
     let
-        val =
-            clamp min max value
+        ( minStr, maxStr, stepStr ) =
+            ( numToString min, numToString max, numToString step )
+
+        valueStr =
+            numToString (clamp min max value)
     in
     viewContainer
-        [ viewBorder [ text (numToString min) ]
+        [ viewBorder [ text (trailingZeros stepStr minStr) ]
         , input
             [ style "box-sizing" "border-box"
             , style "padding" "5px"
@@ -58,14 +76,14 @@ range msg name numToString { min, max, step, value } =
             --
             , Html.Attributes.type_ "range"
             , Html.Attributes.name name
-            , Html.Attributes.min (numToString min)
-            , Html.Attributes.max (numToString max)
-            , Html.Attributes.step (numToString step)
-            , Html.Attributes.value (numToString val)
+            , Html.Attributes.min minStr
+            , Html.Attributes.max maxStr
+            , Html.Attributes.step stepStr
+            , Html.Attributes.value valueStr
 
             --
             , Html.Events.onInput msg
             ]
             []
-        , viewBorder [ text (numToString val ++ " / " ++ numToString max) ]
+        , viewBorder [ text (trailingZeros stepStr valueStr ++ " / " ++ trailingZeros stepStr maxStr) ]
         ]

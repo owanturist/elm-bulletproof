@@ -20,6 +20,6 @@ story =
                 |> Bulletproof.html
         )
         |> Bulletproof.Knob.int "Min" 10 []
-        |> Bulletproof.Knob.int "Max" 50 []
+        |> Bulletproof.Knob.int "Max" 20 []
         |> Bulletproof.Knob.int "Step" 1 []
-        |> Bulletproof.Knob.int "Value" 20 []
+        |> Bulletproof.Knob.int "Value" 15 []
