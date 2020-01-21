@@ -6,6 +6,7 @@ import Counter
 import Html exposing (br, div, text)
 import Html.Attributes exposing (style)
 import Incrementor
+import Story.Link
 
 
 type Color
@@ -38,7 +39,8 @@ colorToHex color =
 main : Bulletproof.Program
 main =
     Bulletproof.program
-        [ Bulletproof.storyOf "Counter positive"
+        [ Story.Link.story
+        , Bulletproof.storyOf "Counter positive"
             (\show count fl str bg color rangeint rangefloat clr date time files ->
                 div
                     [ style "background" (colorToHex bg)

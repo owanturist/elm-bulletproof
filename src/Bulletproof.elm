@@ -1,6 +1,7 @@
 module Bulletproof exposing
     ( Program
     , Renderer
+    , Story
     , html
     , program
     , storyOf
@@ -8,10 +9,11 @@ module Bulletproof exposing
 
 import Browser
 import Browser.Navigation
-import Html exposing (Html, a, div, hr, nav, text)
+import Html exposing (Html, div, hr, nav, text)
 import Html.Attributes exposing (style)
 import Internal exposing (Addons, initialAddons)
 import Internal.Knob as Knob
+import Link exposing (link)
 import Router
 import Url exposing (Url)
 
@@ -119,24 +121,19 @@ subscriptions _ =
 -- V I E W
 
 
-viewLink : Router.Route -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-viewLink route attrs children =
-    a (Html.Attributes.href (Router.toString route) :: attrs) children
-
-
 viewItem : Maybe String -> Internal.Story a -> Html Msg
 viewItem currentID (Internal.Story story) =
     div
-        [ style "background" (ifelse (currentID == Just story.title) "#ccc" "fff")
+        [ style "background" (ifelse (currentID == Just story.title) "#ccc" "#fff")
         ]
-        [ viewLink (Router.ToStory story.title)
+        [ link (Router.ToStory story.title)
             []
             [ text story.title
             ]
         ]
 
 
-viewNavigation : Maybe String -> List (Story a) -> Html Msg
+viewNavigation : Maybe String -> List (Internal.Story a) -> Html Msg
 viewNavigation current =
     nav
         [ style "float" "left"
@@ -171,7 +168,7 @@ viewEmpty =
     text "Nothing to show"
 
 
-view : List (Story Renderer) -> Model -> Browser.Document Msg
+view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
         [ viewNavigation state.current stories
@@ -202,11 +199,11 @@ html layout =
     Renderer (Html.map (always StoryMsg) layout)
 
 
-type alias Story view =
-    Internal.Story view
+type alias Story =
+    Internal.Story Renderer
 
 
-storyOf : String -> view -> Story view
+storyOf : String -> view -> Internal.Story view
 storyOf title view_ =
     Internal.Story
         { title = title
@@ -219,7 +216,7 @@ type alias Program =
     Platform.Program () Model Msg
 
 
-program : List (Story Renderer) -> Program
+program : List Story -> Program
 program stories =
     let
         firstStoryID =
