@@ -1,5 +1,7 @@
 module Bulletproof exposing
     ( Program
+    , Renderer
+    , html
     , program
     , storyOf
     )
@@ -172,7 +174,7 @@ viewNavigation current =
         << List.map (viewItem current)
 
 
-viewStory : Addons -> Internal.Story (Html msg) -> Html Msg
+viewStory : Addons -> Internal.Story Renderer -> Html Msg
 viewStory addons (Internal.Story story) =
     div
         [ style "float" "left"
@@ -182,8 +184,12 @@ viewStory addons (Internal.Story story) =
             Err error ->
                 text error
 
-            Ok storyView ->
-                Html.map (always StoryMsg) (storyView addons)
+            Ok renderer ->
+                let
+                    (Renderer layout) =
+                        renderer addons
+                in
+                layout
         , hr [] []
         , Html.map KnobMsg (Knob.view story.title story.knobs addons.knobs)
         ]
@@ -194,7 +200,7 @@ viewEmpty =
     text "Nothing to show"
 
 
-view : List (Story (Html msg)) -> Model -> Browser.Document Msg
+view : List (Story Renderer) -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
         [ viewNavigation state.current stories
@@ -216,6 +222,15 @@ view stories (Model addons state) =
 -- A P I
 
 
+type Renderer
+    = Renderer (Html Msg)
+
+
+html : Html msg -> Renderer
+html layout =
+    Renderer (Html.map (always StoryMsg) layout)
+
+
 type alias Story view =
     Internal.Story view
 
@@ -233,7 +248,7 @@ type alias Program =
     Platform.Program () Model Msg
 
 
-program : List (Story (Html Msg)) -> Program
+program : List (Story Renderer) -> Program
 program stories =
     let
         firstStoryID =

@@ -78,6 +78,7 @@ main =
                     , br [] []
                     , text ("Files count :" ++ String.fromInt (List.length files))
                     ]
+                    |> Bulletproof.html
             )
             |> Bulletproof.Knob.bool "Bool" True
             |> Bulletproof.Knob.int "Int" 10
@@ -100,6 +101,8 @@ main =
             |> Bulletproof.Knob.files "File"
 
         --
-        , Incrementor.view 0
-            |> Bulletproof.storyOf "Incrementor initial"
+        , Bulletproof.storyOf "Incrementor initial"
+            (Incrementor.view 0
+                |> Bulletproof.html
+            )
         ]

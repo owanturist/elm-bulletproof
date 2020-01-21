@@ -1,6 +1,6 @@
 module Incrementor exposing (Model, Msg, initial, update, view)
 
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, text)
 import Html.Attributes
 import Html.Events
 
