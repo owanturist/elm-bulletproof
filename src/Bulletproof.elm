@@ -2,6 +2,7 @@ module Bulletproof exposing
     ( Program
     , Renderer
     , Story
+    , componentOf
     , html
     , program
     , storyOf
@@ -34,14 +35,36 @@ type Model
     = Model Addons State
 
 
-init : Maybe String -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init firstStoryID () url navigationKey =
+extractFirstStoryID : List Story -> Maybe String
+extractFirstStoryID stories =
+    List.foldl
+        (\story result ->
+            if result /= Nothing then
+                result
+
+            else
+                case story of
+                    Story.Story payload ->
+                        Just payload.title
+
+                    Story.Component _ substories ->
+                        extractFirstStoryID substories
+
+                    Story.Empty ->
+                        Nothing
+        )
+        Nothing
+        stories
+
+
+init : List Story -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init stories () url navigationKey =
     let
         ( initialStoryID, initialCmd ) =
             case Router.parse url of
                 Router.ToHome ->
-                    ( firstStoryID
-                    , firstStoryID
+                    ( Nothing
+                    , extractFirstStoryID stories
                         |> Maybe.map (Router.replace navigationKey << Router.ToStory)
                         |> Maybe.withDefault Cmd.none
                     )
@@ -115,15 +138,27 @@ subscriptions _ =
 
 
 viewItem : Maybe String -> Story.Story a -> Html Msg
-viewItem currentID (Story.Story story) =
-    div
-        [ style "background" (ifelse (currentID == Just story.title) "#ccc" "#fff")
-        ]
-        [ link (Router.ToStory story.title)
-            []
-            [ text story.title
-            ]
-        ]
+viewItem currentID story =
+    case story of
+        Story.Story { title } ->
+            div
+                [ style "background" (ifelse (currentID == Just title) "#ccc" "#fff")
+                ]
+                [ link (Router.ToStory title)
+                    []
+                    [ text title
+                    ]
+                ]
+
+        Story.Component title stories ->
+            div
+                []
+                [ text title
+                , div [] (List.map (viewItem currentID) stories)
+                ]
+
+        Story.Empty ->
+            text ""
 
 
 viewNavigation : Maybe String -> List (Story.Story a) -> Html Msg
@@ -135,13 +170,13 @@ viewNavigation current =
         << List.map (viewItem current)
 
 
-viewStory : Addons -> Story.Story Renderer -> Html Msg
-viewStory addons (Story.Story story) =
+viewStory : Addons -> Story.Payload Renderer -> Html Msg
+viewStory addons payload =
     div
         [ style "float" "left"
         , style "width" "70%"
         ]
-        [ case story.view of
+        [ case payload.view of
             Err error ->
                 text error
 
@@ -152,13 +187,39 @@ viewStory addons (Story.Story story) =
                 in
                 layout
         , hr [] []
-        , Html.map KnobMsg (Knob.view story.title story.knobs addons.knobs)
+        , Html.map KnobMsg (Knob.view payload.title payload.knobs addons.knobs)
         ]
 
 
 viewEmpty : Html msg
 viewEmpty =
     text "Nothing to show"
+
+
+findCurrentStory : String -> List Story -> Maybe (Story.Payload Renderer)
+findCurrentStory currentStoryID stories =
+    List.foldl
+        (\story result ->
+            if result /= Nothing then
+                result
+
+            else
+                case story of
+                    Story.Story payload ->
+                        if currentStoryID == payload.title then
+                            Just payload
+
+                        else
+                            Nothing
+
+                    Story.Component _ substories ->
+                        findCurrentStory currentStoryID substories
+
+                    Story.Empty ->
+                        Nothing
+        )
+        Nothing
+        stories
 
 
 view : List Story -> Model -> Browser.Document Msg
@@ -169,13 +230,13 @@ view stories (Model addons state) =
             Nothing ->
                 viewEmpty
 
-            Just current ->
-                case List.filter (\(Story.Story story) -> story.title == current) stories of
-                    [ currentStoryID ] ->
-                        viewStory addons currentStoryID
-
-                    _ ->
+            Just currentStoryID ->
+                case findCurrentStory currentStoryID stories of
+                    Nothing ->
                         viewEmpty
+
+                    Just payload ->
+                        viewStory addons payload
         ]
 
 
@@ -205,23 +266,19 @@ storyOf title view_ =
         }
 
 
+componentOf : String -> List Story -> Story
+componentOf title stories =
+    Story.Component title stories
+
+
 type alias Program =
     Platform.Program () Model Msg
 
 
 program : List Story -> Program
 program stories =
-    let
-        firstStoryID =
-            case stories of
-                [] ->
-                    Nothing
-
-                (Story.Story story) :: _ ->
-                    Just story.title
-    in
     Browser.application
-        { init = init firstStoryID
+        { init = init stories
         , update = update
         , view = view stories
         , subscriptions = subscriptions
