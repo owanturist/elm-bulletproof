@@ -83,8 +83,13 @@ main =
                     |> Bulletproof.html
             )
             |> Bulletproof.Knob.bool "Bool" True
-            |> Bulletproof.Knob.int "Int" 10
-            |> Bulletproof.Knob.float "Float" 10.123
+            |> Bulletproof.Knob.int "Int"
+                10
+                [ Bulletproof.Knob.min 5
+                , Bulletproof.Knob.max 50
+                , Bulletproof.Knob.step 5
+                ]
+            |> Bulletproof.Knob.float "Float" 10.123 []
             |> Bulletproof.Knob.string "String" "Counter example!"
             |> Bulletproof.Knob.radio "Radio"
                 [ ( "Red", Red )
@@ -95,8 +100,15 @@ main =
                 [ ( "Black", Black )
                 , ( "White", White )
                 ]
-            |> Bulletproof.Knob.intRange "range int" 10 { min = 0, max = 100, step = 5 }
-            |> Bulletproof.Knob.floatRange "range float" 1.5 { min = 0.5, max = 10.5, step = 0.5 }
+            |> Bulletproof.Knob.int "range int"
+                10
+                [ Bulletproof.Knob.range True
+                ]
+            |> Bulletproof.Knob.float "range float"
+                1.5
+                [ Bulletproof.Knob.range True
+                , Bulletproof.Knob.step 0.1
+                ]
             |> Bulletproof.Knob.color "Color" "#cce"
             |> Bulletproof.Knob.date "Date" "10-2-2011"
             |> Bulletproof.Knob.time "Time" "12:2"

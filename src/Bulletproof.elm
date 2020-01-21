@@ -16,15 +16,7 @@ import Knob
 import Link exposing (link)
 import Router
 import Url exposing (Url)
-
-
-ifelse : Bool -> x -> x -> x
-ifelse bool onTrue onFalse =
-    if bool then
-        onTrue
-
-    else
-        onFalse
+import Utils exposing (ifelse)
 
 
 

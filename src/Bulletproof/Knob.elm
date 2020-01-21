@@ -2,18 +2,20 @@ module Bulletproof.Knob exposing
     ( Color
     , Date
     , File
-    , Limits
+    , Property
     , Time
     , bool
     , color
     , date
     , files
     , float
-    , floatRange
     , int
-    , intRange
+    , max
+    , min
     , radio
+    , range
     , select
+    , step
     , string
     , time
     )
@@ -22,15 +24,11 @@ import Color
 import Date
 import File
 import Internal exposing (Story(..))
-import Knob exposing (Choice(..), Knob(..), Value(..), extract)
+import Knob exposing (Choice(..), Knob(..), NumberPayload, Value(..), extract)
 
 
 type alias File =
     File.File
-
-
-type alias Limits number =
-    Knob.Limits number
 
 
 type alias Color =
@@ -83,11 +81,61 @@ string name defaultValue (Story story) =
         }
 
 
-int : String -> Int -> Story (Int -> a) -> Story a
-int name defaultValue (Story story) =
+type Property num
+    = Range Bool
+    | Min num
+    | Max num
+    | Step num
+
+
+range : Bool -> Property num
+range =
+    Range
+
+
+min : number -> Property number
+min =
+    Min
+
+
+max : number -> Property number
+max =
+    Max
+
+
+step : number -> Property number
+step =
+    Step
+
+
+propertyToNumberPayload : Property number -> NumberPayload number -> NumberPayload number
+propertyToNumberPayload property payload =
+    case property of
+        Range x ->
+            { payload | range = x }
+
+        Min num ->
+            { payload | min = Just num }
+
+        Max num ->
+            { payload | max = Just num }
+
+        Step num ->
+            { payload | step = Just num }
+
+
+propertiesToNumberPayload : List (Property number) -> NumberPayload number
+propertiesToNumberPayload =
+    List.foldl
+        propertyToNumberPayload
+        (NumberPayload False Nothing Nothing Nothing)
+
+
+int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
+int name defaultValue properties (Story story) =
     Story
         { title = story.title
-        , knobs = ( name, Int defaultValue ) :: story.knobs
+        , knobs = ( name, Int defaultValue (propertiesToNumberPayload properties) ) :: story.knobs
         , view =
             Result.map
                 (\view state ->
@@ -102,49 +150,11 @@ int name defaultValue (Story story) =
         }
 
 
-float : String -> Float -> Story (Float -> a) -> Story a
-float name defaultValue (Story story) =
+float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
+float name defaultValue properties (Story story) =
     Story
         { title = story.title
-        , knobs = ( name, Float defaultValue ) :: story.knobs
-        , view =
-            Result.map
-                (\view state ->
-                    case extract story.title name state.knobs of
-                        Just (FloatValue (Just value)) ->
-                            view state value
-
-                        _ ->
-                            view state defaultValue
-                )
-                story.view
-        }
-
-
-intRange : String -> Int -> { min : Int, max : Int, step : Int } -> Story (Int -> a) -> Story a
-intRange name defaultValue limits (Story story) =
-    Story
-        { title = story.title
-        , knobs = ( name, IntRange defaultValue limits ) :: story.knobs
-        , view =
-            Result.map
-                (\view state ->
-                    case extract story.title name state.knobs of
-                        Just (IntValue (Just value)) ->
-                            view state value
-
-                        _ ->
-                            view state defaultValue
-                )
-                story.view
-        }
-
-
-floatRange : String -> Float -> { min : Float, max : Float, step : Float } -> Story (Float -> a) -> Story a
-floatRange name defaultValue limits (Story story) =
-    Story
-        { title = story.title
-        , knobs = ( name, FloatRange defaultValue limits ) :: story.knobs
+        , knobs = ( name, Float defaultValue (propertiesToNumberPayload properties) ) :: story.knobs
         , view =
             Result.map
                 (\view state ->

@@ -1,8 +1,8 @@
 module Knob exposing
     ( Choice(..)
     , Knob(..)
-    , Limits
     , Msg
+    , NumberPayload
     , State
     , Value(..)
     , extract
@@ -22,26 +22,26 @@ import Html.Events
 import Html.Keyed
 import Json.Decode as Decode exposing (Decoder)
 import Time
+import Utils exposing (ifelse)
 
 
 type Knob
     = Bool Bool
     | String String
-    | Int Int
-    | Float Float
+    | Int Int (NumberPayload Int)
+    | Float Float (NumberPayload Float)
     | Choice Choice (List String)
-    | IntRange Int (Limits Int)
-    | FloatRange Float (Limits Float)
     | Color (Maybe Color)
     | Date (Maybe Time.Posix)
     | Time (Maybe Time)
     | Files
 
 
-type alias Limits x =
-    { min : x
-    , max : x
-    , step : x
+type alias NumberPayload x =
+    { range : Bool
+    , min : Maybe x
+    , max : Maybe x
+    , step : Maybe x
     }
 
 
@@ -192,25 +192,26 @@ viewKnobString storyID name value =
         []
 
 
-viewKnobInt : String -> String -> String -> Html Msg
-viewKnobInt storyID name value =
+viewKnobNumber :
+    (String -> String -> String -> msg)
+    -> (number -> String)
+    -> String
+    -> String
+    -> Maybe number
+    -> NumberPayload number
+    -> Html msg
+viewKnobNumber msg numberToString storyID name number payload =
     input
-        [ Html.Attributes.type_ "number"
-        , Html.Attributes.name name
-        , Html.Attributes.value value
-        , Html.Events.onInput (UpdateInt storyID name)
-        ]
-        []
-
-
-viewKnobFloat : String -> String -> String -> Html Msg
-viewKnobFloat storyID name value =
-    input
-        [ Html.Attributes.type_ "number"
-        , Html.Attributes.name name
-        , Html.Attributes.value value
-        , Html.Events.onInput (UpdateFloat storyID name)
-        ]
+        (Html.Attributes.type_ (ifelse payload.range "range" "number")
+            :: Html.Attributes.name name
+            :: Html.Attributes.value (Maybe.withDefault "" (Maybe.map numberToString number))
+            :: Html.Events.onInput (msg storyID name)
+            :: List.filterMap identity
+                [ Maybe.map (Html.Attributes.min << numberToString) payload.min
+                , Maybe.map (Html.Attributes.max << numberToString) payload.max
+                , Maybe.map (Html.Attributes.step << numberToString) payload.step
+                ]
+        )
         []
 
 
@@ -259,20 +260,6 @@ viewKnobSelect storyID name options current =
             )
             options
         )
-
-
-viewKnobRange : (String -> msg) -> (number -> String) -> String -> Limits number -> number -> Html msg
-viewKnobRange msg numberToString name limits number =
-    input
-        [ Html.Attributes.type_ "range"
-        , Html.Attributes.name name
-        , Html.Attributes.min (numberToString limits.min)
-        , Html.Attributes.max (numberToString limits.max)
-        , Html.Attributes.step (numberToString limits.step)
-        , Html.Attributes.value (numberToString number)
-        , Html.Events.onInput msg
-        ]
-        []
 
 
 viewKnobColor : String -> String -> String -> Html Msg
@@ -352,27 +339,21 @@ viewKnob storyID state name knob =
                 _ ->
                     viewKnobString storyID name defaultValue
 
-        Int defaultValue ->
+        Int defaultValue payload ->
             case extract storyID name state of
-                Just (IntValue Nothing) ->
-                    viewKnobInt storyID name ""
-
-                Just (IntValue (Just int)) ->
-                    viewKnobInt storyID name (String.fromInt int)
+                Just (IntValue value) ->
+                    viewKnobNumber UpdateInt String.fromInt storyID name value payload
 
                 _ ->
-                    viewKnobInt storyID name (String.fromInt defaultValue)
+                    viewKnobNumber UpdateInt String.fromInt storyID name (Just defaultValue) payload
 
-        Float defaultValue ->
+        Float defaultValue payload ->
             case extract storyID name state of
-                Just (FloatValue Nothing) ->
-                    viewKnobFloat storyID name ""
-
-                Just (FloatValue (Just float)) ->
-                    viewKnobFloat storyID name (String.fromFloat float)
+                Just (FloatValue value) ->
+                    viewKnobNumber UpdateFloat String.fromFloat storyID name value payload
 
                 _ ->
-                    viewKnobFloat storyID name (String.fromFloat defaultValue)
+                    viewKnobNumber UpdateFloat String.fromFloat storyID name (Just defaultValue) payload
 
         Choice _ [] ->
             text "No Options available"
@@ -392,22 +373,6 @@ viewKnob storyID state name knob =
 
                 _ ->
                     viewKnobSelect storyID name options defaultValue
-
-        IntRange defaultValue limits ->
-            case extract storyID name state of
-                Just (IntValue (Just int)) ->
-                    viewKnobRange (UpdateInt storyID name) String.fromInt name limits int
-
-                _ ->
-                    viewKnobRange (UpdateInt storyID name) String.fromInt name limits defaultValue
-
-        FloatRange defaultValue limits ->
-            case extract storyID name state of
-                Just (FloatValue (Just float)) ->
-                    viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits float
-
-                _ ->
-                    viewKnobRange (UpdateFloat storyID name) String.fromFloat name limits defaultValue
 
         Color Nothing ->
             viewKnobColor storyID name ""
