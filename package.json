@@ -4,7 +4,11 @@
   "description": "Make your components Bulletproof",
   "main": "index.js",
   "scripts": {
-    "test": "elm-test --compiler ./node_modules/.bin/elm"
+    "test": "elm-test --compiler ./node_modules/.bin/elm",
+    "predemo-build": "rm -rf build",
+    "demo-build": "elm make --output=./build/index.html tests/Demo.elm",
+    "demo-serve": "http-server ./build --proxy http://localhost:8080?",
+    "demo": "npm run demo-build && npm run demo-serve"
   },
   "repository": {
     "type": "git",
