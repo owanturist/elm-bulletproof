@@ -46,14 +46,13 @@ type alias Time =
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Bool defaultValue ) :: payload.knobs
+        Story path payload ->
+            Story path
+                { knobs = ( name, Bool defaultValue ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (BoolValue value) ->
                                     view state value
 
@@ -70,14 +69,13 @@ bool name defaultValue story =
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, String defaultValue ) :: payload.knobs
+        Story path payload ->
+            Story path
+                { knobs = ( name, String defaultValue ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (StringValue value) ->
                                     view state value
 
@@ -143,19 +141,18 @@ propertiesToNumberPayload =
 
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
-    let
-        ( range_, limits ) =
-            propertiesToNumberPayload properties
-    in
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Int range_ defaultValue limits ) :: payload.knobs
+        Story path payload ->
+            let
+                ( range_, limits ) =
+                    propertiesToNumberPayload properties
+            in
+            Story path
+                { knobs = ( name, Int range_ defaultValue limits ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (IntValue (Just value)) ->
                                     view state value
 
@@ -171,19 +168,18 @@ int name defaultValue properties story =
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
-    let
-        ( range_, limits ) =
-            propertiesToNumberPayload properties
-    in
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Float range_ defaultValue limits ) :: payload.knobs
+        Story path payload ->
+            let
+                ( range_, limits ) =
+                    propertiesToNumberPayload properties
+            in
+            Story path
+                { knobs = ( name, Float range_ defaultValue limits ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (FloatValue (Just value)) ->
                                     view state value
 
@@ -200,10 +196,9 @@ float name defaultValue properties story =
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice choiceName name options story =
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Choice choice (List.map Tuple.first options) ) :: payload.knobs
+        Story path payload ->
+            Story path
+                { knobs = ( name, Choice choice (List.map Tuple.first options) ) :: payload.knobs
                 , view =
                     case List.head options of
                         Nothing ->
@@ -214,7 +209,7 @@ makeChoice choice choiceName name options story =
                                 (\view state ->
                                     let
                                         selected =
-                                            case extract payload.title name state.knobs of
+                                            case extract path name state.knobs of
                                                 Just (StringValue value) ->
                                                     value
 
@@ -247,19 +242,18 @@ select =
 
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
-    let
-        defaultColor =
-            Color.fromString defaultValue
-    in
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Color defaultColor ) :: payload.knobs
+        Story path payload ->
+            let
+                defaultColor =
+                    Color.fromString defaultValue
+            in
+            Story path
+                { knobs = ( name, Color defaultColor ) :: payload.knobs
                 , view =
                     Result.map2
                         (\default view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (ColorValue (Just value)) ->
                                     view state value
 
@@ -276,19 +270,18 @@ color name defaultValue story =
 
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
-    let
-        defaultDate =
-            Date.parseStringToPosix defaultValue
-    in
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Date defaultDate ) :: payload.knobs
+        Story path payload ->
+            let
+                defaultDate =
+                    Date.parseStringToPosix defaultValue
+            in
+            Story path
+                { knobs = ( name, Date defaultDate ) :: payload.knobs
                 , view =
                     Result.map2
                         (\default view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (DateValue (Just value)) ->
                                     view state (Date.dateFromPosix value)
 
@@ -305,19 +298,18 @@ date name defaultValue story =
 
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
-    let
-        defaultTime =
-            Date.timeFromString defaultValue
-    in
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Time defaultTime ) :: payload.knobs
+        Story path payload ->
+            let
+                defaultTime =
+                    Date.timeFromString defaultValue
+            in
+            Story path
+                { knobs = ( name, Time defaultTime ) :: payload.knobs
                 , view =
                     Result.map2
                         (\default view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (TimeValue (Just value)) ->
                                     view state value
 
@@ -335,14 +327,13 @@ time name defaultValue story =
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case story of
-        Story payload ->
-            Story
-                { title = payload.title
-                , knobs = ( name, Files ) :: payload.knobs
+        Story path payload ->
+            Story path
+                { knobs = ( name, Files ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract payload.title name state.knobs of
+                            case extract path name state.knobs of
                                 Just (FileValue value) ->
                                     view state value
 

@@ -11,7 +11,7 @@ story : Bulletproof.Story
 story =
     Bulletproof.storyOf "Link"
         (\str ->
-            link Router.ToHome
+            link Router.ToNotFound
                 []
                 [ text str
                 ]

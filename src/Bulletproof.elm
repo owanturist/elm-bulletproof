@@ -15,6 +15,7 @@ import Html exposing (Html, div, hr, nav, text)
 import Html.Attributes exposing (style)
 import Knob
 import Link exposing (link)
+import Path exposing (Path)
 import Router
 import Story exposing (Story)
 import Url exposing (Url)
@@ -27,7 +28,7 @@ import Utils exposing (ifelse)
 
 type alias State =
     { navigationKey : Browser.Navigation.Key
-    , current : Maybe String
+    , current : Maybe Path
     }
 
 
@@ -35,8 +36,8 @@ type Model
     = Model Addons State
 
 
-extractFirstStoryID : List Story -> Maybe String
-extractFirstStoryID stories =
+extractFirstStoryPath : List Story -> Maybe Path
+extractFirstStoryPath stories =
     List.foldl
         (\story result ->
             if result /= Nothing then
@@ -44,11 +45,11 @@ extractFirstStoryID stories =
 
             else
                 case story of
-                    Story.Story payload ->
-                        Just payload.title
+                    Story.Story path _ ->
+                        Just path
 
                     Story.Group _ substories ->
-                        extractFirstStoryID substories
+                        extractFirstStoryPath substories
 
                     Story.Empty ->
                         Nothing
@@ -60,22 +61,22 @@ extractFirstStoryID stories =
 init : List Story -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories () url navigationKey =
     let
-        ( initialStoryID, initialCmd ) =
+        ( initialStoryPath, initialCmd ) =
             case Router.parse url of
-                Router.ToHome ->
+                Router.ToStory storyPath ->
+                    ( Just storyPath, Cmd.none )
+
+                Router.ToNotFound ->
                     ( Nothing
-                    , extractFirstStoryID stories
+                    , extractFirstStoryPath stories
                         |> Maybe.map (Router.replace navigationKey << Router.ToStory)
                         |> Maybe.withDefault Cmd.none
                     )
-
-                Router.ToStory storyID ->
-                    ( Just storyID, Cmd.none )
     in
     ( Model
         Addons.initial
         { navigationKey = navigationKey
-        , current = initialStoryID
+        , current = initialStoryPath
         }
     , initialCmd
     )
@@ -107,11 +108,11 @@ update msg (Model addons state) =
 
         UrlChanged url ->
             ( case Router.parse url of
-                Router.ToHome ->
-                    Model addons { state | current = Nothing }
+                Router.ToStory storyPath ->
+                    Model addons { state | current = Just storyPath }
 
-                Router.ToStory storyID ->
-                    Model addons { state | current = Just storyID }
+                Router.ToNotFound ->
+                    Model addons { state | current = Nothing }
             , Cmd.none
             )
 
@@ -137,16 +138,16 @@ subscriptions _ =
 -- V I E W
 
 
-viewItem : Maybe String -> Story.Story a -> Html Msg
-viewItem currentID story =
+viewItem : Maybe Path -> Story.Story a -> Html Msg
+viewItem currentPath story =
     case story of
-        Story.Story { title } ->
+        Story.Story path _ ->
             div
-                [ style "background" (ifelse (currentID == Just title) "#ccc" "#fff")
+                [ style "background" (ifelse (currentPath == Just path) "#ccc" "#fff")
                 ]
-                [ link (Router.ToStory title)
+                [ link (Router.ToStory path)
                     []
-                    [ text title
+                    [ text (Path.toStoryTitle path)
                     ]
                 ]
 
@@ -154,14 +155,14 @@ viewItem currentID story =
             div
                 []
                 [ text title
-                , div [] (List.map (viewItem currentID) stories)
+                , div [] (List.map (viewItem currentPath) stories)
                 ]
 
-        Story.Empty ->
+        _ ->
             text ""
 
 
-viewNavigation : Maybe String -> List (Story.Story a) -> Html Msg
+viewNavigation : Maybe Path -> List (Story.Story a) -> Html Msg
 viewNavigation current =
     nav
         [ style "float" "left"
@@ -170,8 +171,8 @@ viewNavigation current =
         << List.map (viewItem current)
 
 
-viewStory : Addons -> Story.Payload Renderer -> Html Msg
-viewStory addons payload =
+viewStory : Addons -> Path -> Story.Payload Renderer -> Html Msg
+viewStory addons path payload =
     div
         [ style "float" "left"
         , style "width" "70%"
@@ -187,7 +188,7 @@ viewStory addons payload =
                 in
                 layout
         , hr [] []
-        , Html.map KnobMsg (Knob.view payload.title payload.knobs addons.knobs)
+        , Html.map KnobMsg (Knob.view path payload.knobs addons.knobs)
         ]
 
 
@@ -196,8 +197,8 @@ viewEmpty =
     text "Nothing to show"
 
 
-findCurrentStory : String -> List Story -> Maybe (Story.Payload Renderer)
-findCurrentStory currentStoryID stories =
+findCurrentStory : Path -> List Story -> Maybe (Story.Payload Renderer)
+findCurrentStory currentStoryPath stories =
     List.foldl
         (\story result ->
             if result /= Nothing then
@@ -205,15 +206,15 @@ findCurrentStory currentStoryID stories =
 
             else
                 case story of
-                    Story.Story payload ->
-                        if currentStoryID == payload.title then
+                    Story.Story path payload ->
+                        if currentStoryPath == path then
                             Just payload
 
                         else
                             Nothing
 
                     Story.Group _ substories ->
-                        findCurrentStory currentStoryID substories
+                        findCurrentStory currentStoryPath substories
 
                     Story.Empty ->
                         Nothing
@@ -230,13 +231,13 @@ view stories (Model addons state) =
             Nothing ->
                 viewEmpty
 
-            Just currentStoryID ->
-                case findCurrentStory currentStoryID stories of
+            Just currentStoryPath ->
+                case findCurrentStory currentStoryPath stories of
                     Nothing ->
                         viewEmpty
 
                     Just payload ->
-                        viewStory addons payload
+                        viewStory addons currentStoryPath payload
         ]
 
 
@@ -259,9 +260,8 @@ type alias Story =
 
 storyOf : String -> view -> Story.Story view
 storyOf title view_ =
-    Story.Story
-        { title = title
-        , knobs = []
+    Story.Story (Path.Alone title)
+        { knobs = []
         , view = Ok (\_ -> view_)
         }
 
