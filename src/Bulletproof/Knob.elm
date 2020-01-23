@@ -46,13 +46,13 @@ type alias Time =
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case story of
-        Story path payload ->
-            Story path
+        Single storyID payload ->
+            Single storyID
                 { knobs = ( name, Bool defaultValue ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (BoolValue value) ->
                                     view state value
 
@@ -63,19 +63,19 @@ bool name defaultValue story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case story of
-        Story path payload ->
-            Story path
+        Single storyID payload ->
+            Single storyID
                 { knobs = ( name, String defaultValue ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (StringValue value) ->
                                     view state value
 
@@ -86,7 +86,7 @@ string name defaultValue story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 type Property num
@@ -142,17 +142,17 @@ propertiesToNumberPayload =
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
     case story of
-        Story path payload ->
+        Single storyID payload ->
             let
                 ( range_, limits ) =
                     propertiesToNumberPayload properties
             in
-            Story path
+            Single storyID
                 { knobs = ( name, Int range_ defaultValue limits ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (IntValue (Just value)) ->
                                     view state value
 
@@ -163,23 +163,23 @@ int name defaultValue properties story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
     case story of
-        Story path payload ->
+        Single storyID payload ->
             let
                 ( range_, limits ) =
                     propertiesToNumberPayload properties
             in
-            Story path
+            Single storyID
                 { knobs = ( name, Float range_ defaultValue limits ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (FloatValue (Just value)) ->
                                     view state value
 
@@ -190,14 +190,14 @@ float name defaultValue properties story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice choiceName name options story =
     case story of
-        Story path payload ->
-            Story path
+        Single storyID payload ->
+            Single storyID
                 { knobs = ( name, Choice choice (List.map Tuple.first options) ) :: payload.knobs
                 , view =
                     case List.head options of
@@ -209,7 +209,7 @@ makeChoice choice choiceName name options story =
                                 (\view state ->
                                     let
                                         selected =
-                                            case extract path name state.knobs of
+                                            case extract name state.knobs of
                                                 Just (StringValue value) ->
                                                     value
 
@@ -227,7 +227,7 @@ makeChoice choice choiceName name options story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -243,17 +243,17 @@ select =
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case story of
-        Story path payload ->
+        Single storyID payload ->
             let
                 defaultColor =
                     Color.fromString defaultValue
             in
-            Story path
+            Single storyID
                 { knobs = ( name, Color defaultColor ) :: payload.knobs
                 , view =
                     Result.map2
                         (\default view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (ColorValue (Just value)) ->
                                     view state value
 
@@ -265,23 +265,23 @@ color name defaultValue story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
     case story of
-        Story path payload ->
+        Single storyID payload ->
             let
                 defaultDate =
                     Date.parseStringToPosix defaultValue
             in
-            Story path
+            Single storyID
                 { knobs = ( name, Date defaultDate ) :: payload.knobs
                 , view =
                     Result.map2
                         (\default view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (DateValue (Just value)) ->
                                     view state (Date.dateFromPosix value)
 
@@ -293,23 +293,23 @@ date name defaultValue story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case story of
-        Story path payload ->
+        Single storyID payload ->
             let
                 defaultTime =
                     Date.timeFromString defaultValue
             in
-            Story path
+            Single storyID
                 { knobs = ( name, Time defaultTime ) :: payload.knobs
                 , view =
                     Result.map2
                         (\default view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (TimeValue (Just value)) ->
                                     view state value
 
@@ -321,19 +321,19 @@ time name defaultValue story =
                 }
 
         _ ->
-            Empty
+            None
 
 
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case story of
-        Story path payload ->
-            Story path
+        Single storyID payload ->
+            Single storyID
                 { knobs = ( name, Files ) :: payload.knobs
                 , view =
                     Result.map
                         (\view state ->
-                            case extract path name state.knobs of
+                            case extract name state.knobs of
                                 Just (FileValue value) ->
                                     view state value
 
@@ -344,4 +344,4 @@ files name story =
                 }
 
         _ ->
-            Empty
+            None

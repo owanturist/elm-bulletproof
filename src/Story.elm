@@ -2,13 +2,13 @@ module Story exposing (Payload, Story(..))
 
 import Addons exposing (Addons)
 import Knob exposing (Knob)
-import Path exposing (Path)
+import Renderer exposing (Renderer)
 
 
 type Story view
-    = Story Path (Payload view)
-    | Group String (List (Story view))
-    | Empty
+    = None
+    | Single String (Payload view)
+    | Batch String (List (Story Renderer))
 
 
 type alias Payload view =

@@ -21,7 +21,6 @@ import Html.Attributes
 import Html.Events
 import Html.Keyed
 import Json.Decode as Decode exposing (Decoder)
-import Path exposing (Path)
 import Range exposing (range)
 import Time
 
@@ -62,28 +61,22 @@ type Value
 
 
 type alias State =
-    Dict Path (Dict String Value)
+    Dict String Value
 
 
 initial : State
 initial =
-    Dict.emptyWith Path.compare
+    Dict.empty
 
 
-extract : Path -> String -> State -> Maybe Value
-extract path name state =
-    Maybe.andThen (Dict.get name) (Dict.get path state)
+extract : String -> State -> Maybe Value
+extract =
+    Dict.get
 
 
-insert : Path -> String -> Value -> State -> State
-insert path name value state =
-    Dict.insert path
-        (state
-            |> Dict.get path
-            |> Maybe.withDefault Dict.empty
-            |> Dict.insert name value
-        )
-        state
+insert : String -> Value -> State -> State
+insert =
+    Dict.insert
 
 
 
@@ -91,121 +84,120 @@ insert path name value state =
 
 
 type Msg
-    = UpdateBool Path String Bool
-    | UpdateString Path String String
-    | UpdateInt Path String String
-    | UpdateFloat Path String String
-    | UpdateColor Path String String
-    | UpdateDate Path String String
-    | UpdateTime Path String String
-    | UpdateFiles Path String (List File)
+    = UpdateBool String Bool
+    | UpdateString String String
+    | UpdateInt String String
+    | UpdateFloat String String
+    | UpdateColor String String
+    | UpdateDate String String
+    | UpdateTime String String
+    | UpdateFiles String (List File)
 
 
 update : Msg -> State -> State
 update msg state =
     case msg of
-        UpdateBool path name bool ->
-            insert path name (BoolValue bool) state
+        UpdateBool name bool ->
+            insert name (BoolValue bool) state
 
-        UpdateString path name string ->
-            insert path name (StringValue string) state
+        UpdateString name string ->
+            insert name (StringValue string) state
 
-        UpdateInt path name "" ->
-            insert path name (IntValue Nothing) state
+        UpdateInt name "" ->
+            insert name (IntValue Nothing) state
 
-        UpdateInt path name str ->
+        UpdateInt name str ->
             case String.toInt str of
                 Nothing ->
                     state
 
                 Just int ->
-                    insert path name (IntValue (Just int)) state
+                    insert name (IntValue (Just int)) state
 
-        UpdateFloat path name "" ->
-            insert path name (FloatValue Nothing) state
+        UpdateFloat name "" ->
+            insert name (FloatValue Nothing) state
 
-        UpdateFloat path name str ->
+        UpdateFloat name str ->
             case String.toFloat str of
                 Nothing ->
                     state
 
                 Just float ->
-                    insert path name (FloatValue (Just float)) state
+                    insert name (FloatValue (Just float)) state
 
-        UpdateColor path name "" ->
-            insert path name (ColorValue Nothing) state
+        UpdateColor name "" ->
+            insert name (ColorValue Nothing) state
 
-        UpdateColor path name str ->
+        UpdateColor name str ->
             case Color.fromString str of
                 Nothing ->
                     state
 
                 Just color ->
-                    insert path name (ColorValue (Just color)) state
+                    insert name (ColorValue (Just color)) state
 
-        UpdateDate path name "" ->
-            insert path name (DateValue Nothing) state
+        UpdateDate name "" ->
+            insert name (DateValue Nothing) state
 
-        UpdateDate path name str ->
+        UpdateDate name str ->
             case Date.posixFromString str of
                 Nothing ->
                     state
 
                 Just date ->
-                    insert path name (DateValue (Just date)) state
+                    insert name (DateValue (Just date)) state
 
-        UpdateTime path name "" ->
-            insert path name (TimeValue Nothing) state
+        UpdateTime name "" ->
+            insert name (TimeValue Nothing) state
 
-        UpdateTime path name str ->
+        UpdateTime name str ->
             case Date.timeFromString str of
                 Nothing ->
                     state
 
                 Just time ->
-                    insert path name (TimeValue (Just time)) state
+                    insert name (TimeValue (Just time)) state
 
-        UpdateFiles path name files ->
-            insert path name (FileValue files) state
+        UpdateFiles name files ->
+            insert name (FileValue files) state
 
 
 
 -- V I E W
 
 
-viewKnobBool : Path -> String -> Bool -> Html Msg
-viewKnobBool path name checked =
+viewKnobBool : String -> Bool -> Html Msg
+viewKnobBool name checked =
     checkbox
         [ Html.Attributes.name name
         , Html.Attributes.checked checked
-        , Html.Events.onCheck (UpdateBool path name)
+        , Html.Events.onCheck (UpdateBool name)
         ]
 
 
-viewKnobString : Path -> String -> String -> Html Msg
-viewKnobString path name value =
+viewKnobString : String -> String -> Html Msg
+viewKnobString name value =
     textarea
         [ Html.Attributes.name name
         , Html.Attributes.value value
-        , Html.Events.onInput (UpdateString path name)
+        , Html.Events.onInput (UpdateString name)
         ]
         []
 
 
 viewKnobNumber :
-    (Path -> String -> String -> msg)
+    (String -> String -> msg)
     -> (number -> String)
-    -> Path
     -> String
     -> Maybe number
     -> Limits number
     -> Html msg
-viewKnobNumber msg numberToString path name number payload =
+viewKnobNumber msg numberToString name number payload =
     input
         (Html.Attributes.type_ "number"
             :: Html.Attributes.name name
             :: Html.Attributes.value (Maybe.withDefault "" (Maybe.map numberToString number))
-            :: Html.Events.onInput (msg path name)
+            :: Html.Events.onInput (msg name)
             :: List.filterMap identity
                 [ Maybe.map (Html.Attributes.min << numberToString) payload.min
                 , Maybe.map (Html.Attributes.max << numberToString) payload.max
@@ -215,8 +207,8 @@ viewKnobNumber msg numberToString path name number payload =
         []
 
 
-viewKnobRadio : Path -> String -> List String -> String -> Html Msg
-viewKnobRadio path name options current =
+viewKnobRadio : String -> List String -> String -> Html Msg
+viewKnobRadio name options current =
     Html.Keyed.node "div"
         []
         (List.map
@@ -229,7 +221,7 @@ viewKnobRadio path name options current =
                             , Html.Attributes.name name
                             , Html.Attributes.value value
                             , Html.Attributes.checked (value == current)
-                            , Html.Events.onCheck (\_ -> UpdateString path name value)
+                            , Html.Events.onCheck (\_ -> UpdateString name value)
                             ]
                             []
                         , text value
@@ -241,11 +233,11 @@ viewKnobRadio path name options current =
         )
 
 
-viewKnobSelect : Path -> String -> List String -> String -> Html Msg
-viewKnobSelect path name options current =
+viewKnobSelect : String -> List String -> String -> Html Msg
+viewKnobSelect name options current =
     Html.Keyed.node "select"
         [ Html.Attributes.name name
-        , Html.Events.onInput (UpdateString path name)
+        , Html.Events.onInput (UpdateString name)
         ]
         (List.map
             (\value ->
@@ -262,35 +254,35 @@ viewKnobSelect path name options current =
         )
 
 
-viewKnobColor : Path -> String -> String -> Html Msg
-viewKnobColor path name color =
+viewKnobColor : String -> String -> Html Msg
+viewKnobColor name color =
     input
         [ Html.Attributes.type_ "color"
         , Html.Attributes.name name
         , Html.Attributes.value color
-        , Html.Events.onInput (UpdateColor path name)
+        , Html.Events.onInput (UpdateColor name)
         ]
         []
 
 
-viewKnobDate : Path -> String -> String -> Html Msg
-viewKnobDate path name value =
+viewKnobDate : String -> String -> Html Msg
+viewKnobDate name value =
     input
         [ Html.Attributes.type_ "date"
         , Html.Attributes.name name
         , Html.Attributes.value value
-        , Html.Events.onInput (UpdateDate path name)
+        , Html.Events.onInput (UpdateDate name)
         ]
         []
 
 
-viewKnobTime : Path -> String -> String -> Html Msg
-viewKnobTime path name value =
+viewKnobTime : String -> String -> Html Msg
+viewKnobTime name value =
     input
         [ Html.Attributes.type_ "time"
         , Html.Attributes.name name
         , Html.Attributes.value value
-        , Html.Events.onInput (UpdateTime path name)
+        , Html.Events.onInput (UpdateTime name)
         ]
         []
 
@@ -300,13 +292,13 @@ filesDecoder =
     Decode.at [ "target", "files" ] (Decode.list File.decoder)
 
 
-viewKnobFile : Path -> String -> Html Msg
-viewKnobFile path name =
+viewKnobFile : String -> Html Msg
+viewKnobFile name =
     input
         [ Html.Attributes.type_ "file"
         , Html.Attributes.multiple True
         , Html.Attributes.name name
-        , Html.Events.on "change" (Decode.map (UpdateFiles path name) filesDecoder)
+        , Html.Events.on "change" (Decode.map (UpdateFiles name) filesDecoder)
         ]
         []
 
@@ -320,44 +312,44 @@ viewKnobRow name knob =
         ]
 
 
-viewKnob : Path -> State -> String -> Knob -> Html Msg
-viewKnob path state name knob =
+viewKnob : State -> String -> Knob -> Html Msg
+viewKnob state name knob =
     case knob of
         Bool defaultValue ->
-            case extract path name state of
+            case extract name state of
                 Just (BoolValue bool) ->
-                    viewKnobBool path name bool
+                    viewKnobBool name bool
 
                 _ ->
-                    viewKnobBool path name defaultValue
+                    viewKnobBool name defaultValue
 
         String defaultValue ->
-            case extract path name state of
+            case extract name state of
                 Just (StringValue string) ->
-                    viewKnobString path name string
+                    viewKnobString name string
 
                 _ ->
-                    viewKnobString path name defaultValue
+                    viewKnobString name defaultValue
 
         Int False defaultValue payload ->
-            case extract path name state of
+            case extract name state of
                 Just (IntValue value) ->
-                    viewKnobNumber UpdateInt String.fromInt path name value payload
+                    viewKnobNumber UpdateInt String.fromInt name value payload
 
                 _ ->
-                    viewKnobNumber UpdateInt String.fromInt path name (Just defaultValue) payload
+                    viewKnobNumber UpdateInt String.fromInt name (Just defaultValue) payload
 
         Int True defaultValue payload ->
             let
                 value =
-                    case extract path name state of
+                    case extract name state of
                         Just (IntValue (Just int)) ->
                             int
 
                         _ ->
                             defaultValue
             in
-            range (UpdateInt path name)
+            range (UpdateInt name)
                 name
                 String.fromInt
                 { min = Maybe.withDefault 0 payload.min
@@ -367,24 +359,24 @@ viewKnob path state name knob =
                 }
 
         Float False defaultValue payload ->
-            case extract path name state of
+            case extract name state of
                 Just (FloatValue value) ->
-                    viewKnobNumber UpdateFloat String.fromFloat path name value payload
+                    viewKnobNumber UpdateFloat String.fromFloat name value payload
 
                 _ ->
-                    viewKnobNumber UpdateFloat String.fromFloat path name (Just defaultValue) payload
+                    viewKnobNumber UpdateFloat String.fromFloat name (Just defaultValue) payload
 
         Float True defaultValue payload ->
             let
                 value =
-                    case extract path name state of
+                    case extract name state of
                         Just (FloatValue (Just float)) ->
                             float
 
                         _ ->
                             defaultValue
             in
-            range (UpdateFloat path name)
+            range (UpdateFloat name)
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 payload.min
@@ -397,70 +389,70 @@ viewKnob path state name knob =
             text "No Options available"
 
         Choice Radio ((defaultValue :: _) as options) ->
-            case extract path name state of
+            case extract name state of
                 Just (StringValue string) ->
-                    viewKnobRadio path name options string
+                    viewKnobRadio name options string
 
                 _ ->
-                    viewKnobRadio path name options defaultValue
+                    viewKnobRadio name options defaultValue
 
         Choice Select ((defaultValue :: _) as options) ->
-            case extract path name state of
+            case extract name state of
                 Just (StringValue string) ->
-                    viewKnobSelect path name options string
+                    viewKnobSelect name options string
 
                 _ ->
-                    viewKnobSelect path name options defaultValue
+                    viewKnobSelect name options defaultValue
 
         Color Nothing ->
-            viewKnobColor path name ""
+            viewKnobColor name ""
 
         Color (Just defaultValue) ->
-            case extract path name state of
+            case extract name state of
                 Just (ColorValue Nothing) ->
-                    viewKnobColor path name ""
+                    viewKnobColor name ""
 
                 Just (ColorValue (Just color)) ->
-                    viewKnobColor path name color.hex
+                    viewKnobColor name color.hex
 
                 _ ->
-                    viewKnobColor path name defaultValue.hex
+                    viewKnobColor name defaultValue.hex
 
         Date Nothing ->
-            viewKnobDate path name ""
+            viewKnobDate name ""
 
         Date (Just defaultValue) ->
-            case extract path name state of
+            case extract name state of
                 Just (DateValue Nothing) ->
-                    viewKnobDate path name ""
+                    viewKnobDate name ""
 
                 Just (DateValue (Just date)) ->
-                    viewKnobDate path name (Date.posixToString date)
+                    viewKnobDate name (Date.posixToString date)
 
                 _ ->
-                    viewKnobDate path name (Date.posixToString defaultValue)
+                    viewKnobDate name (Date.posixToString defaultValue)
 
         Time Nothing ->
-            viewKnobTime path name ""
+            viewKnobTime name ""
 
         Time (Just defaultValue) ->
-            case extract path name state of
+            case extract name state of
                 Just (TimeValue Nothing) ->
-                    viewKnobTime path name ""
+                    viewKnobTime name ""
 
                 Just (TimeValue (Just time)) ->
-                    viewKnobTime path name (Date.timeToString time)
+                    viewKnobTime name (Date.timeToString time)
 
                 _ ->
-                    viewKnobTime path name (Date.timeToString defaultValue)
+                    viewKnobTime name (Date.timeToString defaultValue)
 
         Files ->
-            viewKnobFile path name
+            viewKnobFile name
 
 
-view : Path -> List ( String, Knob ) -> State -> Html Msg
-view path knobs state =
+view : List ( String, Knob ) -> State -> Html Msg
+view knobs state =
     knobs
         |> List.reverse
-        |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob path state name knob))
+        |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob state name knob))
         |> div []

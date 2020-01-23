@@ -8,6 +8,7 @@ module Bulletproof exposing
     , storyOf
     )
 
+import AVL.Dict as Dict exposing (Dict)
 import Addons exposing (Addons)
 import Browser
 import Browser.Navigation
@@ -15,7 +16,7 @@ import Html exposing (Html, div, hr, nav, text)
 import Html.Attributes exposing (style)
 import Knob
 import Link exposing (link)
-import Path exposing (Path)
+import Renderer
 import Router
 import Story exposing (Story)
 import Url exposing (Url)
@@ -28,15 +29,15 @@ import Utils exposing (ifelse)
 
 type alias State =
     { navigationKey : Browser.Navigation.Key
-    , current : Maybe Path
+    , current : Maybe (List String)
     }
 
 
 type Model
-    = Model Addons State
+    = Model (Dict (List String) Addons) State
 
 
-extractFirstStoryPath : List Story -> Maybe Path
+extractFirstStoryPath : List Story -> Maybe (List String)
 extractFirstStoryPath stories =
     List.foldl
         (\story result ->
@@ -45,14 +46,14 @@ extractFirstStoryPath stories =
 
             else
                 case story of
-                    Story.Story path _ ->
-                        Just path
-
-                    Story.Group _ substories ->
-                        extractFirstStoryPath substories
-
-                    Story.Empty ->
+                    Story.None ->
                         Nothing
+
+                    Story.Single storyID _ ->
+                        Just [ storyID ]
+
+                    Story.Batch groupID substories ->
+                        Maybe.map ((::) groupID) (extractFirstStoryPath substories)
         )
         Nothing
         stories
@@ -74,7 +75,7 @@ init stories () url navigationKey =
                     )
     in
     ( Model
-        Addons.initial
+        Dict.empty
         { navigationKey = navigationKey
         , current = initialStoryPath
         }
@@ -89,8 +90,8 @@ init stories () url navigationKey =
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
-    | StoryMsg
-    | KnobMsg Knob.Msg
+    | StoryMsg ()
+    | KnobMsg (List String) Knob.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -116,11 +117,18 @@ update msg (Model addons state) =
             , Cmd.none
             )
 
-        StoryMsg ->
+        StoryMsg () ->
             ( Model addons state, Cmd.none )
 
-        KnobMsg knobMsg ->
-            ( Model { addons | knobs = Knob.update knobMsg addons.knobs } state
+        KnobMsg path knobMsg ->
+            let
+                storyAddons =
+                    Maybe.withDefault Addons.initial (Dict.get path addons)
+
+                nextStoryAddons =
+                    { storyAddons | knobs = Knob.update knobMsg storyAddons.knobs }
+            in
+            ( Model (Dict.insert path nextStoryAddons addons) state
             , Cmd.none
             )
 
@@ -138,41 +146,64 @@ subscriptions _ =
 -- V I E W
 
 
-viewItem : Maybe Path -> Story.Story a -> Html Msg
-viewItem currentPath story =
-    case story of
-        Story.Story path _ ->
-            div
-                [ style "background" (ifelse (currentPath == Just path) "#ccc" "#fff")
-                ]
-                [ link (Router.ToStory path)
-                    []
-                    [ text (Path.toStoryTitle path)
-                    ]
-                ]
+viewStoryLink : Bool -> List String -> String -> Html msg
+viewStoryLink active parentPath storyID =
+    div
+        [ style "background" (ifelse active "#ccc" "#fff")
+        ]
+        [ link (Router.ToStory (List.reverse (storyID :: parentPath)))
+            []
+            [ text storyID
+            ]
+        ]
 
-        Story.Group title stories ->
-            div
-                []
-                [ text title
-                , div [] (List.map (viewItem currentPath) stories)
-                ]
+
+viewStoryGroup : List String -> String -> Maybe (List String) -> List Story -> Html Msg
+viewStoryGroup parentPath groupID currentStoryPath stories =
+    div
+        []
+        [ text groupID
+        , div [] (List.map (viewItem (groupID :: parentPath) currentStoryPath) stories)
+        ]
+
+
+viewItem : List String -> Maybe (List String) -> Story -> Html Msg
+viewItem parentPath currentStoryPath story =
+    case ( currentStoryPath, story ) of
+        ( Nothing, Story.Single storyID _ ) ->
+            viewStoryLink False parentPath storyID
+
+        ( Just (fragmentID :: []), Story.Single storyID _ ) ->
+            viewStoryLink (fragmentID == storyID) parentPath storyID
+
+        ( Just (fragmentID :: _), Story.Single storyID _ ) ->
+            viewStoryLink False parentPath storyID
+
+        ( Nothing, Story.Batch groupID stories ) ->
+            viewStoryGroup parentPath groupID Nothing stories
+
+        ( Just (fragmentID :: restPath), Story.Batch groupID stories ) ->
+            if fragmentID == groupID then
+                viewStoryGroup parentPath groupID (Just restPath) stories
+
+            else
+                viewStoryGroup parentPath groupID Nothing stories
 
         _ ->
             text ""
 
 
-viewNavigation : Maybe Path -> List (Story.Story a) -> Html Msg
-viewNavigation current =
+viewNavigation : Maybe (List String) -> List Story -> Html Msg
+viewNavigation currentStoryPath =
     nav
         [ style "float" "left"
         , style "width" "30%"
         ]
-        << List.map (viewItem current)
+        << List.map (viewItem [] currentStoryPath)
 
 
-viewStory : Addons -> Path -> Story.Payload Renderer -> Html Msg
-viewStory addons path payload =
+viewStory : List String -> Story.Payload Renderer -> Addons -> Html Msg
+viewStory path payload addons =
     div
         [ style "float" "left"
         , style "width" "70%"
@@ -183,12 +214,12 @@ viewStory addons path payload =
 
             Ok renderer ->
                 let
-                    (Renderer layout) =
+                    (Renderer.Renderer layout) =
                         renderer addons
                 in
-                layout
+                Html.map StoryMsg layout
         , hr [] []
-        , Html.map KnobMsg (Knob.view path payload.knobs addons.knobs)
+        , Html.map (KnobMsg path) (Knob.view payload.knobs addons.knobs)
         ]
 
 
@@ -197,7 +228,7 @@ viewEmpty =
     text "Nothing to show"
 
 
-findCurrentStory : Path -> List Story -> Maybe (Story.Payload Renderer)
+findCurrentStory : List String -> List Story -> Maybe (Story.Payload Renderer)
 findCurrentStory currentStoryPath stories =
     List.foldl
         (\story result ->
@@ -205,18 +236,22 @@ findCurrentStory currentStoryPath stories =
                 result
 
             else
-                case story of
-                    Story.Story path payload ->
-                        if currentStoryPath == path then
+                case ( currentStoryPath, story ) of
+                    ( fragmentID :: [], Story.Single storyID payload ) ->
+                        if fragmentID == storyID then
                             Just payload
 
                         else
                             Nothing
 
-                    Story.Group _ substories ->
-                        findCurrentStory currentStoryPath substories
+                    ( fragmentID :: restPath, Story.Batch groupID substories ) ->
+                        if fragmentID == groupID then
+                            findCurrentStory restPath substories
 
-                    Story.Empty ->
+                        else
+                            Nothing
+
+                    _ ->
                         Nothing
         )
         Nothing
@@ -237,7 +272,10 @@ view stories (Model addons state) =
                         viewEmpty
 
                     Just payload ->
-                        viewStory addons currentStoryPath payload
+                        addons
+                            |> Dict.get currentStoryPath
+                            |> Maybe.withDefault Addons.initial
+                            |> viewStory currentStoryPath payload
         ]
 
 
@@ -245,13 +283,13 @@ view stories (Model addons state) =
 -- A P I
 
 
-type Renderer
-    = Renderer (Html Msg)
+type alias Renderer =
+    Renderer.Renderer
 
 
 html : Html msg -> Renderer
 html layout =
-    Renderer (Html.map (always StoryMsg) layout)
+    Renderer.Renderer (Html.map (always ()) layout)
 
 
 type alias Story =
@@ -260,7 +298,7 @@ type alias Story =
 
 storyOf : String -> view -> Story.Story view
 storyOf title view_ =
-    Story.Story (Path.Alone title)
+    Story.Single title
         { knobs = []
         , view = Ok (\_ -> view_)
         }
@@ -268,7 +306,7 @@ storyOf title view_ =
 
 groupOf : String -> List Story -> Story
 groupOf title stories =
-    Story.Group title stories
+    Story.Batch title stories
 
 
 type alias Program =

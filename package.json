@@ -8,7 +8,8 @@
     "predemo-build": "rm -rf build",
     "demo-build": "elm make --output=./build/index.html tests/Demo.elm",
     "demo-serve": "http-server ./build --proxy http://localhost:8080?",
-    "demo": "npm run demo-build && npm run demo-serve"
+    "demo": "npm run demo-build && npm run demo-serve",
+    "demo:debug": "npm run demo-build -- --debug && npm run demo-serve"
   },
   "repository": {
     "type": "git",
