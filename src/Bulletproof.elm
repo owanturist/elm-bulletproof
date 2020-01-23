@@ -29,7 +29,7 @@ import Utils exposing (ifelse)
 
 type alias State =
     { navigationKey : Browser.Navigation.Key
-    , current : Maybe (List String)
+    , current : List String
     }
 
 
@@ -77,7 +77,7 @@ init stories () url navigationKey =
     ( Model
         Dict.empty
         { navigationKey = navigationKey
-        , current = initialStoryPath
+        , current = Maybe.withDefault [] initialStoryPath
         }
     , initialCmd
     )
@@ -110,10 +110,10 @@ update msg (Model addons state) =
         UrlChanged url ->
             ( case Router.parse url of
                 Router.ToStory storyPath ->
-                    Model addons { state | current = Just storyPath }
+                    Model addons { state | current = storyPath }
 
                 Router.ToNotFound ->
-                    Model addons { state | current = Nothing }
+                    Model addons { state | current = [] }
             , Cmd.none
             )
 
@@ -158,7 +158,7 @@ viewStoryLink active parentPath storyID =
         ]
 
 
-viewStoryGroup : List String -> String -> Maybe (List String) -> List Story -> Html Msg
+viewStoryGroup : List String -> String -> List String -> List Story -> Html Msg
 viewStoryGroup parentPath groupID currentStoryPath stories =
     div
         []
@@ -167,33 +167,30 @@ viewStoryGroup parentPath groupID currentStoryPath stories =
         ]
 
 
-viewItem : List String -> Maybe (List String) -> Story -> Html Msg
+viewItem : List String -> List String -> Story -> Html Msg
 viewItem parentPath currentStoryPath story =
     case ( currentStoryPath, story ) of
-        ( Nothing, Story.Single storyID _ ) ->
-            viewStoryLink False parentPath storyID
-
-        ( Just (fragmentID :: []), Story.Single storyID _ ) ->
-            viewStoryLink (fragmentID == storyID) parentPath storyID
-
-        ( Just (fragmentID :: _), Story.Single storyID _ ) ->
-            viewStoryLink False parentPath storyID
-
-        ( Nothing, Story.Batch groupID stories ) ->
-            viewStoryGroup parentPath groupID Nothing stories
-
-        ( Just (fragmentID :: restPath), Story.Batch groupID stories ) ->
-            if fragmentID == groupID then
-                viewStoryGroup parentPath groupID (Just restPath) stories
-
-            else
-                viewStoryGroup parentPath groupID Nothing stories
-
-        _ ->
+        ( _, Story.None ) ->
             text ""
 
+        ( fragmentID :: [], Story.Single storyID _ ) ->
+            viewStoryLink (fragmentID == storyID) parentPath storyID
 
-viewNavigation : Maybe (List String) -> List Story -> Html Msg
+        ( _, Story.Single storyID _ ) ->
+            viewStoryLink False parentPath storyID
+
+        ( [], Story.Batch groupID stories ) ->
+            viewStoryGroup parentPath groupID [] stories
+
+        ( fragmentID :: restPath, Story.Batch groupID stories ) ->
+            if fragmentID == groupID then
+                viewStoryGroup parentPath groupID restPath stories
+
+            else
+                viewStoryGroup parentPath groupID [] stories
+
+
+viewNavigation : List String -> List Story -> Html Msg
 viewNavigation currentStoryPath =
     nav
         [ style "float" "left"
@@ -262,20 +259,15 @@ view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
         [ viewNavigation state.current stories
-        , case state.current of
+        , case findCurrentStory state.current stories of
             Nothing ->
                 viewEmpty
 
-            Just currentStoryPath ->
-                case findCurrentStory currentStoryPath stories of
-                    Nothing ->
-                        viewEmpty
-
-                    Just payload ->
-                        addons
-                            |> Dict.get currentStoryPath
-                            |> Maybe.withDefault Addons.initial
-                            |> viewStory currentStoryPath payload
+            Just payload ->
+                addons
+                    |> Dict.get state.current
+                    |> Maybe.withDefault Addons.initial
+                    |> viewStory state.current payload
         ]
 
 
