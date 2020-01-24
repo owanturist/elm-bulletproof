@@ -62,8 +62,8 @@ bool name defaultValue story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 string : String -> String -> Story (String -> a) -> Story a
@@ -85,8 +85,8 @@ string name defaultValue story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 type Property num
@@ -162,8 +162,8 @@ int name defaultValue properties story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
@@ -189,8 +189,8 @@ float name defaultValue properties story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -226,8 +226,8 @@ makeChoice choice choiceName name options story =
                                 payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -264,8 +264,8 @@ color name defaultValue story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 date : String -> String -> Story (Date -> a) -> Story a
@@ -292,8 +292,8 @@ date name defaultValue story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 time : String -> String -> Story (Time -> a) -> Story a
@@ -320,8 +320,8 @@ time name defaultValue story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories
 
 
 files : String -> Story (List File -> a) -> Story a
@@ -343,5 +343,5 @@ files name story =
                         payload.view
                 }
 
-        _ ->
-            None
+        Batch groupID stories ->
+            Batch groupID stories

@@ -6,8 +6,7 @@ import Renderer exposing (Renderer)
 
 
 type Story view
-    = None
-    | Single String (Payload view)
+    = Single String (Payload view)
     | Batch String (List (Story Renderer))
 
 

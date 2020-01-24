@@ -46,9 +46,6 @@ extractFirstStoryPath stories =
 
             else
                 case story of
-                    Story.None ->
-                        Nothing
-
                     Story.Single storyID _ ->
                         Just [ storyID ]
 
@@ -170,9 +167,6 @@ viewStoryGroup parentPath groupID currentStoryPath stories =
 viewItem : List String -> List String -> Story -> Html Msg
 viewItem parentPath currentStoryPath story =
     case ( currentStoryPath, story ) of
-        ( _, Story.None ) ->
-            text ""
-
         ( fragmentID :: [], Story.Single storyID _ ) ->
             viewStoryLink (fragmentID == storyID) parentPath storyID
 
