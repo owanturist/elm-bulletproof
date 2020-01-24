@@ -37,25 +37,6 @@ type Model
     = Model (Dict (List String) Addons) State
 
 
-extractFirstStoryPath : List Story -> Maybe (List String)
-extractFirstStoryPath stories =
-    List.foldl
-        (\story result ->
-            if result /= Nothing then
-                result
-
-            else
-                case story of
-                    Story.Single storyID _ ->
-                        Just [ storyID ]
-
-                    Story.Batch groupID substories ->
-                        Maybe.map ((::) groupID) (extractFirstStoryPath substories)
-        )
-        Nothing
-        stories
-
-
 init : List Story -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories () url navigationKey =
     let
@@ -66,9 +47,9 @@ init stories () url navigationKey =
 
                 Router.ToNotFound ->
                     ( Nothing
-                    , extractFirstStoryPath stories
-                        |> Maybe.map (Router.replace navigationKey << Router.ToStory)
-                        |> Maybe.withDefault Cmd.none
+                    , Story.firstPath stories
+                        |> Router.ToStory
+                        |> Router.replace navigationKey
                     )
     in
     ( Model
@@ -219,41 +200,11 @@ viewEmpty =
     text "Nothing to show"
 
 
-findCurrentStory : List String -> List Story -> Maybe (Story.Payload Renderer)
-findCurrentStory currentStoryPath stories =
-    List.foldl
-        (\story result ->
-            if result /= Nothing then
-                result
-
-            else
-                case ( currentStoryPath, story ) of
-                    ( fragmentID :: [], Story.Single storyID payload ) ->
-                        if fragmentID == storyID then
-                            Just payload
-
-                        else
-                            Nothing
-
-                    ( fragmentID :: restPath, Story.Batch groupID substories ) ->
-                        if fragmentID == groupID then
-                            findCurrentStory restPath substories
-
-                        else
-                            Nothing
-
-                    _ ->
-                        Nothing
-        )
-        Nothing
-        stories
-
-
 view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
         [ viewNavigation state.current stories
-        , case findCurrentStory state.current stories of
+        , case Story.find state.current stories of
             Nothing ->
                 viewEmpty
 
