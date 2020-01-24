@@ -1,6 +1,6 @@
 module Renderer exposing (Renderer(..))
 
-import Html exposing (Html)
+import Html.Styled exposing (Html)
 
 
 type Renderer

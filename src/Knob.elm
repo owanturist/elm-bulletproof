@@ -16,13 +16,10 @@ import Checkbox exposing (checkbox)
 import Color exposing (Color)
 import Date exposing (Date, Time)
 import File exposing (File)
-import Html exposing (Html, div, input, label, option, text, textarea)
-import Html.Attributes
-import Html.Events
-import Html.Keyed
-import Html.Styled as Styled
-import Html.Styled.Attributes as StyledA
-import Html.Styled.Events as StyledE
+import Html.Styled exposing (Html, div, input, label, option, text, textarea)
+import Html.Styled.Attributes as Attributes
+import Html.Styled.Events as Events
+import Html.Styled.Keyed as Keyed
 import Json.Decode as Decode exposing (Decoder)
 import Range exposing (range)
 import Time
@@ -172,19 +169,18 @@ update msg state =
 viewKnobBool : String -> Bool -> Html Msg
 viewKnobBool name checked =
     checkbox
-        [ StyledA.name name
-        , StyledA.checked checked
-        , StyledE.onCheck (UpdateBool name)
+        [ Attributes.name name
+        , Attributes.checked checked
+        , Events.onCheck (UpdateBool name)
         ]
-        |> Styled.toUnstyled
 
 
 viewKnobString : String -> String -> Html Msg
 viewKnobString name value =
     textarea
-        [ Html.Attributes.name name
-        , Html.Attributes.value value
-        , Html.Events.onInput (UpdateString name)
+        [ Attributes.name name
+        , Attributes.value value
+        , Events.onInput (UpdateString name)
         ]
         []
 
@@ -198,14 +194,14 @@ viewKnobNumber :
     -> Html msg
 viewKnobNumber msg numberToString name number payload =
     input
-        (Html.Attributes.type_ "number"
-            :: Html.Attributes.name name
-            :: Html.Attributes.value (Maybe.withDefault "" (Maybe.map numberToString number))
-            :: Html.Events.onInput (msg name)
+        (Attributes.type_ "number"
+            :: Attributes.name name
+            :: Attributes.value (Maybe.withDefault "" (Maybe.map numberToString number))
+            :: Events.onInput (msg name)
             :: List.filterMap identity
-                [ Maybe.map (Html.Attributes.min << numberToString) payload.min
-                , Maybe.map (Html.Attributes.max << numberToString) payload.max
-                , Maybe.map (Html.Attributes.step << numberToString) payload.step
+                [ Maybe.map (Attributes.min << numberToString) payload.min
+                , Maybe.map (Attributes.max << numberToString) payload.max
+                , Maybe.map (Attributes.step << numberToString) payload.step
                 ]
         )
         []
@@ -213,7 +209,7 @@ viewKnobNumber msg numberToString name number payload =
 
 viewKnobRadio : String -> List String -> String -> Html Msg
 viewKnobRadio name options current =
-    Html.Keyed.node "div"
+    Keyed.node "div"
         []
         (List.map
             (\value ->
@@ -221,11 +217,11 @@ viewKnobRadio name options current =
                 , div []
                     [ label []
                         [ input
-                            [ Html.Attributes.type_ "radio"
-                            , Html.Attributes.name name
-                            , Html.Attributes.value value
-                            , Html.Attributes.checked (value == current)
-                            , Html.Events.onCheck (\_ -> UpdateString name value)
+                            [ Attributes.type_ "radio"
+                            , Attributes.name name
+                            , Attributes.value value
+                            , Attributes.checked (value == current)
+                            , Events.onCheck (\_ -> UpdateString name value)
                             ]
                             []
                         , text value
@@ -239,16 +235,16 @@ viewKnobRadio name options current =
 
 viewKnobSelect : String -> List String -> String -> Html Msg
 viewKnobSelect name options current =
-    Html.Keyed.node "select"
-        [ Html.Attributes.name name
-        , Html.Events.onInput (UpdateString name)
+    Keyed.node "select"
+        [ Attributes.name name
+        , Events.onInput (UpdateString name)
         ]
         (List.map
             (\value ->
                 ( value
                 , option
-                    [ Html.Attributes.value value
-                    , Html.Attributes.selected (value == current)
+                    [ Attributes.value value
+                    , Attributes.selected (value == current)
                     ]
                     [ text value
                     ]
@@ -261,10 +257,10 @@ viewKnobSelect name options current =
 viewKnobColor : String -> String -> Html Msg
 viewKnobColor name color =
     input
-        [ Html.Attributes.type_ "color"
-        , Html.Attributes.name name
-        , Html.Attributes.value color
-        , Html.Events.onInput (UpdateColor name)
+        [ Attributes.type_ "color"
+        , Attributes.name name
+        , Attributes.value color
+        , Events.onInput (UpdateColor name)
         ]
         []
 
@@ -272,10 +268,10 @@ viewKnobColor name color =
 viewKnobDate : String -> String -> Html Msg
 viewKnobDate name value =
     input
-        [ Html.Attributes.type_ "date"
-        , Html.Attributes.name name
-        , Html.Attributes.value value
-        , Html.Events.onInput (UpdateDate name)
+        [ Attributes.type_ "date"
+        , Attributes.name name
+        , Attributes.value value
+        , Events.onInput (UpdateDate name)
         ]
         []
 
@@ -283,10 +279,10 @@ viewKnobDate name value =
 viewKnobTime : String -> String -> Html Msg
 viewKnobTime name value =
     input
-        [ Html.Attributes.type_ "time"
-        , Html.Attributes.name name
-        , Html.Attributes.value value
-        , Html.Events.onInput (UpdateTime name)
+        [ Attributes.type_ "time"
+        , Attributes.name name
+        , Attributes.value value
+        , Events.onInput (UpdateTime name)
         ]
         []
 
@@ -299,10 +295,10 @@ filesDecoder =
 viewKnobFile : String -> Html Msg
 viewKnobFile name =
     input
-        [ Html.Attributes.type_ "file"
-        , Html.Attributes.multiple True
-        , Html.Attributes.name name
-        , Html.Events.on "change" (Decode.map (UpdateFiles name) filesDecoder)
+        [ Attributes.type_ "file"
+        , Attributes.multiple True
+        , Attributes.name name
+        , Events.on "change" (Decode.map (UpdateFiles name) filesDecoder)
         ]
         []
 
@@ -361,7 +357,6 @@ viewKnob state name knob =
                 , step = Maybe.withDefault 1 payload.step
                 , value = value
                 }
-                |> Styled.toUnstyled
 
         Float False defaultValue payload ->
             case extract name state of
@@ -389,7 +384,6 @@ viewKnob state name knob =
                 , step = Maybe.withDefault 1 payload.step
                 , value = value
                 }
-                |> Styled.toUnstyled
 
         Choice _ [] ->
             text "No Options available"

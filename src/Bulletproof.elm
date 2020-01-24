@@ -13,9 +13,9 @@ import AVL.Dict as Dict exposing (Dict)
 import Addons exposing (Addons)
 import Browser
 import Browser.Navigation
-import Html exposing (Html, div, hr, nav, text)
-import Html.Attributes exposing (style)
-import Html.Styled as Styled
+import Css
+import Html
+import Html.Styled exposing (Html, div, hr, nav, styled, text)
 import Knob
 import Link exposing (link)
 import Renderer
@@ -126,16 +126,22 @@ subscriptions _ =
 -- V I E W
 
 
-viewStoryLink : Bool -> List String -> String -> Html msg
-viewStoryLink active parentPath storyID =
-    div
-        [ style "background" (ifelse active "#ccc" "#fff")
+styledNavigationItem : Bool -> List (Html msg) -> Html msg
+styledNavigationItem active children =
+    styled div
+        [ Css.backgroundColor (Css.hex (ifelse active "#ccc" "#fff"))
         ]
+        []
+        children
+
+
+viewNavigationStory : Bool -> List String -> String -> Html msg
+viewNavigationStory active parentPath storyID =
+    styledNavigationItem active
         [ link (Router.ToStory (List.reverse (storyID :: parentPath)))
             []
-            [ Styled.text storyID
+            [ text storyID
             ]
-            |> Styled.toUnstyled
         ]
 
 
@@ -152,10 +158,10 @@ viewItem : List String -> List String -> Story -> Html Msg
 viewItem parentPath currentStoryPath story =
     case ( currentStoryPath, story ) of
         ( fragmentID :: [], Story.Single storyID _ ) ->
-            viewStoryLink (fragmentID == storyID) parentPath storyID
+            viewNavigationStory (fragmentID == storyID) parentPath storyID
 
         ( _, Story.Single storyID _ ) ->
-            viewStoryLink False parentPath storyID
+            viewNavigationStory False parentPath storyID
 
         ( [], Story.Batch groupID stories ) ->
             viewStoryGroup parentPath groupID [] stories
@@ -168,21 +174,34 @@ viewItem parentPath currentStoryPath story =
                 viewStoryGroup parentPath groupID [] stories
 
 
-viewNavigation : List String -> List Story -> Html Msg
-viewNavigation currentStoryPath =
-    nav
-        [ style "float" "left"
-        , style "width" "30%"
+styledNavigationPanel : List (Html msg) -> Html msg
+styledNavigationPanel children =
+    styled nav
+        [ Css.float Css.left
+        , Css.width (Css.pct 30)
         ]
-        << List.map (viewItem [] currentStoryPath)
+        []
+        children
+
+
+viewNavigation : List String -> List Story -> Html Msg
+viewNavigation currentStoryPath stories =
+    styledNavigationPanel (List.map (viewItem [] currentStoryPath) stories)
+
+
+styledStory : List (Html msg) -> Html msg
+styledStory children =
+    styled div
+        [ Css.float Css.left
+        , Css.width (Css.pct 70)
+        ]
+        []
+        children
 
 
 viewStory : List String -> Story.Payload Renderer -> Addons -> Html Msg
 viewStory path payload addons =
-    div
-        [ style "float" "left"
-        , style "width" "70%"
-        ]
+    styledStory
         [ case payload.view of
             Err error ->
                 text error
@@ -192,9 +211,9 @@ viewStory path payload addons =
                     (Renderer.Renderer layout) =
                         renderer addons
                 in
-                Html.map StoryMsg layout
+                Html.Styled.map StoryMsg layout
         , hr [] []
-        , Html.map (KnobMsg path) (Knob.view payload.knobs addons.knobs)
+        , Html.Styled.map (KnobMsg path) (Knob.view payload.knobs addons.knobs)
         ]
 
 
@@ -203,19 +222,30 @@ viewEmpty =
     text "Nothing to show"
 
 
+styledRoot : List (Html msg) -> Html msg
+styledRoot children =
+    styled div
+        []
+        []
+        children
+
+
 view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
-        [ viewNavigation state.current stories
-        , case Story.find state.current stories of
-            Nothing ->
-                viewEmpty
+        [ styledRoot
+            [ viewNavigation state.current stories
+            , case Story.find state.current stories of
+                Nothing ->
+                    viewEmpty
 
-            Just payload ->
-                addons
-                    |> Dict.get state.current
-                    |> Maybe.withDefault Addons.initial
-                    |> viewStory state.current payload
+                Just payload ->
+                    addons
+                        |> Dict.get state.current
+                        |> Maybe.withDefault Addons.initial
+                        |> viewStory state.current payload
+            ]
+            |> Html.Styled.toUnstyled
         ]
 
 
@@ -227,14 +257,14 @@ type alias Renderer =
     Renderer.Renderer
 
 
-html : Html msg -> Renderer
+html : Html.Html msg -> Renderer
 html layout =
-    Renderer.Renderer (Html.map (always ()) layout)
+    Renderer.Renderer (Html.Styled.map (always ()) (Html.Styled.fromUnstyled layout))
 
 
-css : Styled.Html msg -> Renderer
+css : Html.Styled.Html msg -> Renderer
 css layout =
-    Renderer.Renderer (Html.map (always ()) (Styled.toUnstyled layout))
+    Renderer.Renderer (Html.Styled.map (always ()) layout)
 
 
 type alias Story =
