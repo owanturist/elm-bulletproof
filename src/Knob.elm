@@ -20,6 +20,7 @@ import Html exposing (Html, div, input, label, option, text, textarea)
 import Html.Attributes
 import Html.Events
 import Html.Keyed
+import Html.Styled
 import Json.Decode as Decode exposing (Decoder)
 import Range exposing (range)
 import Time
@@ -357,6 +358,7 @@ viewKnob state name knob =
                 , step = Maybe.withDefault 1 payload.step
                 , value = value
                 }
+                |> Html.Styled.toUnstyled
 
         Float False defaultValue payload ->
             case extract name state of
@@ -384,6 +386,7 @@ viewKnob state name knob =
                 , step = Maybe.withDefault 1 payload.step
                 , value = value
                 }
+                |> Html.Styled.toUnstyled
 
         Choice _ [] ->
             text "No Options available"

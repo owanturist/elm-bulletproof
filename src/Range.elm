@@ -1,28 +1,9 @@
 module Range exposing (range)
 
-import Html exposing (Html, div, input, span, text)
-import Html.Attributes exposing (style)
-import Html.Events
-
-
-viewContainer : List (Html msg) -> Html msg
-viewContainer =
-    div
-        [ style "display" "flex"
-        , style "-webkit-box-align" "center"
-        , style "align-items" "center"
-        , style "width" "100%"
-        , style "font-family" "monospace"
-        ]
-
-
-viewBorder : List (Html msg) -> Html msg
-viewBorder =
-    span
-        [ style "padding" "0 5px"
-        , style "font-size" "12px"
-        , style "white-space" "nowrap"
-        ]
+import Css
+import Html.Styled as Html exposing (Html, div, input, span, styled, text)
+import Html.Styled.Attributes as Attributes
+import Html.Styled.Events as Events
 
 
 trailingZeros : String -> String -> String
@@ -38,6 +19,44 @@ trailingZeros step value =
 
         _ ->
             value
+
+
+styledContainer : List (Html msg) -> Html msg
+styledContainer =
+    styled div
+        [ Css.displayFlex
+        , Css.alignItems Css.center
+        , Css.width (Css.pct 100)
+        , Css.fontFamily Css.monospace
+        ]
+        []
+
+
+styledBorder : List (Html msg) -> Html msg
+styledBorder =
+    styled span
+        [ Css.padding2 Css.zero (Css.px 5)
+        , Css.fontSize (Css.px 12)
+        , Css.whiteSpace Css.noWrap
+        ]
+        []
+
+
+styledInput : List (Html.Attribute msg) -> Html msg
+styledInput attributes =
+    styled input
+        [ Css.boxSizing Css.borderBox
+        , Css.display Css.tableCell
+        , Css.flexGrow (Css.int 1)
+        , Css.padding (Css.px 5)
+        , Css.height (Css.px 11)
+        , Css.border3 (Css.px 1) Css.solid (Css.hex "#f7f4f4")
+        , Css.borderRadius (Css.px 2)
+        , Css.color (Css.hex "#444")
+        , Css.outline Css.none
+        ]
+        attributes
+        []
 
 
 range :
@@ -59,31 +78,20 @@ range msg name numToString { min, max, step, value } =
         valueStr =
             numToString (clamp min max value)
     in
-    viewContainer
-        [ viewBorder [ text (trailingZeros stepStr minStr) ]
-        , input
-            [ style "box-sizing" "border-box"
-            , style "padding" "5px"
-            , style "height" "11px"
-            , style "color" "#444"
-            , style "display" "table-cell"
-            , style "-webkit-box-flex" "1"
-            , style "flex-grow" "1"
-            , style "outline" "none"
-            , style "border" "1px solid #f7f4f4"
-            , style "border-radius" "2px"
-
-            --
-            , Html.Attributes.type_ "range"
-            , Html.Attributes.name name
-            , Html.Attributes.min minStr
-            , Html.Attributes.max maxStr
-            , Html.Attributes.step stepStr
-            , Html.Attributes.value valueStr
-
-            --
-            , Html.Events.onInput msg
+    styledContainer
+        [ styledBorder
+            [ text (trailingZeros stepStr minStr)
             ]
-            []
-        , viewBorder [ text (trailingZeros stepStr valueStr ++ " / " ++ trailingZeros stepStr maxStr) ]
+        , styledInput
+            [ Attributes.type_ "range"
+            , Attributes.name name
+            , Attributes.min minStr
+            , Attributes.max maxStr
+            , Attributes.step stepStr
+            , Attributes.value valueStr
+            , Events.onInput msg
+            ]
+        , styledBorder
+            [ text (trailingZeros stepStr valueStr ++ " / " ++ trailingZeros stepStr maxStr)
+            ]
         ]

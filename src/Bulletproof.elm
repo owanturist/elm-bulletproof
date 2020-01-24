@@ -2,6 +2,7 @@ module Bulletproof exposing
     ( Program
     , Renderer
     , Story
+    , css
     , groupOf
     , html
     , program
@@ -14,6 +15,7 @@ import Browser
 import Browser.Navigation
 import Html exposing (Html, div, hr, nav, text)
 import Html.Attributes exposing (style)
+import Html.Styled as Styled
 import Knob
 import Link exposing (link)
 import Renderer
@@ -227,6 +229,11 @@ type alias Renderer =
 html : Html msg -> Renderer
 html layout =
     Renderer.Renderer (Html.map (always ()) layout)
+
+
+css : Styled.Html msg -> Renderer
+css layout =
+    Renderer.Renderer (Html.map (always ()) (Styled.toUnstyled layout))
 
 
 type alias Story =

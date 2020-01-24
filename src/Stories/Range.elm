@@ -18,7 +18,7 @@ story =
                     , step = step
                     , value = value
                     }
-                    |> Bulletproof.html
+                    |> Bulletproof.css
             )
             |> Bulletproof.Knob.int "Min" 10 []
             |> Bulletproof.Knob.int "Max" 20 []
@@ -36,7 +36,7 @@ story =
                     , step = step
                     , value = value
                     }
-                    |> Bulletproof.html
+                    |> Bulletproof.css
             )
             |> Bulletproof.Knob.float "Min" 1 []
             |> Bulletproof.Knob.float "Max" 5 []
