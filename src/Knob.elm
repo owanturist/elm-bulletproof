@@ -44,6 +44,14 @@ type alias Limits x =
     }
 
 
+mapLimits : (a -> b) -> Limits a -> Limits b
+mapLimits fn { min, max, step } =
+    Limits
+        (Maybe.map fn min)
+        (Maybe.map fn max)
+        (Maybe.map fn step)
+
+
 type Choice
     = Radio
     | Select
@@ -52,8 +60,8 @@ type Choice
 type Value
     = BoolValue Bool
     | StringValue String
-    | IntValue (Maybe Int)
-    | FloatValue (Maybe Float)
+    | IntValue String
+    | FloatValue String
     | ColorValue (Maybe Color)
     | DateValue (Maybe Time.Posix)
     | TimeValue (Maybe Time)
@@ -104,26 +112,24 @@ update msg state =
             insert name (StringValue string) state
 
         UpdateInt name "" ->
-            insert name (IntValue Nothing) state
+            insert name (IntValue "") state
 
         UpdateInt name str ->
-            case String.toInt str of
-                Nothing ->
-                    state
+            if String.toInt str == Nothing then
+                state
 
-                Just int ->
-                    insert name (IntValue (Just int)) state
+            else
+                insert name (IntValue str) state
 
         UpdateFloat name "" ->
-            insert name (FloatValue Nothing) state
+            insert name (FloatValue "") state
 
         UpdateFloat name str ->
-            case String.toFloat str of
-                Nothing ->
-                    state
+            if String.toFloat str == Nothing then
+                state
 
-                Just float ->
-                    insert name (FloatValue (Just float)) state
+            else
+                insert name (FloatValue str) state
 
         UpdateColor name "" ->
             insert name (ColorValue Nothing) state
@@ -187,21 +193,20 @@ viewKnobString name value =
 
 viewKnobNumber :
     (String -> String -> msg)
-    -> (number -> String)
     -> String
-    -> Maybe number
-    -> Limits number
+    -> String
+    -> Limits String
     -> Html msg
-viewKnobNumber msg numberToString name number payload =
+viewKnobNumber msg name number payload =
     input
         (Attributes.type_ "number"
             :: Attributes.name name
-            :: Attributes.value (Maybe.withDefault "" (Maybe.map numberToString number))
+            :: Attributes.value number
             :: Events.onInput (msg name)
             :: List.filterMap identity
-                [ Maybe.map (Attributes.min << numberToString) payload.min
-                , Maybe.map (Attributes.max << numberToString) payload.max
-                , Maybe.map (Attributes.step << numberToString) payload.step
+                [ Maybe.map Attributes.min payload.min
+                , Maybe.map Attributes.max payload.max
+                , Maybe.map Attributes.step payload.step
                 ]
         )
         []
@@ -331,20 +336,20 @@ viewKnob state name knob =
                 _ ->
                     viewKnobString name defaultValue
 
-        Int False defaultValue payload ->
+        Int False defaultValue limits ->
             case extract name state of
                 Just (IntValue value) ->
-                    viewKnobNumber UpdateInt String.fromInt name value payload
+                    viewKnobNumber UpdateInt name value (mapLimits String.fromInt limits)
 
                 _ ->
-                    viewKnobNumber UpdateInt String.fromInt name (Just defaultValue) payload
+                    viewKnobNumber UpdateInt name (String.fromInt defaultValue) (mapLimits String.fromInt limits)
 
-        Int True defaultValue payload ->
+        Int True defaultValue limits ->
             let
                 value =
                     case extract name state of
-                        Just (IntValue (Just int)) ->
-                            int
+                        Just (IntValue str) ->
+                            Maybe.withDefault defaultValue (String.toInt str)
 
                         _ ->
                             defaultValue
@@ -352,26 +357,26 @@ viewKnob state name knob =
             range (UpdateInt name)
                 name
                 String.fromInt
-                { min = Maybe.withDefault 0 payload.min
-                , max = Maybe.withDefault 100 payload.max
-                , step = Maybe.withDefault 1 payload.step
+                { min = Maybe.withDefault 0 limits.min
+                , max = Maybe.withDefault 100 limits.max
+                , step = Maybe.withDefault 1 limits.step
                 , value = value
                 }
 
-        Float False defaultValue payload ->
+        Float False defaultValue limits ->
             case extract name state of
                 Just (FloatValue value) ->
-                    viewKnobNumber UpdateFloat String.fromFloat name value payload
+                    viewKnobNumber UpdateFloat name value (mapLimits String.fromFloat limits)
 
                 _ ->
-                    viewKnobNumber UpdateFloat String.fromFloat name (Just defaultValue) payload
+                    viewKnobNumber UpdateFloat name (String.fromFloat defaultValue) (mapLimits String.fromFloat limits)
 
-        Float True defaultValue payload ->
+        Float True defaultValue limits ->
             let
                 value =
                     case extract name state of
-                        Just (FloatValue (Just float)) ->
-                            float
+                        Just (FloatValue str) ->
+                            Maybe.withDefault defaultValue (String.toFloat str)
 
                         _ ->
                             defaultValue
@@ -379,9 +384,9 @@ viewKnob state name knob =
             range (UpdateFloat name)
                 name
                 String.fromFloat
-                { min = Maybe.withDefault 0 payload.min
-                , max = Maybe.withDefault 100 payload.max
-                , step = Maybe.withDefault 1 payload.step
+                { min = Maybe.withDefault 0 limits.min
+                , max = Maybe.withDefault 100 limits.max
+                , step = Maybe.withDefault 1 limits.step
                 , value = value
                 }
 

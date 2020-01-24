@@ -153,8 +153,8 @@ int name defaultValue properties story =
                     Result.map
                         (\view state ->
                             case extract name state.knobs of
-                                Just (IntValue (Just value)) ->
-                                    view state value
+                                Just (IntValue str) ->
+                                    view state (Maybe.withDefault defaultValue (String.toInt str))
 
                                 _ ->
                                     view state defaultValue
@@ -180,8 +180,8 @@ float name defaultValue properties story =
                     Result.map
                         (\view state ->
                             case extract name state.knobs of
-                                Just (FloatValue (Just value)) ->
-                                    view state value
+                                Just (FloatValue str) ->
+                                    view state (Maybe.withDefault defaultValue (String.toFloat str))
 
                                 _ ->
                                     view state defaultValue
