@@ -1,24 +1,24 @@
 module Link exposing (link)
 
-import Html exposing (Html, a)
-import Html.Attributes
+import Css
+import Html.Styled as Html exposing (Html, a, styled)
+import Html.Styled.Attributes as Attributes
 import Palette
 import Router
 
 
-styles : List ( String, String )
-styles =
-    [ ( "color", Palette.aqua )
-    ]
+styledA : List (Html.Attribute msg) -> List (Html msg) -> Html msg
+styledA =
+    styled a
+        [ Css.color Palette.aqua
+        ]
 
 
 link : Router.Route -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 link route attributes children =
-    a
-        (Html.Attributes.href (Router.toString route)
-            :: Html.Attributes.tabindex 0
-            :: List.foldl (\( key, value ) acc -> Html.Attributes.style key value :: acc)
-                attributes
-                styles
+    styledA
+        (Attributes.href (Router.toString route)
+            :: Attributes.tabindex 0
+            :: attributes
         )
         children

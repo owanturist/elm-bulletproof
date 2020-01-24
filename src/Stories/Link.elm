@@ -2,7 +2,7 @@ module Stories.Link exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Html exposing (text)
+import Html.Styled exposing (text)
 import Link exposing (link)
 import Router
 
@@ -15,6 +15,6 @@ story =
                 []
                 [ text str
                 ]
-                |> Bulletproof.html
+                |> Bulletproof.css
         )
         |> Bulletproof.Knob.string "Text" "Simple Link"

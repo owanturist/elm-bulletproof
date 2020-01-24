@@ -1,9 +1,11 @@
 module Palette exposing (aqua, font)
 
+import Css
 
-aqua : String
+
+aqua : Css.Color
 aqua =
-    "#1a99fc"
+    Css.hex "#1a99fc"
 
 
 font : String

@@ -133,8 +133,9 @@ viewStoryLink active parentPath storyID =
         ]
         [ link (Router.ToStory (List.reverse (storyID :: parentPath)))
             []
-            [ text storyID
+            [ Styled.text storyID
             ]
+            |> Styled.toUnstyled
         ]
 
 
