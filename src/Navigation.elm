@@ -2,7 +2,7 @@ module Navigation exposing (Model, Msg, initial, open, update, view)
 
 import AVL.Set as Set exposing (Set)
 import Css
-import Html.Styled as Html exposing (Html, a, button, span, styled, text)
+import Html.Styled as Html exposing (Html, a, div, span, styled, text)
 import Html.Styled.Attributes as Attributes exposing (css)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -107,7 +107,8 @@ viewLink active path title =
     in
     ( toKey storyPath
     , styledStoryLink active
-        [ storyPath
+        [ Attributes.rel "noopener noreferrer"
+        , storyPath
             |> List.reverse
             |> Router.ToStory
             |> Router.toString
@@ -122,13 +123,14 @@ viewLink active path title =
 
 styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 styledFolder active =
-    styled button
+    styled div
         [ Css.display Css.block
         , if active then
             Css.backgroundColor Palette.aqua
 
           else
             Css.backgroundColor Css.transparent
+        , Css.cursor Css.pointer
         ]
 
 
@@ -155,7 +157,9 @@ viewFolder model current path title stories =
     in
     ( toKey folderPath
     , styledFolder active
-        [ Events.onClick (Toggle folderPath)
+        [ Attributes.attribute "role" "button"
+        , Attributes.tabindex 0
+        , Events.onClick (Toggle folderPath)
         ]
         [ viewSpacer (List.length path)
         , text (ifelse opened "V" ">")
