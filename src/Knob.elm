@@ -20,7 +20,9 @@ import Html exposing (Html, div, input, label, option, text, textarea)
 import Html.Attributes
 import Html.Events
 import Html.Keyed
-import Html.Styled
+import Html.Styled as Styled
+import Html.Styled.Attributes as StyledA
+import Html.Styled.Events as StyledE
 import Json.Decode as Decode exposing (Decoder)
 import Range exposing (range)
 import Time
@@ -170,10 +172,11 @@ update msg state =
 viewKnobBool : String -> Bool -> Html Msg
 viewKnobBool name checked =
     checkbox
-        [ Html.Attributes.name name
-        , Html.Attributes.checked checked
-        , Html.Events.onCheck (UpdateBool name)
+        [ StyledA.name name
+        , StyledA.checked checked
+        , StyledE.onCheck (UpdateBool name)
         ]
+        |> Styled.toUnstyled
 
 
 viewKnobString : String -> String -> Html Msg
@@ -358,7 +361,7 @@ viewKnob state name knob =
                 , step = Maybe.withDefault 1 payload.step
                 , value = value
                 }
-                |> Html.Styled.toUnstyled
+                |> Styled.toUnstyled
 
         Float False defaultValue payload ->
             case extract name state of
@@ -386,7 +389,7 @@ viewKnob state name knob =
                 , step = Maybe.withDefault 1 payload.step
                 , value = value
                 }
-                |> Html.Styled.toUnstyled
+                |> Styled.toUnstyled
 
         Choice _ [] ->
             text "No Options available"

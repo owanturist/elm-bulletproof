@@ -84,6 +84,7 @@ range msg name numToString { min, max, step, value } =
             ]
         , styledInput
             [ Attributes.type_ "range"
+            , Attributes.tabindex 0
             , Attributes.name name
             , Attributes.min minStr
             , Attributes.max maxStr
