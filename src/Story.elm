@@ -32,8 +32,8 @@ find path stories =
                         else
                             Nothing
 
-                    ( fragmentID :: restPath, Batch groupID substories ) ->
-                        if fragmentID == groupID then
+                    ( fragmentID :: restPath, Batch folderID substories ) ->
+                        if fragmentID == folderID then
                             find restPath substories
 
                         else
@@ -55,8 +55,8 @@ firstPath stories =
                     Single storyID _ ->
                         [ storyID ]
 
-                    Batch groupID substories ->
-                        groupID :: firstPath substories
+                    Batch folderID substories ->
+                        folderID :: firstPath substories
 
             else
                 path

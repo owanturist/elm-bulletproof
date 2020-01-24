@@ -11,6 +11,6 @@ story =
     Bulletproof.storyOf "Checkbox"
         (\check ->
             checkbox [ Attributes.checked check ]
-                |> Bulletproof.css
+                |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.bool "Checked" False

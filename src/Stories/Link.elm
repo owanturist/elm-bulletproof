@@ -15,6 +15,6 @@ story =
                 []
                 [ text str
                 ]
-                |> Bulletproof.css
+                |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.string "Text" "Simple Link"

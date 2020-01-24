@@ -2,9 +2,9 @@ module Bulletproof exposing
     ( Program
     , Renderer
     , Story
-    , css
-    , groupOf
-    , html
+    , folderOf
+    , fromElmCss
+    , fromHtml
     , program
     , storyOf
     )
@@ -17,12 +17,11 @@ import Css
 import Html
 import Html.Styled exposing (Html, div, hr, nav, styled, text)
 import Knob
-import Link exposing (link)
+import Navigation
 import Renderer
 import Router
 import Story exposing (Story)
 import Url exposing (Url)
-import Utils exposing (ifelse)
 
 
 
@@ -30,8 +29,9 @@ import Utils exposing (ifelse)
 
 
 type alias State =
-    { navigationKey : Browser.Navigation.Key
+    { key : Browser.Navigation.Key
     , current : List String
+    , navigation : Navigation.Model
     }
 
 
@@ -40,24 +40,25 @@ type Model
 
 
 init : List Story -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init stories () url navigationKey =
+init stories () url key =
     let
         ( initialStoryPath, initialCmd ) =
             case Router.parse url of
                 Router.ToStory storyPath ->
-                    ( Just storyPath, Cmd.none )
+                    ( storyPath, Cmd.none )
 
                 Router.ToNotFound ->
-                    ( Nothing
+                    ( []
                     , Story.firstPath stories
                         |> Router.ToStory
-                        |> Router.replace navigationKey
+                        |> Router.replace key
                     )
     in
     ( Model
         Dict.empty
-        { navigationKey = navigationKey
-        , current = Maybe.withDefault [] initialStoryPath
+        { key = key
+        , current = initialStoryPath
+        , navigation = Navigation.initial
         }
     , initialCmd
     )
@@ -70,6 +71,7 @@ init stories () url navigationKey =
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
+    | NavigationMsg Navigation.Msg
     | StoryMsg ()
     | KnobMsg (List String) Knob.Msg
 
@@ -79,7 +81,7 @@ update msg (Model addons state) =
     case msg of
         UrlRequested (Browser.Internal url) ->
             ( Model addons state
-            , Browser.Navigation.pushUrl state.navigationKey (Url.toString url)
+            , Browser.Navigation.pushUrl state.key (Url.toString url)
             )
 
         UrlRequested (Browser.External path) ->
@@ -94,6 +96,11 @@ update msg (Model addons state) =
 
                 Router.ToNotFound ->
                     Model addons { state | current = [] }
+            , Cmd.none
+            )
+
+        NavigationMsg navigationMsg ->
+            ( Model addons { state | navigation = Navigation.update navigationMsg state.navigation }
             , Cmd.none
             )
 
@@ -124,69 +131,6 @@ subscriptions _ =
 
 
 -- V I E W
-
-
-styledNavigationItem : Bool -> List (Html msg) -> Html msg
-styledNavigationItem active children =
-    styled div
-        [ Css.backgroundColor (Css.hex (ifelse active "#ccc" "#fff"))
-        ]
-        []
-        children
-
-
-viewNavigationStory : Bool -> List String -> String -> Html msg
-viewNavigationStory active parentPath storyID =
-    styledNavigationItem active
-        [ link (Router.ToStory (List.reverse (storyID :: parentPath)))
-            []
-            [ text storyID
-            ]
-        ]
-
-
-viewStoryGroup : List String -> String -> List String -> List Story -> Html Msg
-viewStoryGroup parentPath groupID currentStoryPath stories =
-    div
-        []
-        [ text groupID
-        , div [] (List.map (viewItem (groupID :: parentPath) currentStoryPath) stories)
-        ]
-
-
-viewItem : List String -> List String -> Story -> Html Msg
-viewItem parentPath currentStoryPath story =
-    case ( currentStoryPath, story ) of
-        ( fragmentID :: [], Story.Single storyID _ ) ->
-            viewNavigationStory (fragmentID == storyID) parentPath storyID
-
-        ( _, Story.Single storyID _ ) ->
-            viewNavigationStory False parentPath storyID
-
-        ( [], Story.Batch groupID stories ) ->
-            viewStoryGroup parentPath groupID [] stories
-
-        ( fragmentID :: restPath, Story.Batch groupID stories ) ->
-            if fragmentID == groupID then
-                viewStoryGroup parentPath groupID restPath stories
-
-            else
-                viewStoryGroup parentPath groupID [] stories
-
-
-styledNavigationPanel : List (Html msg) -> Html msg
-styledNavigationPanel children =
-    styled nav
-        [ Css.float Css.left
-        , Css.width (Css.pct 30)
-        ]
-        []
-        children
-
-
-viewNavigation : List String -> List Story -> Html Msg
-viewNavigation currentStoryPath stories =
-    styledNavigationPanel (List.map (viewItem [] currentStoryPath) stories)
 
 
 styledStory : List (Html msg) -> Html msg
@@ -230,11 +174,23 @@ styledRoot children =
         children
 
 
+styledNavigation : List (Html msg) -> Html msg
+styledNavigation =
+    styled nav
+        [ Css.float Css.left
+        , Css.width (Css.pct 30)
+        ]
+        []
+
+
 view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
         [ styledRoot
-            [ viewNavigation state.current stories
+            [ styledNavigation
+                [ Navigation.view state.current stories state.navigation
+                ]
+                |> Html.Styled.map NavigationMsg
             , case Story.find state.current stories of
                 Nothing ->
                     viewEmpty
@@ -257,13 +213,13 @@ type alias Renderer =
     Renderer.Renderer
 
 
-html : Html.Html msg -> Renderer
-html layout =
+fromHtml : Html.Html msg -> Renderer
+fromHtml layout =
     Renderer.Renderer (Html.Styled.map (always ()) (Html.Styled.fromUnstyled layout))
 
 
-css : Html.Styled.Html msg -> Renderer
-css layout =
+fromElmCss : Html.Styled.Html msg -> Renderer
+fromElmCss layout =
     Renderer.Renderer (Html.Styled.map (always ()) layout)
 
 
@@ -279,8 +235,8 @@ storyOf title view_ =
         }
 
 
-groupOf : String -> List Story -> Story
-groupOf title stories =
+folderOf : String -> List Story -> Story
+folderOf title stories =
     Story.Batch title stories
 
 

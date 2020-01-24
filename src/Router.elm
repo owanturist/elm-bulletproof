@@ -14,20 +14,19 @@ type Route
 parser : Parser (Route -> a) a
 parser =
     Url.Parser.oneOf
-        [ Url.Parser.map
-            (\storyID -> ToStory [ storyID ])
-            (s "story" </> string)
+        [ Url.Parser.map List.singleton (s "story" </> string)
 
         --
         , Url.Parser.map
-            (\componentID storyID -> ToStory [ componentID, storyID ])
+            (\componentID storyID -> [ componentID, storyID ])
             (s "story" </> string </> string)
 
         --
         , Url.Parser.map
-            (\folderID componentID storyID -> ToStory [ folderID, componentID, storyID ])
+            (\folderID componentID storyID -> [ folderID, componentID, storyID ])
             (s "story" </> string </> string </> string)
         ]
+        |> Url.Parser.map (ToStory << List.filterMap Url.percentDecode)
 
 
 parse : Url -> Route
