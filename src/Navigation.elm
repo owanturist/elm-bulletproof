@@ -120,10 +120,15 @@ viewLink active path title =
     )
 
 
-styledFolder : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledFolder =
+styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+styledFolder active =
     styled button
         [ Css.display Css.block
+        , if active then
+            Css.backgroundColor Palette.aqua
+
+          else
+            Css.backgroundColor Css.transparent
         ]
 
 
@@ -135,9 +140,21 @@ viewFolder model current path title stories =
 
         opened =
             Set.member folderPath model
+
+        ( active, nextCurrent ) =
+            case current of
+                [] ->
+                    ( False, [] )
+
+                fragmentID :: rest ->
+                    if fragmentID == title then
+                        ( not opened, rest )
+
+                    else
+                        ( False, [] )
     in
     ( toKey folderPath
-    , styledFolder
+    , styledFolder active
         [ Events.onClick (Toggle folderPath)
         ]
         [ viewSpacer (List.length path)
@@ -145,7 +162,7 @@ viewFolder model current path title stories =
         , text title
         ]
     )
-        :: List.concatMap (viewItem model current folderPath) (ifelse opened stories [])
+        :: List.concatMap (viewItem model nextCurrent folderPath) (ifelse opened stories [])
 
 
 viewItem : Model -> List String -> List String -> Story Renderer -> List ( String, Html Msg )
@@ -159,15 +176,8 @@ viewItem model current path story =
             [ viewLink False path storyID
             ]
 
-        ( [], Story.Batch folderID stories ) ->
-            viewFolder model [] path folderID stories
-
-        ( fragmentID :: restPath, Story.Batch folderID stories ) ->
-            if fragmentID == folderID then
-                viewFolder model restPath path folderID stories
-
-            else
-                viewFolder model [] path folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            viewFolder model current path folderID stories
 
 
 cssScroller : List Css.Style
