@@ -28,7 +28,24 @@ initial =
 
 open : List String -> Model -> Model
 open path model =
-    Set.insert path model
+    openHelp [] path model
+
+
+openHelp : List String -> List String -> Model -> Model
+openHelp prev path model =
+    case path of
+        [] ->
+            model
+
+        _ :: [] ->
+            model
+
+        first :: rest ->
+            let
+                pathToOpen =
+                    first :: prev
+            in
+            openHelp pathToOpen rest (Set.insert pathToOpen model)
 
 
 

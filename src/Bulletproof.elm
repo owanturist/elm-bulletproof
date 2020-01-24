@@ -58,7 +58,7 @@ init stories () url key =
         Dict.empty
         { key = key
         , current = initialStoryPath
-        , navigation = Navigation.initial
+        , navigation = Navigation.open initialStoryPath Navigation.initial
         }
     , initialCmd
     )
