@@ -92,8 +92,7 @@ styledIconHolder =
     styled span
         [ Css.display Css.inlineBlock
         , Css.marginRight (Css.px 4)
-        , Css.width (Css.px 20)
-        , Css.textAlign Css.center
+        , Css.width (Css.px 18)
         , Css.verticalAlign Css.middle
         ]
         []
@@ -128,7 +127,9 @@ viewStoryLink active path title =
             title :: path
     in
     ( toKey storyPath
-    , ifelse active span a
+    , ifelse active
+        span
+        a
         [ css (cssStoryLink active)
         , Attributes.rel "noopener noreferrer"
         , storyPath
@@ -150,6 +151,7 @@ styledFolder active =
         [ Css.display Css.block
         , Css.padding2 (Css.px 4) (Css.px 8)
         , Css.outline Css.none
+        , Css.cursor Css.pointer
         , if active then
             Css.batch
                 [ Css.backgroundColor Palette.blue
@@ -157,11 +159,8 @@ styledFolder active =
                 ]
 
           else
-            Css.batch
-                [ Css.cursor Css.pointer
-                , Css.hover
-                    [ Css.backgroundColor Palette.fog
-                    ]
+            Css.hover
+                [ Css.backgroundColor Palette.fog
                 ]
         ]
 

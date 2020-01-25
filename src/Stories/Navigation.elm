@@ -15,12 +15,12 @@ dummy =
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Navigation"
-        [ Bulletproof.storyOf "empty"
+        [ Bulletproof.storyOf "Empty"
             (Navigation.view [] [] Navigation.initial
                 |> Bulletproof.fromElmCss
             )
         , Bulletproof.folderOf "Stories"
-            [ Bulletproof.storyOf "single"
+            [ Bulletproof.storyOf "Single"
                 (\str ->
                     Navigation.view
                         []
@@ -32,7 +32,7 @@ story =
                 |> Bulletproof.Knob.string "Story Tilte" "single story title"
 
             --
-            , Bulletproof.storyOf "multiple"
+            , Bulletproof.storyOf "Multiple"
                 (\n ->
                     Navigation.view
                         []
@@ -47,7 +47,7 @@ story =
                 )
                 |> Bulletproof.Knob.int "Amount of Stories"
                     3
-                    [ Bulletproof.Knob.range True
+                    [ Bulletproof.Knob.range
                     , Bulletproof.Knob.min 1
                     , Bulletproof.Knob.max 20
                     ]
@@ -55,19 +55,52 @@ story =
 
         --
         , Bulletproof.folderOf "Folders"
-            [ Bulletproof.storyOf "single"
-                (\str ->
+            [ Bulletproof.storyOf "Empty"
+                (\opened title ->
                     Navigation.view
                         []
-                        [ Bulletproof.folderOf str []
+                        [ Bulletproof.folderOf title []
                         ]
-                        Navigation.initial
+                        (if opened then
+                            Set.insert [ title ] Navigation.initial
+
+                         else
+                            Navigation.initial
+                        )
                         |> Bulletproof.fromElmCss
                 )
-                |> Bulletproof.Knob.string "Folder title" "single folder title"
+                |> Bulletproof.Knob.bool "Folder opened" True
+                |> Bulletproof.Knob.string "Folder Title" "Folder"
 
             --
-            , Bulletproof.storyOf "multiple"
+            , Bulletproof.storyOf "Single"
+                (\opened current ->
+                    Navigation.view
+                        [ "Folder", "Story #" ++ String.fromInt current ]
+                        [ Bulletproof.folderOf "Folder"
+                            [ Bulletproof.storyOf "Story #1" dummy
+                            , Bulletproof.storyOf "Story #2" dummy
+                            , Bulletproof.storyOf "Story #3" dummy
+                            ]
+                        ]
+                        (if opened then
+                            Set.insert [ "Folder" ] Navigation.initial
+
+                         else
+                            Navigation.initial
+                        )
+                        |> Bulletproof.fromElmCss
+                )
+                |> Bulletproof.Knob.bool "Folder opened" True
+                |> Bulletproof.Knob.int "Active Story #"
+                    1
+                    [ Bulletproof.Knob.range
+                    , Bulletproof.Knob.min 0
+                    , Bulletproof.Knob.max 3
+                    ]
+
+            --
+            , Bulletproof.storyOf "Multiple"
                 (\n ->
                     Navigation.view
                         []
@@ -80,13 +113,13 @@ story =
                 )
                 |> Bulletproof.Knob.int "Amount of Folders"
                     3
-                    [ Bulletproof.Knob.range True
+                    [ Bulletproof.Knob.range
                     , Bulletproof.Knob.min 1
                     , Bulletproof.Knob.max 20
                     ]
 
             --
-            , Bulletproof.storyOf "nested"
+            , Bulletproof.storyOf "Nested"
                 (\openFirst openSecond openThird current ->
                     [ ( openFirst, [ "First" ] )
                     , ( openSecond, [ "First", "Second" ] )
@@ -101,13 +134,13 @@ story =
                                     acc
                             )
                             Navigation.initial
-                        |> Navigation.view (String.split " " current)
+                        |> Navigation.view [ "First", "Second", "Third", "Story #" ++ String.fromInt current ]
                             [ Bulletproof.folderOf "First"
                                 [ Bulletproof.folderOf "Second"
                                     [ Bulletproof.folderOf "Third"
-                                        [ Bulletproof.storyOf "Story1" dummy
-                                        , Bulletproof.storyOf "Story2" dummy
-                                        , Bulletproof.storyOf "Story3" dummy
+                                        [ Bulletproof.storyOf "Story #1" dummy
+                                        , Bulletproof.storyOf "Story #2" dummy
+                                        , Bulletproof.storyOf "Story #3" dummy
                                         ]
                                     ]
                                 ]
@@ -117,6 +150,11 @@ story =
                 |> Bulletproof.Knob.bool "Open First" True
                 |> Bulletproof.Knob.bool "Open Second" True
                 |> Bulletproof.Knob.bool "Open Third" True
-                |> Bulletproof.Knob.string "Current Path" "First Second Third Story1"
+                |> Bulletproof.Knob.int "Active Story #"
+                    1
+                    [ Bulletproof.Knob.range
+                    , Bulletproof.Knob.min 0
+                    , Bulletproof.Knob.max 3
+                    ]
             ]
         ]

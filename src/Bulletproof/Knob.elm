@@ -90,13 +90,13 @@ string name defaultValue story =
 
 
 type Property num
-    = Range Bool
+    = Range
     | Min num
     | Max num
     | Step num
 
 
-range : Bool -> Property num
+range : Property num
 range =
     Range
 
@@ -119,8 +119,8 @@ step =
 propertyToNumberPayload : Property number -> ( Bool, Limits number ) -> ( Bool, Limits number )
 propertyToNumberPayload property ( range_, limits ) =
     case property of
-        Range x ->
-            ( x, limits )
+        Range ->
+            ( True, limits )
 
         Min num ->
             ( range_, { limits | min = Just num } )
