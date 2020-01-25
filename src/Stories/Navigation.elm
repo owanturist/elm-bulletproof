@@ -206,7 +206,8 @@ storyLabels =
         , Bulletproof.storyOf "Nested"
             (\open5 ->
                 Navigation.view []
-                    [ Bulletproof.storyOf "Story #1" dummy
+                    [ Bulletproof.label "Label #0"
+                    , Bulletproof.storyOf "Story #1" dummy
                     , Bulletproof.storyOf "Story #2" dummy
                     , Bulletproof.label "Label #1"
                     , Bulletproof.folderOf "Folder #1"

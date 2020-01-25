@@ -98,11 +98,15 @@ styledIconHolder =
 styledLabel : List (Html msg) -> Html msg
 styledLabel =
     styled div
-        [ Css.padding3 (Css.px 4) (Css.px 8) (Css.px 5)
+        [ Css.marginTop (Css.px 16)
+        , Css.padding3 (Css.px 4) (Css.px 8) (Css.px 5)
         , Css.color Palette.dark50
         , Css.fontSize (Css.px 12)
         , Css.fontWeight Css.bold
         , Css.letterSpacing (Css.em 0.25)
+        , Css.firstChild
+            [ Css.marginTop Css.zero
+            ]
         ]
         []
 
