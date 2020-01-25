@@ -99,22 +99,26 @@ styledIconHolder =
         []
 
 
-styledStoryLink : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledStoryLink active =
-    styled a
-        [ Css.display Css.block
-        , Css.padding2 (Css.px 4) (Css.px 8)
-        , Css.textDecoration Css.none
-        , if active then
-            Css.batch
-                [ Css.backgroundColor Palette.blue
-                , Css.color Palette.white
-                , Css.fontWeight Css.bold
-                ]
+cssStoryLink : Bool -> List Css.Style
+cssStoryLink active =
+    [ Css.display Css.block
+    , Css.padding2 (Css.px 4) (Css.px 8)
+    , Css.textDecoration Css.none
+    , if active then
+        Css.batch
+            [ Css.backgroundColor Palette.blue
+            , Css.color Palette.white
+            , Css.fontWeight Css.bold
+            ]
 
-          else
-            Css.color Css.inherit
-        ]
+      else
+        Css.batch
+            [ Css.color Css.inherit
+            , Css.hover
+                [ Css.backgroundColor Palette.fog
+                ]
+            ]
+    ]
 
 
 viewStoryLink : Bool -> List String -> String -> ( String, Html msg )
@@ -124,8 +128,9 @@ viewStoryLink active path title =
             title :: path
     in
     ( toKey storyPath
-    , styledStoryLink active
-        [ Attributes.rel "noopener noreferrer"
+    , ifelse active span a
+        [ css (cssStoryLink active)
+        , Attributes.rel "noopener noreferrer"
         , storyPath
             |> List.reverse
             |> Router.ToStory
@@ -145,7 +150,6 @@ styledFolder active =
         [ Css.display Css.block
         , Css.padding2 (Css.px 4) (Css.px 8)
         , Css.outline Css.none
-        , Css.cursor Css.pointer
         , if active then
             Css.batch
                 [ Css.backgroundColor Palette.blue
@@ -153,7 +157,12 @@ styledFolder active =
                 ]
 
           else
-            Css.batch []
+            Css.batch
+                [ Css.cursor Css.pointer
+                , Css.hover
+                    [ Css.backgroundColor Palette.fog
+                    ]
+                ]
         ]
 
 
