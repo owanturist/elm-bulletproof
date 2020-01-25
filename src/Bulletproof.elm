@@ -178,7 +178,6 @@ styledDragger orientation attributes =
     styled div
         [ Css.position Css.absolute
         , Css.backgroundColor (Css.hex "#f00")
-        , Css.cursor Css.rowResize
         , case orientation of
             Horizontal ->
                 Css.batch
@@ -186,6 +185,7 @@ styledDragger orientation attributes =
                     , Css.right Css.zero
                     , Css.left Css.zero
                     , Css.height (Css.px 5)
+                    , Css.cursor Css.rowResize
                     ]
 
             Vertical ->
@@ -194,6 +194,7 @@ styledDragger orientation attributes =
                     , Css.bottom Css.zero
                     , Css.left (Css.px -5)
                     , Css.width (Css.px 5)
+                    , Css.cursor Css.colResize
                     ]
         ]
         attributes
@@ -205,13 +206,17 @@ styledDock size =
     styled div
         [ Css.position Css.relative
         , Css.flex3 Css.zero Css.zero (Css.px (toFloat size))
-        , Css.borderTop3 (Css.px 1) Css.solid Palette.gray
+        , Css.borderTop3 (Css.px 1) Css.solid Palette.smoke
         ]
 
 
 styledDockHeader : List (Html msg) -> Html msg
 styledDockHeader =
-    styled div [] []
+    styled div
+        [ Css.padding (Css.px 8)
+        , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
+        ]
+        []
 
 
 styledDockBody : List (Html msg) -> Html msg

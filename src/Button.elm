@@ -26,7 +26,7 @@ cssButton =
 
     --
     , Css.focus
-        [ Css.boxShadow5 Css.zero Css.zero Css.zero (Css.px 3) Palette.gray50
+        [ Css.boxShadow5 Css.zero Css.zero Css.zero (Css.px 2) Palette.gray50
         ]
 
     --
