@@ -78,7 +78,7 @@ viewSpacer n =
     if n > 0 then
         styled span
             [ Css.display Css.inlineBlock
-            , Css.width (Css.px (toFloat n * 16))
+            , Css.width (Css.px (toFloat n * 22))
             ]
             []
             []
@@ -193,7 +193,13 @@ viewFolder model current path title stories =
         , Events.onClick (Toggle folderPath)
         ]
         [ viewSpacer (List.length path)
-        , styledIconHolder [ ifelse opened Icon.folderOpen Icon.folder ]
+        , styledIconHolder
+            [ if opened then
+                ifelse (List.isEmpty stories) Icon.folderEmptyOpen Icon.folderOpen
+
+              else
+                ifelse (List.isEmpty stories) Icon.folderEmpty Icon.folder
+            ]
         , text title
         ]
     )
@@ -202,16 +208,18 @@ viewFolder model current path title stories =
 
 viewItem : Model -> List String -> List String -> Story Renderer -> List ( String, Html Msg )
 viewItem model current path story =
-    case ( current, story ) of
-        ( fragmentID :: [], Story.Single storyID _ ) ->
-            [ viewStoryLink (fragmentID == storyID) path storyID
-            ]
+    case story of
+        Story.Single storyID _ ->
+            case current of
+                fragmentID :: [] ->
+                    [ viewStoryLink (fragmentID == storyID) path storyID
+                    ]
 
-        ( _, Story.Single storyID _ ) ->
-            [ viewStoryLink False path storyID
-            ]
+                _ ->
+                    [ viewStoryLink False path storyID
+                    ]
 
-        ( _, Story.Batch folderID stories ) ->
+        Story.Batch folderID stories ->
             viewFolder model current path folderID stories
 
 
@@ -222,6 +230,7 @@ cssContainer =
     , Css.property "user-select" "none"
     , Css.fontFamilies Palette.font
     , Css.fontSize (Css.px 13)
+    , Css.color Palette.dark
     ]
 
 

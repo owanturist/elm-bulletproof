@@ -3,7 +3,7 @@ module Stories.Icon exposing (story)
 import Bulletproof
 import Bulletproof.Knob
 import Css
-import Html.Styled exposing (Html, div, styled)
+import Html.Styled exposing (Html, div, span, styled, text)
 import Icon
 
 
@@ -18,26 +18,37 @@ viewContainer color =
         []
 
 
-viewBlock : Html msg -> Html msg
-viewBlock child =
+viewBlock : ( String, Html msg ) -> Html msg
+viewBlock ( name, child ) =
     styled div
         [ Css.displayFlex
+        , Css.flexDirection Css.column
         , Css.alignItems Css.center
         , Css.justifyContent Css.center
-        , Css.width (Css.px 50)
-        , Css.height (Css.px 50)
+        , Css.width (Css.px 150)
+        , Css.height (Css.px 100)
         ]
         []
-        [ child ]
+        [ child
+        , styled span
+            [ Css.marginTop (Css.px 8)
+            , Css.fontSize (Css.px 12)
+            , Css.fontFamily Css.monospace
+            ]
+            []
+            [ text name ]
+        ]
 
 
 story : Bulletproof.Story
 story =
     Bulletproof.storyOf "Icon"
         (\color ->
-            [ Icon.folder
-            , Icon.folderOpen
-            , Icon.elm
+            [ ( "folder", Icon.folder )
+            , ( "folderOpen", Icon.folderOpen )
+            , ( "folderEmpty", Icon.folderEmpty )
+            , ( "folderEmptyOpen", Icon.folderEmptyOpen )
+            , ( "elm", Icon.elm )
             ]
                 |> List.map viewBlock
                 |> viewContainer (Css.hex color.hex)
