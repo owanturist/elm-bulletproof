@@ -105,21 +105,25 @@ update msg (Model addons state) =
             , Cmd.none
             )
 
-        NavigationMsg navigationMsg ->
-            ( Model addons { state | navigation = Navigation.update navigationMsg state.navigation }
-            , Cmd.none
+        NavigationMsg msgOfNavigation ->
+            let
+                ( nextNavigation, cmdOfNavigation ) =
+                    Navigation.update state.key msgOfNavigation state.navigation
+            in
+            ( Model addons { state | navigation = nextNavigation }
+            , Cmd.map NavigationMsg cmdOfNavigation
             )
 
         StoryMsg () ->
             ( Model addons state, Cmd.none )
 
-        KnobMsg path knobMsg ->
+        KnobMsg path msgOfKnob ->
             let
                 storyAddons =
                     Maybe.withDefault Addons.initial (Dict.get path addons)
 
                 nextStoryAddons =
-                    { storyAddons | knobs = Knob.update knobMsg storyAddons.knobs }
+                    { storyAddons | knobs = Knob.update msgOfKnob storyAddons.knobs }
             in
             ( Model (Dict.insert path nextStoryAddons addons) state
             , Cmd.none

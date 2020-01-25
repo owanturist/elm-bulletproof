@@ -7,6 +7,7 @@ import Html.Styled.Attributes as Attributes exposing (css)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Icon
+import Json.Decode as Decode exposing (Decoder)
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
@@ -51,14 +52,22 @@ openHelp prev path model =
 
 
 type Msg
-    = Toggle (List String)
+    = GoToStory (List String)
+    | Toggle (List String)
 
 
-update : Msg -> Model -> Model
-update msg model =
+update : Router.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update key msg model =
     case msg of
+        GoToStory storyPath ->
+            ( model
+            , Router.push key (Router.ToStory storyPath)
+            )
+
         Toggle path ->
-            Set.toggle path model
+            ( Set.toggle path model
+            , Cmd.none
+            )
 
 
 
@@ -121,11 +130,13 @@ viewLabel nesting title =
     )
 
 
-cssStoryLink : Bool -> List Css.Style
-cssStoryLink active =
+cssItem : Bool -> List Css.Style
+cssItem active =
     [ Css.display Css.block
     , Css.padding2 (Css.px 4) (Css.px 8)
     , Css.textDecoration Css.none
+    , Css.outline Css.none
+    , Css.color Css.inherit
     , if active then
         Css.batch
             [ Css.backgroundColor Palette.blue
@@ -134,32 +145,53 @@ cssStoryLink active =
             ]
 
       else
-        Css.batch
-            [ Css.color Css.inherit
-            , Css.hover
-                [ Css.backgroundColor Palette.fog
-                ]
-            ]
+        Css.batch []
+
+    --
+    , Css.focus
+        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
+        ]
+
+    --
+    , Css.hover
+        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
+        ]
     ]
 
 
-viewStoryLink : Bool -> List String -> String -> ( String, Html msg )
+onSpaceOrEnter : msg -> Decoder ( msg, Bool )
+onSpaceOrEnter msg =
+    Decode.andThen
+        (\keyCode ->
+            if keyCode == 13 || keyCode == 32 then
+                Decode.succeed ( msg, True )
+
+            else
+                Decode.fail "Ignore that"
+        )
+        Events.keyCode
+
+
+viewStoryLink : Bool -> List String -> String -> ( String, Html Msg )
 viewStoryLink active path title =
     let
         storyPath =
             title :: path
+
+        exactStoryPath =
+            List.reverse storyPath
     in
     ( toKey ("STORY" :: storyPath)
-    , ifelse active
-        span
-        a
-        [ css (cssStoryLink active)
+    , a
+        [ css (cssItem active)
         , Attributes.rel "noopener noreferrer"
-        , storyPath
-            |> List.reverse
-            |> Router.ToStory
+        , Attributes.tabindex 0
+        , Router.ToStory exactStoryPath
             |> Router.toString
             |> Attributes.href
+        , GoToStory exactStoryPath
+            |> onSpaceOrEnter
+            |> Events.preventDefaultOn "keypress"
         ]
         [ viewSpacer (List.length path)
         , styledIconHolder [ Icon.elm ]
@@ -170,22 +202,7 @@ viewStoryLink active path title =
 
 styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 styledFolder active =
-    styled div
-        [ Css.display Css.block
-        , Css.padding2 (Css.px 4) (Css.px 8)
-        , Css.outline Css.none
-        , Css.cursor Css.pointer
-        , if active then
-            Css.batch
-                [ Css.backgroundColor Palette.blue
-                , Css.color Palette.white
-                ]
-
-          else
-            Css.hover
-                [ Css.backgroundColor Palette.fog
-                ]
-        ]
+    styled div (Css.cursor Css.pointer :: cssItem active)
 
 
 viewFolder : Model -> List String -> List String -> String -> List (Story Renderer) -> List ( String, Html Msg )
@@ -214,6 +231,9 @@ viewFolder model current path title stories =
         [ Attributes.attribute "role" "button"
         , Attributes.tabindex 0
         , Events.onClick (Toggle folderPath)
+        , Toggle folderPath
+            |> onSpaceOrEnter
+            |> Events.preventDefaultOn "keypress"
         ]
         [ viewSpacer (List.length path)
         , styledIconHolder

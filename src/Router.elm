@@ -1,9 +1,13 @@
-module Router exposing (Route(..), parse, replace, toString)
+module Router exposing (Key, Route(..), parse, push, replace, toString)
 
 import Browser.Navigation
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing ((</>), Parser, s, string)
+
+
+type alias Key =
+    Browser.Navigation.Key
 
 
 type Route
@@ -47,3 +51,8 @@ toString route =
 replace : Browser.Navigation.Key -> Route -> Cmd msg
 replace key route =
     Browser.Navigation.replaceUrl key (toString route)
+
+
+push : Browser.Navigation.Key -> Route -> Cmd msg
+push key route =
+    Browser.Navigation.pushUrl key (toString route)

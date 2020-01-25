@@ -1,11 +1,16 @@
-module Palette exposing (black, blue, cloud, dark, dark50, fog, font, white)
+module Palette exposing (black, blue, blueDark, cloud, dark, dark50, font, smoke, white)
 
 import Css
 
 
 blue : Css.Color
 blue =
-    Css.hex "#1ea7fd"
+    Css.rgb 30 165 253
+
+
+blueDark : Css.Color
+blueDark =
+    Css.rgb 8 155 251
 
 
 cloud : Css.Color
@@ -23,8 +28,8 @@ dark50 =
     Css.rgba 51 51 51 0.5
 
 
-fog : Css.Color
-fog =
+smoke : Css.Color
+smoke =
     Css.rgba 0 0 0 0.05
 
 
