@@ -274,7 +274,9 @@ viewItem model current path story =
 
 cssContainer : List Css.Style
 cssContainer =
-    [ Css.whiteSpace Css.noWrap
+    [ Css.display Css.table
+    , Css.width (Css.pct 100)
+    , Css.whiteSpace Css.noWrap
     , Css.property "user-select" "none"
     , Css.fontFamilies Palette.font
     , Css.fontSize (Css.px 13)

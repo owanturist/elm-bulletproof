@@ -3,7 +3,9 @@ module Stories.Navigation exposing (story)
 import AVL.Set as Set
 import Bulletproof
 import Bulletproof.Knob
+import Css
 import Html exposing (text)
+import Html.Styled exposing (div, styled)
 import Navigation
 
 
@@ -19,6 +21,32 @@ story =
             (Navigation.view [] [] Navigation.initial
                 |> Bulletproof.fromElmCss
             )
+        , Bulletproof.storyOf "Overflow"
+            (\title count ->
+                Navigation.view []
+                    (List.range 1 count
+                        |> List.map
+                            (\i ->
+                                Bulletproof.storyOf (title ++ " #" ++ String.fromInt i) dummy
+                            )
+                    )
+                    Navigation.initial
+                    |> List.singleton
+                    |> styled div
+                        [ Css.width (Css.px 150)
+                        , Css.height (Css.px 300)
+                        , Css.overflow Css.auto
+                        ]
+                        []
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Stories prefix" "SuperLongStoryTitle"
+            |> Bulletproof.Knob.int "Amount of Stories"
+                30
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 100
+                ]
         , storyStories
         , storyFolders
         , storyLabels

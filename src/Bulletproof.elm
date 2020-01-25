@@ -208,6 +208,7 @@ styledNavigation : List (Html msg) -> Html msg
 styledNavigation =
     styled nav
         [ Css.flex3 Css.zero Css.zero (Css.px 240)
+        , Css.overflow Css.auto
         ]
         []
 
