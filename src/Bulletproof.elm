@@ -5,6 +5,7 @@ module Bulletproof exposing
     , folderOf
     , fromElmCss
     , fromHtml
+    , label
     , program
     , storyOf
     )
@@ -55,12 +56,15 @@ init stories () url key =
                         |> Router.ToStory
                         |> Router.replace key
                     )
+
+        initialFolderPath =
+            List.take (List.length initialStoryPath - 1) initialStoryPath
     in
     ( Model
         Dict.empty
         { key = key
         , current = initialStoryPath
-        , navigation = Navigation.open initialStoryPath Navigation.initial
+        , navigation = Navigation.open initialFolderPath Navigation.initial
         }
     , initialCmd
     )
@@ -249,6 +253,11 @@ storyOf title view_ =
 folderOf : String -> List Story -> Story
 folderOf title stories =
     Story.Batch title stories
+
+
+label : String -> Story
+label =
+    Story.Label
 
 
 type alias Program =

@@ -38,9 +38,6 @@ openHelp prev path model =
         [] ->
             model
 
-        _ :: [] ->
-            model
-
         first :: rest ->
             let
                 pathToOpen =
@@ -98,6 +95,28 @@ styledIconHolder =
         []
 
 
+styledLabel : List (Html msg) -> Html msg
+styledLabel =
+    styled div
+        [ Css.padding3 (Css.px 4) (Css.px 8) (Css.px 5)
+        , Css.color Palette.dark50
+        , Css.fontSize (Css.px 12)
+        , Css.fontWeight Css.bold
+        , Css.letterSpacing (Css.em 0.25)
+        ]
+        []
+
+
+viewLabel : Int -> String -> ( String, Html msg )
+viewLabel nesting title =
+    ( toKey [ "LABEL", title ]
+    , styledLabel
+        [ viewSpacer nesting
+        , text (String.toUpper title)
+        ]
+    )
+
+
 cssStoryLink : Bool -> List Css.Style
 cssStoryLink active =
     [ Css.display Css.block
@@ -126,7 +145,7 @@ viewStoryLink active path title =
         storyPath =
             title :: path
     in
-    ( toKey storyPath
+    ( toKey ("STORY" :: storyPath)
     , ifelse active
         span
         a
@@ -186,7 +205,7 @@ viewFolder model current path title stories =
                     else
                         ( False, [] )
     in
-    ( toKey folderPath
+    ( toKey ("FOLDER" :: folderPath)
     , styledFolder active
         [ Attributes.attribute "role" "button"
         , Attributes.tabindex 0
@@ -209,6 +228,10 @@ viewFolder model current path title stories =
 viewItem : Model -> List String -> List String -> Story Renderer -> List ( String, Html Msg )
 viewItem model current path story =
     case story of
+        Story.Label title ->
+            [ viewLabel (List.length path) title
+            ]
+
         Story.Single storyID _ ->
             case current of
                 fragmentID :: [] ->
@@ -226,7 +249,6 @@ viewItem model current path story =
 cssContainer : List Css.Style
 cssContainer =
     [ Css.width (Css.pct 100)
-    , Css.overflow Css.auto
     , Css.property "user-select" "none"
     , Css.fontFamilies Palette.font
     , Css.fontSize (Css.px 13)

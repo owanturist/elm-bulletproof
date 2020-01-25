@@ -6,7 +6,8 @@ import Renderer exposing (Renderer)
 
 
 type Story view
-    = Single String (Payload view)
+    = Label String
+    | Single String (Payload view)
     | Batch String (List (Story Renderer))
 
 
@@ -52,6 +53,9 @@ firstPath stories =
         (\story path ->
             if List.isEmpty path then
                 case story of
+                    Label _ ->
+                        []
+
                     Single storyID _ ->
                         [ storyID ]
 

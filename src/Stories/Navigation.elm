@@ -21,6 +21,7 @@ story =
             )
         , storyStories
         , storyFolders
+        , storyLabels
         ]
 
 
@@ -169,4 +170,71 @@ storyFolders =
                 , Bulletproof.Knob.min 0
                 , Bulletproof.Knob.max 3
                 ]
+        ]
+
+
+storyLabels : Bulletproof.Story
+storyLabels =
+    Bulletproof.folderOf "Labels"
+        [ Bulletproof.storyOf "Alone"
+            (\title ->
+                Navigation.view []
+                    [ Bulletproof.label title
+                    ]
+                    Navigation.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Label Title" "Standalone"
+
+        --
+        , Bulletproof.storyOf "Stories around"
+            (Navigation.view []
+                [ Bulletproof.label "Label #1"
+                , Bulletproof.storyOf "Some story" dummy
+                , Bulletproof.label "Label #2"
+                , Bulletproof.folderOf "Empty Folder" []
+                , Bulletproof.label "Label #3"
+                , Bulletproof.folderOf "Folder"
+                    [ Bulletproof.storyOf "Another story" dummy
+                    ]
+                ]
+                Navigation.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Nested"
+            (\open5 ->
+                Navigation.view []
+                    [ Bulletproof.storyOf "Story #1" dummy
+                    , Bulletproof.storyOf "Story #2" dummy
+                    , Bulletproof.label "Label #1"
+                    , Bulletproof.folderOf "Folder #1"
+                        [ Bulletproof.storyOf "Story #3" dummy
+                        , Bulletproof.label "Label #2"
+                        , Bulletproof.folderOf "Folder #2" []
+                        , Bulletproof.folderOf "Folder #3"
+                            [ Bulletproof.label "Label #3"
+                            , Bulletproof.storyOf "Story #4" dummy
+                            , Bulletproof.folderOf "Folder #4" []
+                            ]
+                        ]
+                    , Bulletproof.folderOf "Folder #5"
+                        [ Bulletproof.label "Label #4"
+                        , Bulletproof.storyOf "Story #5" dummy
+                        ]
+                    ]
+                    (List.foldl Navigation.open
+                        Navigation.initial
+                        [ [ "Folder #1", "Folder #3", "Folder #4" ]
+                        , if open5 then
+                            [ "Folder #5" ]
+
+                          else
+                            []
+                        ]
+                    )
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.bool "Open Folder #5" False
         ]

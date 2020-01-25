@@ -46,6 +46,9 @@ type alias Time =
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             Single storyID
                 { knobs = ( name, Bool defaultValue ) :: payload.knobs
@@ -69,6 +72,9 @@ bool name defaultValue story =
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             Single storyID
                 { knobs = ( name, String defaultValue ) :: payload.knobs
@@ -142,6 +148,9 @@ propertiesToNumberPayload =
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             let
                 ( range_, limits ) =
@@ -169,6 +178,9 @@ int name defaultValue properties story =
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             let
                 ( range_, limits ) =
@@ -196,6 +208,9 @@ float name defaultValue properties story =
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice choiceName name options story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             Single storyID
                 { knobs = ( name, Choice choice (List.map Tuple.first options) ) :: payload.knobs
@@ -243,6 +258,9 @@ select =
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             let
                 defaultColor =
@@ -271,6 +289,9 @@ color name defaultValue story =
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             let
                 defaultDate =
@@ -299,6 +320,9 @@ date name defaultValue story =
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             let
                 defaultTime =
@@ -327,6 +351,9 @@ time name defaultValue story =
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case story of
+        Label title ->
+            Label title
+
         Single storyID payload ->
             Single storyID
                 { knobs = ( name, Files ) :: payload.knobs
