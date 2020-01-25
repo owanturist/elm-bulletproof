@@ -108,7 +108,7 @@ styledLabel : List (Html msg) -> Html msg
 styledLabel =
     styled div
         [ Css.marginTop (Css.px 16)
-        , Css.padding3 (Css.px 4) (Css.px 8) (Css.px 5)
+        , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 5) (Css.px 8)
         , Css.color Palette.dark50
         , Css.fontSize (Css.px 12)
         , Css.fontWeight Css.bold
@@ -133,7 +133,7 @@ viewLabel nesting title =
 cssItem : Bool -> List Css.Style
 cssItem active =
     [ Css.display Css.block
-    , Css.padding2 (Css.px 4) (Css.px 8)
+    , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 4) (Css.px 8)
     , Css.textDecoration Css.none
     , Css.outline Css.none
     , Css.color Css.inherit

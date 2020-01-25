@@ -35,6 +35,7 @@ story =
                     |> styled div
                         [ Css.width (Css.px 150)
                         , Css.height (Css.px 300)
+                        , Css.border3 (Css.px 1) Css.solid (Css.hex "#444")
                         , Css.overflow Css.auto
                         ]
                         []
