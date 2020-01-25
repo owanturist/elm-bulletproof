@@ -7,12 +7,11 @@ import Html.Styled.Attributes as Attributes exposing (css)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Icon
-import Json.Decode as Decode exposing (Decoder)
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
 import Story exposing (Story(..))
-import Utils exposing (ifelse)
+import Utils exposing (ifelse, onSpaceOrEnter)
 
 
 
@@ -159,19 +158,6 @@ cssItem active =
     ]
 
 
-onSpaceOrEnter : msg -> Decoder ( msg, Bool )
-onSpaceOrEnter msg =
-    Decode.andThen
-        (\keyCode ->
-            if keyCode == 13 || keyCode == 32 then
-                Decode.succeed ( msg, True )
-
-            else
-                Decode.fail "Ignore that"
-        )
-        Events.keyCode
-
-
 viewStoryLink : Bool -> List String -> String -> ( String, Html Msg )
 viewStoryLink active path title =
     let
@@ -190,9 +176,7 @@ viewStoryLink active path title =
         , Router.ToStory exactStoryPath
             |> Router.toString
             |> Attributes.href
-        , GoToStory exactStoryPath
-            |> onSpaceOrEnter
-            |> Events.preventDefaultOn "keypress"
+        , onSpaceOrEnter (GoToStory exactStoryPath)
         ]
         [ viewSpacer (List.length path)
         , styledIconHolder [ Icon.elm ]
@@ -233,9 +217,7 @@ viewFolder model current path title stories =
         , Attributes.tabindex 0
         , Attributes.title title
         , Events.onClick (Toggle folderPath)
-        , Toggle folderPath
-            |> onSpaceOrEnter
-            |> Events.preventDefaultOn "keypress"
+        , onSpaceOrEnter (Toggle folderPath)
         ]
         [ viewSpacer (List.length path)
         , styledIconHolder

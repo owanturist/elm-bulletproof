@@ -48,6 +48,8 @@ story =
             , ( "folderOpen", Icon.folderOpen )
             , ( "folderEmpty", Icon.folderEmpty )
             , ( "folderEmptyOpen", Icon.folderEmptyOpen )
+            , ( "dockHorizontal", Icon.dockHorizontal )
+            , ( "dockVertical", Icon.dockVertical )
             , ( "elm", Icon.elm )
             ]
                 |> List.map viewBlock

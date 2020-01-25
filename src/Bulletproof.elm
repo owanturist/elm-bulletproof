@@ -14,10 +14,12 @@ import AVL.Dict as Dict exposing (Dict)
 import Addons exposing (Addons)
 import Browser
 import Browser.Navigation
+import Button exposing (button)
 import Css
 import Css.Global exposing (global)
 import Html
 import Html.Styled exposing (Html, div, nav, styled, text)
+import Icon
 import Knob
 import Navigation
 import Palette
@@ -31,10 +33,16 @@ import Url exposing (Url)
 -- M O D E L
 
 
+type Orientation
+    = Horizontal
+    | Vertical
+
+
 type alias State =
     { key : Browser.Navigation.Key
     , current : List String
     , navigation : Navigation.Model
+    , dock : ( Orientation, Int )
     }
 
 
@@ -65,6 +73,7 @@ init stories () url key =
         { key = key
         , current = initialStoryPath
         , navigation = Navigation.open initialFolderPath Navigation.initial
+        , dock = ( Horizontal, 300 )
         }
     , initialCmd
     )
@@ -77,9 +86,10 @@ init stories () url key =
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
+    | ToggleDockOrientation
     | NavigationMsg Navigation.Msg
-    | StoryMsg ()
     | KnobMsg (List String) Knob.Msg
+    | StoryMsg ()
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,6 +115,16 @@ update msg (Model addons state) =
             , Cmd.none
             )
 
+        ToggleDockOrientation ->
+            ( case Tuple.first state.dock of
+                Horizontal ->
+                    Model addons { state | dock = ( Vertical, 400 ) }
+
+                Vertical ->
+                    Model addons { state | dock = ( Horizontal, 300 ) }
+            , Cmd.none
+            )
+
         NavigationMsg msgOfNavigation ->
             let
                 ( nextNavigation, cmdOfNavigation ) =
@@ -113,9 +133,6 @@ update msg (Model addons state) =
             ( Model addons { state | navigation = nextNavigation }
             , Cmd.map NavigationMsg cmdOfNavigation
             )
-
-        StoryMsg () ->
-            ( Model addons state, Cmd.none )
 
         KnobMsg path msgOfKnob ->
             let
@@ -128,6 +145,9 @@ update msg (Model addons state) =
             ( Model (Dict.insert path nextStoryAddons addons) state
             , Cmd.none
             )
+
+        StoryMsg () ->
+            ( Model addons state, Cmd.none )
 
 
 
@@ -153,29 +173,92 @@ styledStory =
         []
 
 
-styledKnobs : List (Html msg) -> Html msg
-styledKnobs =
+styledDragger : Orientation -> List (Html.Styled.Attribute msg) -> Html msg
+styledDragger orientation attributes =
     styled div
-        [ Css.flex3 Css.zero Css.zero (Css.px 300)
-        , Css.borderTop3 (Css.px 1) Css.solid Palette.gray
+        [ Css.position Css.absolute
+        , Css.backgroundColor (Css.hex "#f00")
+        , Css.cursor Css.rowResize
+        , case orientation of
+            Horizontal ->
+                Css.batch
+                    [ Css.top (Css.px -5)
+                    , Css.right Css.zero
+                    , Css.left Css.zero
+                    , Css.height (Css.px 5)
+                    ]
+
+            Vertical ->
+                Css.batch
+                    [ Css.top Css.zero
+                    , Css.bottom Css.zero
+                    , Css.left (Css.px -5)
+                    , Css.width (Css.px 5)
+                    ]
         ]
+        attributes
         []
 
 
-styledWorkspace : List (Html msg) -> Html msg
-styledWorkspace =
+styledDock : Int -> List (Html.Styled.Attribute msg) -> List (Html msg) -> Html msg
+styledDock size =
+    styled div
+        [ Css.position Css.relative
+        , Css.flex3 Css.zero Css.zero (Css.px (toFloat size))
+        , Css.borderTop3 (Css.px 1) Css.solid Palette.gray
+        ]
+
+
+styledDockHeader : List (Html msg) -> Html msg
+styledDockHeader =
+    styled div [] []
+
+
+styledDockBody : List (Html msg) -> Html msg
+styledDockBody =
+    styled div [] []
+
+
+viewDock : Orientation -> Int -> Html Msg -> Html Msg
+viewDock dockOrientation dockSize knobs =
+    styledDock dockSize
+        []
+        [ styledDragger dockOrientation []
+        , styledDockHeader
+            [ button ToggleDockOrientation
+                [ case dockOrientation of
+                    Horizontal ->
+                        Icon.dockVertical
+
+                    Vertical ->
+                        Icon.dockHorizontal
+                ]
+            ]
+        , styledDockBody
+            [ knobs
+            ]
+        ]
+
+
+styledWorkspace : Orientation -> List (Html msg) -> Html msg
+styledWorkspace dockOrientation =
     styled div
         [ Css.displayFlex
-        , Css.flexDirection Css.column
+        , case dockOrientation of
+            Horizontal ->
+                Css.flexDirection Css.column
+
+            Vertical ->
+                Css.flexDirection Css.row
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.backgroundColor Palette.white
         ]
         []
 
 
-viewWorkspace : List String -> Story.Payload Renderer -> Addons -> Html Msg
-viewWorkspace path payload addons =
-    styledWorkspace
+viewWorkspace : ( Orientation, Int ) -> List String -> Story.Payload Renderer -> Addons -> Html Msg
+viewWorkspace ( dockOrientation, dockSize ) path payload addons =
+    styledWorkspace dockOrientation
         [ case Result.map ((|>) addons) payload.view of
             Err error ->
                 text error
@@ -188,9 +271,9 @@ viewWorkspace path payload addons =
             text ""
 
           else
-            styledKnobs
-                [ Html.Styled.map (KnobMsg path) (Knob.view payload.knobs addons.knobs)
-                ]
+            Knob.view payload.knobs addons.knobs
+                |> Html.Styled.map (KnobMsg path)
+                |> viewDock dockOrientation dockSize
         ]
 
 
@@ -253,7 +336,7 @@ view stories (Model addons state) =
                     addons
                         |> Dict.get state.current
                         |> Maybe.withDefault Addons.initial
-                        |> viewWorkspace state.current payload
+                        |> viewWorkspace state.dock state.current payload
             ]
             |> Html.Styled.toUnstyled
         ]
