@@ -86,7 +86,7 @@ storyStories =
                 3
                 [ Bulletproof.Knob.range
                 , Bulletproof.Knob.min 1
-                , Bulletproof.Knob.max 20
+                , Bulletproof.Knob.max 50
                 ]
         ]
 
@@ -158,7 +158,7 @@ storyFolders =
                 3
                 [ Bulletproof.Knob.range
                 , Bulletproof.Knob.min 1
-                , Bulletproof.Knob.max 20
+                , Bulletproof.Knob.max 50
                 ]
 
         --

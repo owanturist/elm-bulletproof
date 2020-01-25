@@ -17,7 +17,7 @@ import Browser.Navigation
 import Css
 import Css.Global exposing (global)
 import Html
-import Html.Styled exposing (Html, div, hr, nav, styled, text)
+import Html.Styled exposing (Html, div, nav, styled, text)
 import Knob
 import Navigation
 import Palette
@@ -144,29 +144,53 @@ subscriptions _ =
 
 
 styledStory : List (Html msg) -> Html msg
-styledStory children =
+styledStory =
     styled div
-        [ Css.flex3 (Css.int 1) (Css.int 1) (Css.pct 0)
+        [ Css.all Css.initial
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.overflow Css.auto
         ]
         []
-        children
 
 
-viewStory : List String -> Story.Payload Renderer -> Addons -> Html Msg
-viewStory path payload addons =
-    styledStory
-        [ case payload.view of
+styledKnobs : List (Html msg) -> Html msg
+styledKnobs =
+    styled div
+        [ Css.flex3 Css.zero Css.zero (Css.px 300)
+        , Css.borderTop3 (Css.px 1) Css.solid Palette.gray
+        ]
+        []
+
+
+styledWorkspace : List (Html msg) -> Html msg
+styledWorkspace =
+    styled div
+        [ Css.displayFlex
+        , Css.flexDirection Css.column
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.backgroundColor Palette.white
+        ]
+        []
+
+
+viewWorkspace : List String -> Story.Payload Renderer -> Addons -> Html Msg
+viewWorkspace path payload addons =
+    styledWorkspace
+        [ case Result.map ((|>) addons) payload.view of
             Err error ->
                 text error
 
-            Ok renderer ->
-                let
-                    (Renderer.Renderer layout) =
-                        renderer addons
-                in
-                Html.Styled.map StoryMsg layout
-        , hr [] []
-        , Html.Styled.map (KnobMsg path) (Knob.view payload.knobs addons.knobs)
+            Ok (Renderer.Renderer layout) ->
+                styledStory
+                    [ Html.Styled.map StoryMsg layout
+                    ]
+        , if List.isEmpty payload.knobs then
+            text ""
+
+          else
+            styledKnobs
+                [ Html.Styled.map (KnobMsg path) (Knob.view payload.knobs addons.knobs)
+                ]
         ]
 
 
@@ -229,7 +253,7 @@ view stories (Model addons state) =
                     addons
                         |> Dict.get state.current
                         |> Maybe.withDefault Addons.initial
-                        |> viewStory state.current payload
+                        |> viewWorkspace state.current payload
             ]
             |> Html.Styled.toUnstyled
         ]
