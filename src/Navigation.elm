@@ -186,6 +186,7 @@ viewStoryLink active path title =
         [ css (cssItem active)
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
+        , Attributes.title title
         , Router.ToStory exactStoryPath
             |> Router.toString
             |> Attributes.href
@@ -230,6 +231,7 @@ viewFolder model current path title stories =
     , styledFolder active
         [ Attributes.attribute "role" "button"
         , Attributes.tabindex 0
+        , Attributes.title title
         , Events.onClick (Toggle folderPath)
         , Toggle folderPath
             |> onSpaceOrEnter
@@ -272,7 +274,7 @@ viewItem model current path story =
 
 cssContainer : List Css.Style
 cssContainer =
-    [ Css.width (Css.pct 100)
+    [ Css.whiteSpace Css.noWrap
     , Css.property "user-select" "none"
     , Css.fontFamilies Palette.font
     , Css.fontSize (Css.px 13)

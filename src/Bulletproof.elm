@@ -146,8 +146,7 @@ subscriptions _ =
 styledStory : List (Html msg) -> Html msg
 styledStory children =
     styled div
-        [ Css.float Css.left
-        , Css.width (Css.pct 70)
+        [ Css.flex3 (Css.int 1) (Css.int 1) (Css.pct 0)
         ]
         []
         children
@@ -182,13 +181,25 @@ styledGlobal =
         [ Css.Global.body
             [ Css.backgroundColor Palette.cloud
             ]
+        , Css.Global.each
+            [ Css.Global.html
+            , Css.Global.body
+            ]
+            [ Css.minHeight (Css.pct 100)
+            , Css.height (Css.pct 100)
+            ]
         ]
 
 
 styledRoot : List (Html msg) -> Html msg
 styledRoot children =
     styled div
-        []
+        [ Css.displayFlex
+        , Css.flexDirection Css.row
+        , Css.flexWrap Css.noWrap
+        , Css.width (Css.pct 100)
+        , Css.height (Css.pct 100)
+        ]
         []
         (styledGlobal :: children)
 
@@ -196,8 +207,7 @@ styledRoot children =
 styledNavigation : List (Html msg) -> Html msg
 styledNavigation =
     styled nav
-        [ Css.float Css.left
-        , Css.width (Css.pct 30)
+        [ Css.flex3 Css.zero Css.zero (Css.px 240)
         ]
         []
 
