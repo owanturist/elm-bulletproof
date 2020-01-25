@@ -14,10 +14,12 @@ import Addons exposing (Addons)
 import Browser
 import Browser.Navigation
 import Css
+import Css.Global exposing (global)
 import Html
 import Html.Styled exposing (Html, div, hr, nav, styled, text)
 import Knob
 import Navigation
+import Palette
 import Renderer
 import Router
 import Story exposing (Story)
@@ -166,12 +168,21 @@ viewEmpty =
     text "Nothing to show"
 
 
+styledGlobal : Html msg
+styledGlobal =
+    global
+        [ Css.Global.body
+            [ Css.backgroundColor Palette.cloud
+            ]
+        ]
+
+
 styledRoot : List (Html msg) -> Html msg
 styledRoot children =
     styled div
         []
         []
-        children
+        (styledGlobal :: children)
 
 
 styledNavigation : List (Html msg) -> Html msg

@@ -6,6 +6,7 @@ import Html.Styled as Html exposing (Html, a, div, span, styled, text)
 import Html.Styled.Attributes as Attributes exposing (css)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
+import Icon
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
@@ -69,20 +70,7 @@ update msg model =
 
 toKey : List String -> String
 toKey =
-    String.join ""
-
-
-styledStoryLink : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledStoryLink active =
-    styled a
-        [ Css.display Css.block
-        , Css.padding2 (Css.px 4) (Css.px 8)
-        , if active then
-            Css.backgroundColor Palette.aqua
-
-          else
-            Css.backgroundColor Css.transparent
-        ]
+    String.join "<-@->"
 
 
 viewSpacer : Int -> Html msg
@@ -90,7 +78,7 @@ viewSpacer n =
     if n > 0 then
         styled span
             [ Css.display Css.inlineBlock
-            , Css.width (Css.px (toFloat n * 8))
+            , Css.width (Css.px (toFloat n * 16))
             ]
             []
             []
@@ -99,8 +87,38 @@ viewSpacer n =
         text ""
 
 
-viewLink : Bool -> List String -> String -> ( String, Html msg )
-viewLink active path title =
+styledIconHolder : List (Html msg) -> Html msg
+styledIconHolder =
+    styled span
+        [ Css.display Css.inlineBlock
+        , Css.marginRight (Css.px 4)
+        , Css.width (Css.px 20)
+        , Css.textAlign Css.center
+        , Css.verticalAlign Css.middle
+        ]
+        []
+
+
+styledStoryLink : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+styledStoryLink active =
+    styled a
+        [ Css.display Css.block
+        , Css.padding2 (Css.px 4) (Css.px 8)
+        , Css.textDecoration Css.none
+        , if active then
+            Css.batch
+                [ Css.backgroundColor Palette.blue
+                , Css.color Palette.white
+                , Css.fontWeight Css.bold
+                ]
+
+          else
+            Css.color Css.inherit
+        ]
+
+
+viewStoryLink : Bool -> List String -> String -> ( String, Html msg )
+viewStoryLink active path title =
     let
         storyPath =
             title :: path
@@ -115,7 +133,7 @@ viewLink active path title =
             |> Attributes.href
         ]
         [ viewSpacer (List.length path)
-        , text "* "
+        , styledIconHolder [ Icon.elm ]
         , text title
         ]
     )
@@ -125,12 +143,17 @@ styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 styledFolder active =
     styled div
         [ Css.display Css.block
+        , Css.padding2 (Css.px 4) (Css.px 8)
+        , Css.outline Css.none
+        , Css.cursor Css.pointer
         , if active then
-            Css.backgroundColor Palette.aqua
+            Css.batch
+                [ Css.backgroundColor Palette.blue
+                , Css.color Palette.white
+                ]
 
           else
-            Css.backgroundColor Css.transparent
-        , Css.cursor Css.pointer
+            Css.batch []
         ]
 
 
@@ -162,7 +185,7 @@ viewFolder model current path title stories =
         , Events.onClick (Toggle folderPath)
         ]
         [ viewSpacer (List.length path)
-        , text (ifelse opened "V" ">")
+        , styledIconHolder [ ifelse opened Icon.folderOpen Icon.folder ]
         , text title
         ]
     )
@@ -173,27 +196,30 @@ viewItem : Model -> List String -> List String -> Story Renderer -> List ( Strin
 viewItem model current path story =
     case ( current, story ) of
         ( fragmentID :: [], Story.Single storyID _ ) ->
-            [ viewLink (fragmentID == storyID) path storyID
+            [ viewStoryLink (fragmentID == storyID) path storyID
             ]
 
         ( _, Story.Single storyID _ ) ->
-            [ viewLink False path storyID
+            [ viewStoryLink False path storyID
             ]
 
         ( _, Story.Batch folderID stories ) ->
             viewFolder model current path folderID stories
 
 
-cssScroller : List Css.Style
-cssScroller =
+cssContainer : List Css.Style
+cssContainer =
     [ Css.width (Css.pct 100)
     , Css.overflow Css.auto
+    , Css.property "user-select" "none"
+    , Css.fontFamilies Palette.font
+    , Css.fontSize (Css.px 13)
     ]
 
 
 view : List String -> List (Story Renderer) -> Model -> Html Msg
 view current stories model =
     Keyed.node "div"
-        [ css cssScroller
+        [ css cssContainer
         ]
         (List.concatMap (viewItem model current []) stories)

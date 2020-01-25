@@ -1,13 +1,48 @@
-module Palette exposing (aqua, font)
+module Palette exposing (black, blue, cloud, dark, fog, font, white)
 
 import Css
 
 
-aqua : Css.Color
-aqua =
-    Css.hex "#1a99fc"
+blue : Css.Color
+blue =
+    Css.hex "#1ea7fd"
 
 
-font : String
+cloud : Css.Color
+cloud =
+    Css.hex "#f6f9fc"
+
+
+dark : Css.Color
+dark =
+    Css.hex "#333"
+
+
+fog : Css.Color
+fog =
+    Css.rgba 0 0 0 0.05
+
+
+black : Css.Color
+black =
+    Css.hex "#000"
+
+
+white : Css.Color
+white =
+    Css.hex "#fff"
+
+
+font : List String
 font =
-    "\"Nunito Sans\", -apple-system, \".SFNSText-Regular\", \"San Francisco\", BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"
+    [ "\"Nunito Sans\""
+    , "-apple-system"
+    , "\".SFNSText-Regular\""
+    , "\"San Francisco\""
+    , "BlinkMacSystemFont"
+    , "\"Segoe UI\""
+    , "\"Helvetica Neue\""
+    , "Helvetica"
+    , "Arial"
+    , "sans-serif"
+    ]
