@@ -13,6 +13,8 @@ module Bulletproof exposing
 import AVL.Dict as Dict exposing (Dict)
 import Addons exposing (Addons)
 import Browser
+import Browser.Dom
+import Browser.Events
 import Browser.Navigation
 import Button exposing (button)
 import Css
@@ -28,6 +30,7 @@ import Palette
 import Renderer
 import Router
 import Story exposing (Story)
+import Task
 import Url exposing (Url)
 
 
@@ -46,8 +49,15 @@ type Dragging
     | DockResizing Int Int Int
 
 
+type alias Viewport =
+    { width : Int
+    , height : Int
+    }
+
+
 type alias State =
     { key : Browser.Navigation.Key
+    , viewport : Viewport
     , current : List String
     , dragging : Dragging
     , dockOrientation : Orientation
@@ -82,6 +92,7 @@ init stories () url key =
     ( Model
         Dict.empty
         { key = key
+        , viewport = Viewport 0 0
         , current = initialStoryPath
         , dragging = NoDragging
         , dockOrientation = Horizontal
@@ -89,7 +100,12 @@ init stories () url key =
         , navigationSize = 240
         , navigation = Navigation.open initialFolderPath Navigation.initial
         }
-    , initialCmd
+    , Cmd.batch
+        [ initialCmd
+        , Task.perform
+            (\{ scene } -> ViewportChanged (round scene.width) (round scene.height))
+            Browser.Dom.getViewport
+        ]
     )
 
 
@@ -100,6 +116,7 @@ init stories () url key =
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
+    | ViewportChanged Int Int
     | ToggleDockOrientation
     | StartNavigationResizing Int
     | StartDockResizing Int Int
@@ -121,6 +138,11 @@ update msg (Model addons state) =
         UrlRequested (Browser.External path) ->
             ( Model addons state
             , Browser.Navigation.load path
+            )
+
+        ViewportChanged width height ->
+            ( Model addons { state | viewport = Viewport width height }
+            , Cmd.none
             )
 
         UrlChanged url ->
@@ -226,7 +248,7 @@ update msg (Model addons state) =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Browser.Events.onResize ViewportChanged
 
 
 
