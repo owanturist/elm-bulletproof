@@ -224,6 +224,11 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
+grandParentWidth : Decoder Int
+grandParentWidth =
+    Decode.at [ "target", "parentElement", "parentElement", "offsetWidth" ] Decode.int
+
+
 grandParentHeight : Decoder Int
 grandParentHeight =
     Decode.at [ "target", "parentElement", "parentElement", "offsetHeight" ] Decode.int
@@ -299,19 +304,23 @@ styledDockBody =
 
 viewDock : Orientation -> Int -> Html Msg -> Html Msg
 viewDock dockOrientation dockSize knobs =
+    let
+        ( grandParentSizeDecoder, startPointDecoder, orientationIcon ) =
+            case dockOrientation of
+                Horizontal ->
+                    ( grandParentHeight, screenY, Icon.dockVertical )
+
+                Vertical ->
+                    ( grandParentWidth, screenX, Icon.dockHorizontal )
+    in
     styledDock dockSize
         []
         [ styledDragger dockOrientation
-            [ Events.on "mousedown" (Decode.map2 StartDockResizing grandParentHeight screenY)
+            [ Events.on "mousedown" (Decode.map2 StartDockResizing grandParentSizeDecoder startPointDecoder)
             ]
         , styledDockHeader
             [ button ToggleDockOrientation
-                [ case dockOrientation of
-                    Horizontal ->
-                        Icon.dockVertical
-
-                    Vertical ->
-                        Icon.dockHorizontal
+                [ orientationIcon
                 ]
             ]
         , styledDockBody
@@ -432,7 +441,12 @@ view stories (Model addons state) =
                     []
 
                 DockResizing _ _ _ ->
-                    [ Events.on "mousemove" (Decode.map Drag screenY)
+                    [ case state.dockOrientation of
+                        Horizontal ->
+                            Events.on "mousemove" (Decode.map Drag screenY)
+
+                        Vertical ->
+                            Events.on "mousemove" (Decode.map Drag screenX)
                     , Events.on "mouseup" (Decode.succeed DragEnd)
                     , Events.on "mouseleave" (Decode.succeed DragEnd)
                     ]
