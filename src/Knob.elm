@@ -14,9 +14,10 @@ module Knob exposing
 import AVL.Dict as Dict exposing (Dict)
 import Checkbox exposing (checkbox)
 import Color exposing (Color)
+import Css
 import Date exposing (Date, Time)
 import File exposing (File)
-import Html.Styled exposing (Html, div, input, label, option, text, textarea)
+import Html.Styled exposing (Html, div, input, label, option, styled, text, textarea)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -455,9 +456,18 @@ viewKnob state name knob =
             viewKnobFile name
 
 
+styledRoot : List (Html msg) -> Html msg
+styledRoot =
+    styled div
+        [ Css.display Css.table
+        , Css.width (Css.pct 100)
+        ]
+        []
+
+
 view : List ( String, Knob ) -> State -> Html Msg
 view knobs state =
     knobs
         |> List.reverse
         |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob state name knob))
-        |> div []
+        |> styledRoot
