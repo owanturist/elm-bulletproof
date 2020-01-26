@@ -21,6 +21,7 @@ import Css
 import Css.Global exposing (global)
 import Html
 import Html.Styled exposing (Html, div, nav, styled, text)
+import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Icon
 import Json.Decode as Decode exposing (Decoder)
@@ -417,20 +418,23 @@ styledDockBody =
 viewDock : Settings -> Html Msg -> Html Msg
 viewDock settings knobs =
     let
-        ( startPointDecoder, orientationIcon ) =
+        ( startPointDecoder, iconTitle, orientationIcon ) =
             case settings.dockOrientation of
                 Horizontal ->
-                    ( screenY, Icon.dockVertical )
+                    ( screenY, "Dock to right", Icon.dockVertical )
 
                 Vertical ->
-                    ( screenX, Icon.dockHorizontal )
+                    ( screenX, "Dock to bottom", Icon.dockHorizontal )
     in
     styledDock settings
         [ viewDragger settings.dockOrientation
             [ Events.on "mousedown" (Decode.map StartDockResizing startPointDecoder)
             ]
         , styledDockHeader
-            [ button ToggleDockOrientation [ orientationIcon ]
+            [ button ToggleDockOrientation
+                [ Attributes.title iconTitle
+                ]
+                [ orientationIcon ]
             ]
         , styledDockBody
             [ knobs

@@ -10,7 +10,7 @@ story : Bulletproof.Story
 story =
     Bulletproof.storyOf "Button"
         (\icon ->
-            button () [ icon ]
+            button () [] [ icon ]
                 |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.select "Icon"

@@ -1,7 +1,7 @@
 module Button exposing (button)
 
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Palette
@@ -36,12 +36,13 @@ cssButton =
     ]
 
 
-button : msg -> List (Html msg) -> Html msg
-button msg =
+button : msg -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+button msg attributes =
     div
-        [ Attributes.css cssButton
-        , Attributes.attribute "role" "button"
-        , Attributes.tabindex 0
-        , Events.onClick msg
-        , onSpaceOrEnter msg
-        ]
+        (Attributes.css cssButton
+            :: Attributes.attribute "role" "button"
+            :: Attributes.tabindex 0
+            :: Events.onClick msg
+            :: onSpaceOrEnter msg
+            :: attributes
+        )
