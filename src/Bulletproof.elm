@@ -35,6 +35,52 @@ import Url exposing (Url)
 
 
 
+-- S E T T I N G S
+
+
+type alias Settings =
+    { navigationWidth : Int
+    , dockWidth : Int
+    , dockHeight : Int
+    , dockOrientation : Orientation
+    }
+
+
+defaultSettings : Settings
+defaultSettings =
+    { navigationWidth = 200
+    , dockWidth = 400
+    , dockHeight = 300
+    , dockOrientation = Horizontal
+    }
+
+
+minNavigationWidth : Int
+minNavigationWidth =
+    100
+
+
+minDockWidth : Int
+minDockWidth =
+    300
+
+
+minDockHeight : Int
+minDockHeight =
+    200
+
+
+minStoryWidth : Int
+minStoryWidth =
+    300
+
+
+minStoryHeight : Int
+minStoryHeight =
+    200
+
+
+
 -- M O D E L
 
 
@@ -52,23 +98,6 @@ type Dragging
 type alias Viewport =
     { width : Int
     , height : Int
-    }
-
-
-type alias Settings =
-    { navigationWidth : Int
-    , dockWidth : Int
-    , dockHeight : Int
-    , dockOrientation : Orientation
-    }
-
-
-defaultSettings : Settings
-defaultSettings =
-    { navigationWidth = 240
-    , dockWidth = 300
-    , dockHeight = 400
-    , dockOrientation = Horizontal
     }
 
 
@@ -170,7 +199,13 @@ update msg (Model settings state addons) =
         ToggleDockOrientation ->
             ( case settings.dockOrientation of
                 Horizontal ->
-                    Model { settings | dockOrientation = Vertical } state addons
+                    let
+                        nextDockWidth =
+                            min
+                                settings.dockWidth
+                                (state.viewport.width - minStoryWidth - settings.navigationWidth)
+                    in
+                    Model { settings | dockOrientation = Vertical, dockWidth = nextDockWidth } state addons
 
                 Vertical ->
                     Model { settings | dockOrientation = Horizontal } state addons
@@ -198,15 +233,51 @@ update msg (Model settings state addons) =
                     Model settings state addons
 
                 NavigationResizing initial start ->
-                    Model { settings | navigationWidth = initial + end - start } state addons
+                    let
+                        nextNavigationWidth =
+                            clamp
+                                minNavigationWidth
+                                (state.viewport.width - minStoryWidth - minDockWidth)
+                                (initial + end - start)
+
+                        nextDockWidth =
+                            case settings.dockOrientation of
+                                Horizontal ->
+                                    settings.dockWidth
+
+                                Vertical ->
+                                    min
+                                        settings.dockWidth
+                                        (state.viewport.width - minStoryWidth - nextNavigationWidth)
+                    in
+                    Model { settings | navigationWidth = nextNavigationWidth, dockWidth = nextDockWidth } state addons
 
                 DockResizing initial start ->
                     case settings.dockOrientation of
                         Horizontal ->
-                            Model { settings | dockHeight = initial + start - end } state addons
+                            let
+                                nextDockHeight =
+                                    clamp
+                                        minDockHeight
+                                        (state.viewport.height - minStoryHeight)
+                                        (initial + start - end)
+                            in
+                            Model { settings | dockHeight = nextDockHeight } state addons
 
                         Vertical ->
-                            Model { settings | dockWidth = initial + start - end } state addons
+                            let
+                                nextDockWidth =
+                                    clamp
+                                        minDockWidth
+                                        (state.viewport.width - minStoryWidth - minNavigationWidth)
+                                        (initial + start - end)
+
+                                nextNavigationWidth =
+                                    min
+                                        settings.navigationWidth
+                                        (state.viewport.width - minStoryWidth - nextDockWidth)
+                            in
+                            Model { settings | dockWidth = nextDockWidth, navigationWidth = nextNavigationWidth } state addons
             , Cmd.none
             )
 
@@ -304,7 +375,8 @@ viewDragger orientation attributes =
 styledDock : Settings -> List (Html msg) -> Html msg
 styledDock settings =
     styled div
-        [ Css.displayFlex
+        [ Css.boxSizing Css.borderBox
+        , Css.displayFlex
         , Css.flexDirection Css.column
         , Css.position Css.relative
         , case settings.dockOrientation of
