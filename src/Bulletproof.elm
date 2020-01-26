@@ -249,14 +249,13 @@ styledDragger : Orientation -> List (Html.Styled.Attribute msg) -> Html msg
 styledDragger orientation attributes =
     styled div
         [ Css.position Css.absolute
-        , Css.backgroundColor (Css.hex "#f00")
         , case orientation of
             Horizontal ->
                 Css.batch
-                    [ Css.top (Css.px -5)
+                    [ Css.top (Css.px -3)
                     , Css.right Css.zero
                     , Css.left Css.zero
-                    , Css.height (Css.px 5)
+                    , Css.height (Css.px 4)
                     , Css.cursor Css.rowResize
                     ]
 
@@ -264,8 +263,8 @@ styledDragger orientation attributes =
                 Css.batch
                     [ Css.top Css.zero
                     , Css.bottom Css.zero
-                    , Css.left (Css.px -5)
-                    , Css.width (Css.px 5)
+                    , Css.left (Css.px -3)
+                    , Css.width (Css.px 4)
                     , Css.cursor Css.colResize
                     ]
         ]
@@ -273,21 +272,26 @@ styledDragger orientation attributes =
         []
 
 
-styledDock : Int -> List (Html.Styled.Attribute msg) -> List (Html msg) -> Html msg
-styledDock size =
+styledDock : Orientation -> Int -> List (Html.Styled.Attribute msg) -> List (Html msg) -> Html msg
+styledDock orientation size =
     styled div
         [ Css.displayFlex
         , Css.flexDirection Css.column
         , Css.position Css.relative
         , Css.flex3 Css.zero Css.zero (Css.px (toFloat size))
-        , Css.borderTop3 (Css.px 1) Css.solid Palette.smoke
+        , case orientation of
+            Horizontal ->
+                Css.borderTop3 (Css.px 2) Css.solid Palette.smoke
+
+            Vertical ->
+                Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
         ]
 
 
 styledDockHeader : List (Html msg) -> Html msg
 styledDockHeader =
     styled div
-        [ Css.padding (Css.px 8)
+        [ Css.padding2 (Css.px 8) (Css.px 12)
         , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
         ]
         []
@@ -298,6 +302,7 @@ styledDockBody =
     styled div
         [ Css.overflow Css.auto
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.padding2 (Css.px 8) (Css.px 12)
         ]
         []
 
@@ -313,7 +318,9 @@ viewDock dockOrientation dockSize knobs =
                 Vertical ->
                     ( grandParentWidth, screenX, Icon.dockHorizontal )
     in
-    styledDock dockSize
+    styledDock
+        dockOrientation
+        dockSize
         []
         [ styledDragger dockOrientation
             [ Events.on "mousedown" (Decode.map2 StartDockResizing grandParentSizeDecoder startPointDecoder)
