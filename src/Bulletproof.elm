@@ -19,7 +19,9 @@ import Css
 import Css.Global exposing (global)
 import Html
 import Html.Styled exposing (Html, div, nav, styled, text)
+import Html.Styled.Events as Events
 import Icon
+import Json.Decode as Decode exposing (Decoder)
 import Knob
 import Navigation
 import Palette
@@ -38,11 +40,18 @@ type Orientation
     | Vertical
 
 
+type Dragging
+    = NoDragging
+    | DockResizing Int Int
+
+
 type alias State =
     { key : Browser.Navigation.Key
     , current : List String
+    , dragging : Dragging
     , navigation : Navigation.Model
-    , dock : ( Orientation, Int )
+    , dockOrientation : Orientation
+    , dockSize : Int
     }
 
 
@@ -72,8 +81,10 @@ init stories () url key =
         Dict.empty
         { key = key
         , current = initialStoryPath
+        , dragging = NoDragging
         , navigation = Navigation.open initialFolderPath Navigation.initial
-        , dock = ( Horizontal, 300 )
+        , dockOrientation = Horizontal
+        , dockSize = 300
         }
     , initialCmd
     )
@@ -87,6 +98,9 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ToggleDockOrientation
+    | StartDockResizing Int
+    | Drag Int
+    | DragEnd
     | NavigationMsg Navigation.Msg
     | KnobMsg (List String) Knob.Msg
     | StoryMsg ()
@@ -116,12 +130,49 @@ update msg (Model addons state) =
             )
 
         ToggleDockOrientation ->
-            ( case Tuple.first state.dock of
+            ( case state.dockOrientation of
                 Horizontal ->
-                    Model addons { state | dock = ( Vertical, 400 ) }
+                    Model addons
+                        { state
+                            | dockOrientation = Vertical
+                            , dockSize = 400
+                        }
 
                 Vertical ->
-                    Model addons { state | dock = ( Horizontal, 300 ) }
+                    Model addons
+                        { state
+                            | dockOrientation = Horizontal
+                            , dockSize = 300
+                        }
+            , Cmd.none
+            )
+
+        StartDockResizing start ->
+            ( Model addons { state | dragging = DockResizing start start }
+            , Cmd.none
+            )
+
+        Drag end ->
+            ( case state.dragging of
+                NoDragging ->
+                    Model addons state
+
+                DockResizing start _ ->
+                    Model addons { state | dragging = DockResizing start end }
+            , Cmd.none
+            )
+
+        DragEnd ->
+            ( case state.dragging of
+                NoDragging ->
+                    Model addons state
+
+                DockResizing start end ->
+                    Model addons
+                        { state
+                            | dragging = NoDragging
+                            , dockSize = state.dockSize + start - end
+                        }
             , Cmd.none
             )
 
@@ -163,12 +214,23 @@ subscriptions _ =
 -- V I E W
 
 
+screenX : Decoder Int
+screenX =
+    Decode.field "screenX" Decode.int
+
+
+screenY : Decoder Int
+screenY =
+    Decode.field "screenY" Decode.int
+
+
 styledStory : List (Html msg) -> Html msg
 styledStory =
     styled div
         [ Css.all Css.initial
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.overflow Css.auto
+        , Css.cursor Css.inherit
         ]
         []
 
@@ -204,7 +266,9 @@ styledDragger orientation attributes =
 styledDock : Int -> List (Html.Styled.Attribute msg) -> List (Html msg) -> Html msg
 styledDock size =
     styled div
-        [ Css.position Css.relative
+        [ Css.displayFlex
+        , Css.flexDirection Css.column
+        , Css.position Css.relative
         , Css.flex3 Css.zero Css.zero (Css.px (toFloat size))
         , Css.borderTop3 (Css.px 1) Css.solid Palette.smoke
         ]
@@ -221,14 +285,20 @@ styledDockHeader =
 
 styledDockBody : List (Html msg) -> Html msg
 styledDockBody =
-    styled div [] []
+    styled div
+        [ Css.overflow Css.auto
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        ]
+        []
 
 
 viewDock : Orientation -> Int -> Html Msg -> Html Msg
 viewDock dockOrientation dockSize knobs =
     styledDock dockSize
         []
-        [ styledDragger dockOrientation []
+        [ styledDragger dockOrientation
+            [ Events.on "mousedown" (Decode.map StartDockResizing screenY)
+            ]
         , styledDockHeader
             [ button ToggleDockOrientation
                 [ case dockOrientation of
@@ -261,9 +331,18 @@ styledWorkspace dockOrientation =
         []
 
 
-viewWorkspace : ( Orientation, Int ) -> List String -> Story.Payload Renderer -> Addons -> Html Msg
-viewWorkspace ( dockOrientation, dockSize ) path payload addons =
-    styledWorkspace dockOrientation
+viewWorkspace : Story.Payload Renderer -> State -> Addons -> Html Msg
+viewWorkspace payload state addons =
+    let
+        dockSize =
+            case state.dragging of
+                DockResizing start end ->
+                    state.dockSize + (start - end)
+
+                _ ->
+                    state.dockSize
+    in
+    styledWorkspace state.dockOrientation
         [ case Result.map ((|>) addons) payload.view of
             Err error ->
                 text error
@@ -277,8 +356,8 @@ viewWorkspace ( dockOrientation, dockSize ) path payload addons =
 
           else
             Knob.view payload.knobs addons.knobs
-                |> Html.Styled.map (KnobMsg path)
-                |> viewDock dockOrientation dockSize
+                |> Html.Styled.map (KnobMsg state.current)
+                |> viewDock state.dockOrientation dockSize
         ]
 
 
@@ -303,16 +382,30 @@ styledGlobal =
         ]
 
 
-styledRoot : List (Html msg) -> Html msg
-styledRoot children =
+styledRoot : State -> List (Html.Styled.Attribute msg) -> List (Html msg) -> Html msg
+styledRoot state attributes children =
     styled div
         [ Css.displayFlex
         , Css.flexDirection Css.row
         , Css.flexWrap Css.noWrap
         , Css.width (Css.pct 100)
         , Css.height (Css.pct 100)
+        , case state.dragging of
+            NoDragging ->
+                Css.batch []
+
+            DockResizing _ _ ->
+                Css.batch
+                    [ Css.property "user-select" "none"
+                    , case state.dockOrientation of
+                        Horizontal ->
+                            Css.cursor Css.rowResize
+
+                        Vertical ->
+                            Css.cursor Css.colResize
+                    ]
         ]
-        []
+        attributes
         (styledGlobal :: children)
 
 
@@ -328,11 +421,20 @@ styledNavigation =
 view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
     Browser.Document "Bulletproof"
-        [ styledRoot
+        [ styledRoot state
+            (case state.dragging of
+                NoDragging ->
+                    []
+
+                DockResizing _ _ ->
+                    [ Events.on "mousemove" (Decode.map Drag screenY)
+                    , Events.on "mouseup" (Decode.succeed DragEnd)
+                    , Events.on "mouseleave" (Decode.succeed DragEnd)
+                    ]
+            )
             [ styledNavigation
-                [ Navigation.view state.current stories state.navigation
+                [ Html.Styled.map NavigationMsg (Navigation.view state.current stories state.navigation)
                 ]
-                |> Html.Styled.map NavigationMsg
             , case Story.find state.current stories of
                 Nothing ->
                     viewEmpty
@@ -341,7 +443,7 @@ view stories (Model addons state) =
                     addons
                         |> Dict.get state.current
                         |> Maybe.withDefault Addons.initial
-                        |> viewWorkspace state.dock state.current payload
+                        |> viewWorkspace payload state
             ]
             |> Html.Styled.toUnstyled
         ]
