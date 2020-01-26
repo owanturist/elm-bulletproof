@@ -42,16 +42,16 @@ type Orientation
 
 type Dragging
     = NoDragging
-    | DockResizing Int Int
+    | DockResizing Int Int Int
 
 
 type alias State =
     { key : Browser.Navigation.Key
     , current : List String
     , dragging : Dragging
-    , navigation : Navigation.Model
     , dockOrientation : Orientation
     , dockSize : Int
+    , navigation : Navigation.Model
     }
 
 
@@ -82,9 +82,9 @@ init stories () url key =
         { key = key
         , current = initialStoryPath
         , dragging = NoDragging
-        , navigation = Navigation.open initialFolderPath Navigation.initial
         , dockOrientation = Horizontal
         , dockSize = 300
+        , navigation = Navigation.open initialFolderPath Navigation.initial
         }
     , initialCmd
     )
@@ -98,7 +98,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ToggleDockOrientation
-    | StartDockResizing Int
+    | StartDockResizing Int Int
     | Drag Int
     | DragEnd
     | NavigationMsg Navigation.Msg
@@ -147,8 +147,8 @@ update msg (Model addons state) =
             , Cmd.none
             )
 
-        StartDockResizing start ->
-            ( Model addons { state | dragging = DockResizing start start }
+        StartDockResizing maximum start ->
+            ( Model addons { state | dragging = DockResizing maximum start start }
             , Cmd.none
             )
 
@@ -157,8 +157,8 @@ update msg (Model addons state) =
                 NoDragging ->
                     Model addons state
 
-                DockResizing start _ ->
-                    Model addons { state | dragging = DockResizing start end }
+                DockResizing maximum start _ ->
+                    Model addons { state | dragging = DockResizing maximum start end }
             , Cmd.none
             )
 
@@ -167,11 +167,11 @@ update msg (Model addons state) =
                 NoDragging ->
                     Model addons state
 
-                DockResizing start end ->
+                DockResizing maximum start end ->
                     Model addons
                         { state
                             | dragging = NoDragging
-                            , dockSize = state.dockSize + start - end
+                            , dockSize = clamp 150 (maximum - 150) (state.dockSize + start - end)
                         }
             , Cmd.none
             )
@@ -222,6 +222,11 @@ screenX =
 screenY : Decoder Int
 screenY =
     Decode.field "screenY" Decode.int
+
+
+grandParentHeight : Decoder Int
+grandParentHeight =
+    Decode.at [ "target", "parentElement", "parentElement", "offsetHeight" ] Decode.int
 
 
 styledStory : List (Html msg) -> Html msg
@@ -297,7 +302,7 @@ viewDock dockOrientation dockSize knobs =
     styledDock dockSize
         []
         [ styledDragger dockOrientation
-            [ Events.on "mousedown" (Decode.map StartDockResizing screenY)
+            [ Events.on "mousedown" (Decode.map2 StartDockResizing grandParentHeight screenY)
             ]
         , styledDockHeader
             [ button ToggleDockOrientation
@@ -336,8 +341,8 @@ viewWorkspace payload state addons =
     let
         dockSize =
             case state.dragging of
-                DockResizing start end ->
-                    state.dockSize + (start - end)
+                DockResizing maximum start end ->
+                    clamp 150 (maximum - 150) (state.dockSize + start - end)
 
                 _ ->
                     state.dockSize
@@ -394,7 +399,7 @@ styledRoot state attributes children =
             NoDragging ->
                 Css.batch []
 
-            DockResizing _ _ ->
+            DockResizing _ _ _ ->
                 Css.batch
                     [ Css.property "user-select" "none"
                     , case state.dockOrientation of
@@ -426,7 +431,7 @@ view stories (Model addons state) =
                 NoDragging ->
                     []
 
-                DockResizing _ _ ->
+                DockResizing _ _ _ ->
                     [ Events.on "mousemove" (Decode.map Drag screenY)
                     , Events.on "mouseup" (Decode.succeed DragEnd)
                     , Events.on "mouseleave" (Decode.succeed DragEnd)
