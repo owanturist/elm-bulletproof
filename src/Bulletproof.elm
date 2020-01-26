@@ -42,6 +42,7 @@ type Orientation
 
 type Dragging
     = NoDragging
+    | NavigationResizing Int Int
     | DockResizing Int Int Int
 
 
@@ -51,6 +52,7 @@ type alias State =
     , dragging : Dragging
     , dockOrientation : Orientation
     , dockSize : Int
+    , navigationSize : Int
     , navigation : Navigation.Model
     }
 
@@ -84,6 +86,7 @@ init stories () url key =
         , dragging = NoDragging
         , dockOrientation = Horizontal
         , dockSize = 300
+        , navigationSize = 240
         , navigation = Navigation.open initialFolderPath Navigation.initial
         }
     , initialCmd
@@ -98,6 +101,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ToggleDockOrientation
+    | StartNavigationResizing Int
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
@@ -147,6 +151,11 @@ update msg (Model addons state) =
             , Cmd.none
             )
 
+        StartNavigationResizing start ->
+            ( Model addons { state | dragging = NavigationResizing start start }
+            , Cmd.none
+            )
+
         StartDockResizing maximum start ->
             ( Model addons { state | dragging = DockResizing maximum start start }
             , Cmd.none
@@ -157,6 +166,9 @@ update msg (Model addons state) =
                 NoDragging ->
                     Model addons state
 
+                NavigationResizing start _ ->
+                    Model addons { state | dragging = NavigationResizing start end }
+
                 DockResizing maximum start _ ->
                     Model addons { state | dragging = DockResizing maximum start end }
             , Cmd.none
@@ -166,6 +178,13 @@ update msg (Model addons state) =
             ( case state.dragging of
                 NoDragging ->
                     Model addons state
+
+                NavigationResizing start end ->
+                    Model addons
+                        { state
+                            | dragging = NoDragging
+                            , navigationSize = max 100 (state.navigationSize + end - start)
+                        }
 
                 DockResizing maximum start end ->
                     Model addons
@@ -245,8 +264,8 @@ styledStory =
         []
 
 
-styledDragger : Orientation -> List (Html.Styled.Attribute msg) -> Html msg
-styledDragger orientation attributes =
+viewDragger : Orientation -> List (Html.Styled.Attribute msg) -> Html msg
+viewDragger orientation attributes =
     styled div
         [ Css.position Css.absolute
         , case orientation of
@@ -322,7 +341,7 @@ viewDock dockOrientation dockSize knobs =
         dockOrientation
         dockSize
         []
-        [ styledDragger dockOrientation
+        [ viewDragger dockOrientation
             [ Events.on "mousedown" (Decode.map2 StartDockResizing grandParentSizeDecoder startPointDecoder)
             ]
         , styledDockHeader
@@ -339,7 +358,8 @@ viewDock dockOrientation dockSize knobs =
 styledWorkspace : Orientation -> List (Html msg) -> Html msg
 styledWorkspace dockOrientation =
     styled div
-        [ Css.displayFlex
+        [ Css.position Css.relative
+        , Css.displayFlex
         , case dockOrientation of
             Horizontal ->
                 Css.flexDirection Css.column
@@ -364,7 +384,10 @@ viewWorkspace payload state addons =
                     state.dockSize
     in
     styledWorkspace state.dockOrientation
-        [ case Result.map ((|>) addons) payload.view of
+        [ viewDragger Vertical
+            [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
+            ]
+        , case Result.map ((|>) addons) payload.view of
             Err error ->
                 text error
 
@@ -415,6 +438,12 @@ styledRoot state attributes children =
             NoDragging ->
                 Css.batch []
 
+            NavigationResizing _ _ ->
+                Css.batch
+                    [ Css.property "user-select" "none"
+                    , Css.cursor Css.colResize
+                    ]
+
             DockResizing _ _ _ ->
                 Css.batch
                     [ Css.property "user-select" "none"
@@ -430,10 +459,10 @@ styledRoot state attributes children =
         (styledGlobal :: children)
 
 
-styledNavigation : List (Html msg) -> Html msg
-styledNavigation =
+styledNavigation : Int -> List (Html msg) -> Html msg
+styledNavigation size =
     styled nav
-        [ Css.flex3 Css.zero Css.zero (Css.px 240)
+        [ Css.flex3 Css.zero Css.zero (Css.px (toFloat size))
         , Css.overflow Css.auto
         ]
         []
@@ -441,24 +470,37 @@ styledNavigation =
 
 view : List Story -> Model -> Browser.Document Msg
 view stories (Model addons state) =
-    Browser.Document "Bulletproof"
-        [ styledRoot state
-            (case state.dragging of
+    let
+        ( navigationSize, attrs ) =
+            case state.dragging of
                 NoDragging ->
-                    []
+                    ( state.navigationSize, [] )
+
+                NavigationResizing start end ->
+                    ( max 100 (state.navigationSize + end - start)
+                    , [ Events.on "mousemove" (Decode.map Drag screenX)
+                      , Events.on "mouseup" (Decode.succeed DragEnd)
+                      , Events.on "mouseleave" (Decode.succeed DragEnd)
+                      ]
+                    )
 
                 DockResizing _ _ _ ->
-                    [ case state.dockOrientation of
-                        Horizontal ->
-                            Events.on "mousemove" (Decode.map Drag screenY)
+                    ( state.navigationSize
+                    , [ case state.dockOrientation of
+                            Horizontal ->
+                                Events.on "mousemove" (Decode.map Drag screenY)
 
-                        Vertical ->
-                            Events.on "mousemove" (Decode.map Drag screenX)
-                    , Events.on "mouseup" (Decode.succeed DragEnd)
-                    , Events.on "mouseleave" (Decode.succeed DragEnd)
-                    ]
-            )
-            [ styledNavigation
+                            Vertical ->
+                                Events.on "mousemove" (Decode.map Drag screenX)
+                      , Events.on "mouseup" (Decode.succeed DragEnd)
+                      , Events.on "mouseleave" (Decode.succeed DragEnd)
+                      ]
+                    )
+    in
+    Browser.Document "Bulletproof"
+        [ styledRoot state
+            attrs
+            [ styledNavigation navigationSize
                 [ Html.Styled.map NavigationMsg (Navigation.view state.current stories state.navigation)
                 ]
             , case Story.find state.current stories of
