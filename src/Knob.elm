@@ -303,7 +303,8 @@ viewKnobRadio name options current =
 viewKnobSelect : String -> List String -> String -> Html Msg
 viewKnobSelect name options current =
     Keyed.node "select"
-        [ Attributes.css (cssInput ++ [ Css.property "-webkit-appearance" "menulist" ])
+        [ Attributes.css cssInput
+        , Attributes.css [ Css.property "-webkit-appearance" "menulist" ]
         , Attributes.name name
         , Attributes.tabindex 0
         , Events.onInput (UpdateString name)
@@ -327,7 +328,8 @@ viewKnobSelect name options current =
 viewKnobColor : String -> String -> Html Msg
 viewKnobColor name color =
     input
-        [ Attributes.css (cssInput ++ [ Css.padding2 Css.zero (Css.px 2) ])
+        [ Attributes.css cssInput
+        , Attributes.css [ Css.padding2 Css.zero (Css.px 2) ]
         , Attributes.type_ "color"
         , Attributes.name name
         , Attributes.value color
