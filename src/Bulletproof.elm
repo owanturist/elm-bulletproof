@@ -33,6 +33,7 @@ import Router
 import Story exposing (Story)
 import Task
 import Url exposing (Url)
+import Utils exposing (ifelse)
 
 
 
@@ -44,6 +45,7 @@ type alias Settings =
     , dockWidth : Int
     , dockHeight : Int
     , dockOrientation : Orientation
+    , addPaddings : Bool
     }
 
 
@@ -53,6 +55,7 @@ defaultSettings =
     , dockWidth = 400
     , dockHeight = 300
     , dockOrientation = Horizontal
+    , addPaddings = False
     }
 
 
@@ -160,6 +163,7 @@ type Msg
     | UrlChanged Url
     | ViewportChanged Int Int
     | ToggleDockOrientation
+    | TogglePaddings
     | StartNavigationResizing Int
     | StartDockResizing Int
     | Drag Int
@@ -210,6 +214,11 @@ update msg (Model settings state addons) =
 
                 Vertical ->
                     Model { settings | dockOrientation = Horizontal } state addons
+            , Cmd.none
+            )
+
+        TogglePaddings ->
+            ( Model { settings | addPaddings = not settings.addPaddings } state addons
             , Cmd.none
             )
 
@@ -335,11 +344,12 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStory : Bool -> List (Html msg) -> Html msg
-styledStory selectable =
+styledStory : Bool -> Bool -> List (Html msg) -> Html msg
+styledStory addPaddings selectable =
     styled div
         [ Css.all Css.initial
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.padding (Css.px (ifelse addPaddings 12 0))
         , Css.overflow Css.auto
         , Css.cursor Css.inherit
         , if selectable then
@@ -420,24 +430,43 @@ styledDockBody =
         []
 
 
+cssNextButton : List Css.Style
+cssNextButton =
+    [ Css.marginLeft (Css.px 4)
+    ]
+
+
 viewDock : Settings -> Html Msg -> Html Msg
 viewDock settings knobs =
     let
-        ( startPointDecoder, iconTitle, orientationIcon ) =
+        ( startPointDecoder, orientationTitle, orientationIcon ) =
             case settings.dockOrientation of
                 Horizontal ->
-                    ( screenY, "Dock to right", Icon.dockVertical )
+                    ( screenY, "Dock to right", Icon.dockHorizontal )
 
                 Vertical ->
-                    ( screenX, "Dock to bottom", Icon.dockHorizontal )
+                    ( screenX, "Dock to bottom", Icon.dockVertical )
+
+        ( paddingsTitle, paddingsIcon ) =
+            if settings.addPaddings then
+                ( "Remove paddings", Icon.bordersBold )
+
+            else
+                ( "Add paddings", Icon.bordersThin )
     in
     styledDock settings
         [ viewDragger settings.dockOrientation
             [ Events.on "mousedown" (Decode.map StartDockResizing startPointDecoder)
             ]
         , styledDockHeader
-            [ button ToggleDockOrientation
-                [ Attributes.title iconTitle
+            [ button TogglePaddings
+                [ Attributes.title paddingsTitle
+                ]
+                [ paddingsIcon
+                ]
+            , button ToggleDockOrientation
+                [ Attributes.css cssNextButton
+                , Attributes.title orientationTitle
                 ]
                 [ orientationIcon ]
             ]
@@ -476,7 +505,9 @@ viewWorkspace payload settings state addons =
                 text error
 
             Ok (Renderer.Renderer layout) ->
-                styledStory (state.dragging == NoDragging)
+                styledStory
+                    settings.addPaddings
+                    (state.dragging == NoDragging)
                     [ Html.Styled.map StoryMsg layout
                     ]
         , Knob.view payload.knobs addons.knobs

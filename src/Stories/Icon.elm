@@ -51,6 +51,8 @@ story =
             , ( "dockHorizontal", Icon.dockHorizontal )
             , ( "dockVertical", Icon.dockVertical )
             , ( "elm", Icon.elm )
+            , ( "bordersBold", Icon.bordersBold )
+            , ( "bordersThin", Icon.bordersThin )
             ]
                 |> List.map viewBlock
                 |> viewContainer (Css.hex color.hex)

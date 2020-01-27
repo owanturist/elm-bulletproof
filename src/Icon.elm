@@ -1,5 +1,7 @@
 module Icon exposing
-    ( dockHorizontal
+    ( bordersBold
+    , bordersThin
+    , dockHorizontal
     , dockVertical
     , elm
     , folder
@@ -15,7 +17,7 @@ import Svg.Styled.Attributes as Attributes
 
 styledIcon : List (Svg.Attribute msg) -> List (Svg msg) -> Svg msg
 styledIcon =
-    styled svg [ Css.height (Css.px 15) ]
+    styled svg [ Css.height (Css.px 14) ]
 
 
 p : String -> Svg msg
@@ -71,3 +73,13 @@ dockVertical =
 elm : Svg msg
 elm =
     viewIcon -300 -300 600 600 "M-280 300L0 20l280 280zM-300-280L-20 0l-280 280zM20.324-300.338h280.014v280.014zM20 0l130 130L280 0 150-130zM-280-300h260l122 122h-260zM130-150L0-20l-130-130zM300 280L170 150 300 20z"
+
+
+bordersThin : Svg msg
+bordersThin =
+    viewIcon 0 0 512 512 "M480 32v448H32V32h448m32-32H0v512h512V0z"
+
+
+bordersBold : Svg msg
+bordersBold =
+    viewIcon 0 0 201 201 "M201 0H0v201h201V0zm-47 154H47V47h107v107z"
