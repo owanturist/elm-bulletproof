@@ -4,6 +4,7 @@ module Bulletproof exposing
     , Story
     , folderOf
     , fromElmCss
+    , fromElmUI
     , fromHtml
     , label
     , program
@@ -19,6 +20,7 @@ import Browser.Navigation
 import Button exposing (button)
 import Css
 import Css.Global exposing (global)
+import Element exposing (Element)
 import Html
 import Html.Styled exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
@@ -671,14 +673,19 @@ type alias Renderer =
     Renderer.Renderer
 
 
-fromHtml : Html.Html msg -> Renderer
-fromHtml layout =
-    Renderer.Renderer (Html.Styled.map (always ()) (Html.Styled.fromUnstyled layout))
-
-
 fromElmCss : Html.Styled.Html msg -> Renderer
 fromElmCss layout =
     Renderer.Renderer (Html.Styled.map (always ()) layout)
+
+
+fromHtml : Html.Html msg -> Renderer
+fromHtml layout =
+    fromElmCss (Html.Styled.fromUnstyled layout)
+
+
+fromElmUI : List Element.Option -> List (Element.Attribute msg) -> Element msg -> Renderer
+fromElmUI options attributes element =
+    fromHtml (Element.layoutWith { options = options } attributes element)
 
 
 type alias Story =
