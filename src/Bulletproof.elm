@@ -348,8 +348,9 @@ styledStory : Bool -> Bool -> List (Html msg) -> Html msg
 styledStory addPaddings selectable =
     styled div
         [ Css.all Css.initial
+        , Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.padding (Css.px (ifelse addPaddings 12 0))
+        , Css.border3 (Css.px (ifelse addPaddings 12 0)) Css.solid Css.transparent
         , Css.overflow Css.auto
         , Css.cursor Css.inherit
         , if selectable then
