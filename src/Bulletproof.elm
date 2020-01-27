@@ -362,7 +362,7 @@ viewDragger orientation attributes =
                     , Css.right Css.zero
                     , Css.left Css.zero
                     , Css.height (Css.px 4)
-                    , Css.cursor Css.rowResize
+                    , Css.cursor Css.nsResize
                     ]
 
             Vertical ->
@@ -371,7 +371,7 @@ viewDragger orientation attributes =
                     , Css.bottom Css.zero
                     , Css.left (Css.px -3)
                     , Css.width (Css.px 4)
-                    , Css.cursor Css.colResize
+                    , Css.cursor Css.ewResize
                     ]
         ]
         attributes
@@ -521,7 +521,7 @@ viewRoot dockOrientation dragging attributes children =
             NavigationResizing _ _ ->
                 Css.batch
                     [ Css.property "user-select" "none"
-                    , Css.cursor Css.colResize
+                    , Css.cursor Css.ewResize
                     ]
 
             DockResizing _ _ ->
@@ -529,10 +529,10 @@ viewRoot dockOrientation dragging attributes children =
                     [ Css.property "user-select" "none"
                     , case dockOrientation of
                         Horizontal ->
-                            Css.cursor Css.rowResize
+                            Css.cursor Css.nsResize
 
                         Vertical ->
-                            Css.cursor Css.colResize
+                            Css.cursor Css.ewResize
                     ]
         ]
         attributes
