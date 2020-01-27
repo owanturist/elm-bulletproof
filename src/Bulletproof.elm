@@ -46,6 +46,7 @@ type alias Settings =
     , dockHeight : Int
     , dockOrientation : Orientation
     , addPaddings : Bool
+    , darkBackground : Bool
     }
 
 
@@ -56,6 +57,7 @@ defaultSettings =
     , dockHeight = 300
     , dockOrientation = Horizontal
     , addPaddings = False
+    , darkBackground = False
     }
 
 
@@ -164,8 +166,9 @@ type Msg
     | ViewportChanged Int Int
     | ToggleDockOrientation
     | TogglePaddings
+    | ToggleBackground
     | StartNavigationResizing Int
-    | StartDockResizing Int
+    | StartDockResizing Int Int
     | Drag Int
     | DragEnd
     | NavigationMsg Navigation.Msg
@@ -222,18 +225,23 @@ update msg (Model settings state addons) =
             , Cmd.none
             )
 
+        ToggleBackground ->
+            ( Model { settings | darkBackground = not settings.darkBackground } state addons
+            , Cmd.none
+            )
+
         StartNavigationResizing start ->
             ( Model settings { state | dragging = NavigationResizing settings.navigationWidth start } addons
             , Cmd.none
             )
 
-        StartDockResizing start ->
+        StartDockResizing x y ->
             ( case settings.dockOrientation of
                 Horizontal ->
-                    Model settings { state | dragging = DockResizing settings.dockHeight start } addons
+                    Model settings { state | dragging = DockResizing settings.dockHeight y } addons
 
                 Vertical ->
-                    Model settings { state | dragging = DockResizing settings.dockWidth start } addons
+                    Model settings { state | dragging = DockResizing settings.dockWidth x } addons
             , Cmd.none
             )
 
@@ -344,20 +352,16 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStory : Bool -> Bool -> List (Html msg) -> Html msg
-styledStory addPaddings selectable =
+styledStory : Settings -> List (Html msg) -> Html msg
+styledStory settings =
     styled div
         [ Css.all Css.initial
         , Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.border3 (Css.px (ifelse addPaddings 12 0)) Css.solid Css.transparent
+        , Css.border3 (Css.px (ifelse settings.addPaddings 12 0)) Css.solid Css.transparent
+        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , Css.overflow Css.auto
         , Css.cursor Css.inherit
-        , if selectable then
-            Css.batch []
-
-          else
-            Css.property "user-select" "none"
         ]
         []
 
@@ -415,7 +419,10 @@ styledDock settings =
 styledDockHeader : List (Html msg) -> Html msg
 styledDockHeader =
     styled div
-        [ Css.padding2 (Css.px 8) (Css.px 12)
+        [ Css.displayFlex
+        , Css.flexDirection Css.row
+        , Css.flexWrap Css.noWrap
+        , Css.padding2 (Css.px 8) (Css.px 12)
         , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
         ]
         []
@@ -437,39 +444,70 @@ cssNextButton =
     ]
 
 
-viewDock : Settings -> Html Msg -> Html Msg
-viewDock settings knobs =
+viewToggleBackground : Bool -> Html Msg
+viewToggleBackground darkBackground =
     let
-        ( startPointDecoder, orientationTitle, orientationIcon ) =
-            case settings.dockOrientation of
-                Horizontal ->
-                    ( screenY, "Dock to right", Icon.dockHorizontal )
+        ( title, icon ) =
+            if darkBackground then
+                ( "Set light background", Icon.fillDrop )
 
-                Vertical ->
-                    ( screenX, "Dock to bottom", Icon.dockVertical )
+            else
+                ( "Set dark background", Icon.fill )
+    in
+    button ToggleBackground
+        [ Attributes.title title
+        ]
+        [ icon
+        ]
 
-        ( paddingsTitle, paddingsIcon ) =
-            if settings.addPaddings then
+
+viewTogglePaddings : Bool -> Html Msg
+viewTogglePaddings addPaddings =
+    let
+        ( title, icon ) =
+            if addPaddings then
                 ( "Remove paddings", Icon.bordersBold )
 
             else
                 ( "Add paddings", Icon.bordersThin )
     in
+    button TogglePaddings
+        [ Attributes.title title
+        , Attributes.css cssNextButton
+        ]
+        [ icon
+        ]
+
+
+viewToggleDockOrientation : Orientation -> Html Msg
+viewToggleDockOrientation dockOrientation =
+    let
+        ( title, icon ) =
+            case dockOrientation of
+                Horizontal ->
+                    ( "Dock to right", Icon.dockHorizontal )
+
+                Vertical ->
+                    ( "Dock to bottom", Icon.dockVertical )
+    in
+    button ToggleDockOrientation
+        [ Attributes.title title
+        , Attributes.css cssNextButton
+        ]
+        [ icon
+        ]
+
+
+viewDock : Settings -> Html Msg -> Html Msg
+viewDock settings knobs =
     styledDock settings
         [ viewDragger settings.dockOrientation
-            [ Events.on "mousedown" (Decode.map StartDockResizing startPointDecoder)
+            [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
         , styledDockHeader
-            [ button TogglePaddings
-                [ Attributes.title paddingsTitle
-                ]
-                [ paddingsIcon
-                ]
-            , button ToggleDockOrientation
-                [ Attributes.css cssNextButton
-                , Attributes.title orientationTitle
-                ]
-                [ orientationIcon ]
+            [ viewToggleBackground settings.darkBackground
+            , viewTogglePaddings settings.addPaddings
+            , viewToggleDockOrientation settings.dockOrientation
             ]
         , styledDockBody
             [ knobs
@@ -506,9 +544,7 @@ viewWorkspace payload settings state addons =
                 text error
 
             Ok (Renderer.Renderer layout) ->
-                styledStory
-                    settings.addPaddings
-                    (state.dragging == NoDragging)
+                styledStory settings
                     [ Html.Styled.map StoryMsg layout
                     ]
         , Knob.view payload.knobs addons.knobs

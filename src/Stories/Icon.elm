@@ -53,6 +53,10 @@ story =
             , ( "elm", Icon.elm )
             , ( "bordersBold", Icon.bordersBold )
             , ( "bordersThin", Icon.bordersThin )
+            , ( "square", Icon.square )
+            , ( "squareBordered", Icon.squareBordered )
+            , ( "fill", Icon.fill )
+            , ( "fillDrop", Icon.fillDrop )
             ]
                 |> List.map viewBlock
                 |> viewContainer (Css.hex color.hex)

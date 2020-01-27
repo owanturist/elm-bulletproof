@@ -201,7 +201,7 @@ cssInput =
     , Css.border3 (Css.px 1) Css.solid Palette.gray50
     , Css.borderRadius (Css.px 4)
     , Css.important (Css.width (Css.pct 100))
-    , Css.backgroundColor Palette.white
+    , Css.backgroundColor Css.transparent
     , Css.height (Css.px 28)
     , Css.minHeight (Css.px 28)
     , Css.textAlign Css.left
@@ -344,7 +344,6 @@ viewKnobColor : String -> String -> Html Msg
 viewKnobColor name color =
     input
         [ Attributes.css cssInput
-        , Attributes.css [ Css.padding2 Css.zero (Css.px 2) ]
         , Attributes.type_ "color"
         , Attributes.name name
         , Attributes.value color
