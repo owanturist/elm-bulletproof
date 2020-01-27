@@ -131,11 +131,11 @@ storyFolders =
                     |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Folder opened" True
-            |> Bulletproof.Knob.int "Active Story #"
-                1
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 0
-                , Bulletproof.Knob.max 3
+            |> Bulletproof.Knob.radio "Active Story"
+                [ ( "Story #1", 1 )
+                , ( "Story #2", 2 )
+                , ( "Story #3", 3 )
+                , ( "Inactive", -1 )
                 ]
 
         --
@@ -163,7 +163,7 @@ storyFolders =
 
         --
         , Bulletproof.storyOf "Nested"
-            (\openFirst openSecond openThird current ->
+            (\openFirst openSecond openThird active ->
                 [ ( openFirst, [ "First" ] )
                 , ( openSecond, [ "First", "Second" ] )
                 , ( openThird, [ "First", "Second", "Third" ] )
@@ -177,7 +177,7 @@ storyFolders =
                                 acc
                         )
                         Navigation.initial
-                    |> Navigation.view [ "First", "Second", "Third", "Story #" ++ String.fromInt current ]
+                    |> Navigation.view [ "First", "Second", "Third", "Story #" ++ String.fromInt active ]
                         [ Bulletproof.folderOf "First"
                             [ Bulletproof.folderOf "Second"
                                 [ Bulletproof.folderOf "Third"
@@ -193,11 +193,11 @@ storyFolders =
             |> Bulletproof.Knob.bool "Open First" True
             |> Bulletproof.Knob.bool "Open Second" True
             |> Bulletproof.Knob.bool "Open Third" True
-            |> Bulletproof.Knob.int "Active Story #"
-                1
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 0
-                , Bulletproof.Knob.max 3
+            |> Bulletproof.Knob.radio "Active Story"
+                [ ( "Story #1", 1 )
+                , ( "Story #2", 2 )
+                , ( "Story #3", 3 )
+                , ( "Inactive", -1 )
                 ]
         ]
 
