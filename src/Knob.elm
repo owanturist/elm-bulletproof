@@ -17,11 +17,12 @@ import Color exposing (Color)
 import Css
 import Date exposing (Date, Time)
 import File exposing (File)
-import Html.Styled exposing (Html, div, input, label, option, styled, text, textarea)
+import Html.Styled exposing (Html, div, input, label, option, styled, table, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Json.Decode as Decode exposing (Decoder)
+import Palette
 import Range exposing (range)
 import Time
 
@@ -309,12 +310,43 @@ viewKnobFile name =
         []
 
 
+styledKnobRow : List (Html msg) -> Html msg
+styledKnobRow =
+    styled tr
+        [ Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
+        ]
+        []
+
+
+styledKnobName : List (Html msg) -> Html msg
+styledKnobName =
+    styled td
+        [ Css.boxSizing Css.borderBox
+        , Css.minWidth (Css.px 100)
+        , Css.height (Css.px 40)
+        , Css.whiteSpace Css.noWrap
+        , Css.padding4 (Css.px 8) (Css.px 12) (Css.px 8) Css.zero
+        , Css.fontWeight Css.bold
+        ]
+        []
+
+
+styledKnobCell : List (Html msg) -> Html msg
+styledKnobCell =
+    styled td
+        [ Css.boxSizing Css.borderBox
+        , Css.width (Css.pct 100)
+        , Css.height (Css.px 40)
+        , Css.padding2 (Css.px 8) Css.zero
+        ]
+        []
+
+
 viewKnobRow : String -> Html msg -> Html msg
 viewKnobRow name knob =
-    div
-        []
-        [ text name
-        , knob
+    styledKnobRow
+        [ styledKnobName [ text name ]
+        , styledKnobCell [ knob ]
         ]
 
 
@@ -458,9 +490,12 @@ viewKnob state name knob =
 
 styledRoot : List (Html msg) -> Html msg
 styledRoot =
-    styled div
-        [ Css.display Css.table
-        , Css.width (Css.pct 100)
+    styled table
+        [ Css.width (Css.pct 100)
+        , Css.verticalAlign Css.middle
+        , Css.borderCollapse Css.collapse
+        , Css.fontSize (Css.px 13)
+        , Css.fontFamilies Palette.font
         ]
         []
 

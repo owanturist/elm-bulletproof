@@ -335,13 +335,18 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStory : List (Html msg) -> Html msg
-styledStory =
+styledStory : Bool -> List (Html msg) -> Html msg
+styledStory selectable =
     styled div
         [ Css.all Css.initial
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.overflow Css.auto
         , Css.cursor Css.inherit
+        , if selectable then
+            Css.batch []
+
+          else
+            Css.property "user-select" "none"
         ]
         []
 
@@ -410,7 +415,7 @@ styledDockBody =
     styled div
         [ Css.overflow Css.auto
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.padding2 (Css.px 8) (Css.px 12)
+        , Css.padding2 Css.zero (Css.px 12)
         ]
         []
 
@@ -470,16 +475,12 @@ viewWorkspace payload settings state addons =
                 text error
 
             Ok (Renderer.Renderer layout) ->
-                styledStory
+                styledStory (state.dragging == NoDragging)
                     [ Html.Styled.map StoryMsg layout
                     ]
-        , if List.isEmpty payload.knobs then
-            text ""
-
-          else
-            Knob.view payload.knobs addons.knobs
-                |> Html.Styled.map (KnobMsg state.current)
-                |> viewDock settings
+        , Knob.view payload.knobs addons.knobs
+            |> Html.Styled.map (KnobMsg state.current)
+            |> viewDock settings
         ]
 
 
