@@ -452,14 +452,15 @@ styledWorkspace dockOrientation =
     styled div
         [ Css.position Css.relative
         , Css.displayFlex
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.backgroundColor Palette.white
+        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
         , case dockOrientation of
             Horizontal ->
                 Css.flexDirection Css.column
 
             Vertical ->
                 Css.flexDirection Css.row
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.backgroundColor Palette.white
         ]
         []
 

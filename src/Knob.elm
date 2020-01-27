@@ -17,7 +17,7 @@ import Color exposing (Color)
 import Css
 import Date exposing (Date, Time)
 import File exposing (File)
-import Html.Styled exposing (Html, div, input, label, option, styled, table, td, text, textarea, tr)
+import Html.Styled exposing (Html, input, label, option, span, styled, table, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -183,11 +183,43 @@ viewKnobBool name checked =
         ]
 
 
+cssInput : List Css.Style
+cssInput =
+    [ Css.property "-webkit-appearance" "none"
+    , Css.boxSizing Css.borderBox
+    , Css.display Css.block
+    , Css.margin Css.zero
+    , Css.padding2 (Css.px 4) (Css.px 8)
+    , Css.border3 (Css.px 1) Css.solid Palette.gray50
+    , Css.borderRadius (Css.px 4)
+    , Css.important (Css.width (Css.pct 100))
+    , Css.backgroundColor Palette.white
+    , Css.height (Css.px 28)
+    , Css.minHeight (Css.px 28)
+    , Css.textAlign Css.left
+    , Css.fontFamily Css.inherit
+    , Css.fontSize Css.inherit
+    , Css.outline Css.none
+
+    --
+    , Css.focus
+        [ Css.boxShadow5 Css.zero Css.zero Css.zero (Css.px 2) Palette.gray50
+        ]
+
+    --
+    , Css.hover
+        [ Css.boxShadow Css.none
+        ]
+    ]
+
+
 viewKnobString : String -> String -> Html Msg
 viewKnobString name value =
     textarea
-        [ Attributes.name name
+        [ Attributes.css cssInput
+        , Attributes.name name
         , Attributes.value value
+        , Attributes.tabindex 0
         , Events.onInput (UpdateString name)
         ]
         []
@@ -201,9 +233,11 @@ viewKnobNumber :
     -> Html msg
 viewKnobNumber msg name number payload =
     input
-        (Attributes.type_ "number"
+        (Attributes.css cssInput
+            :: Attributes.type_ "number"
             :: Attributes.name name
             :: Attributes.value number
+            :: Attributes.tabindex 0
             :: Events.onInput (msg name)
             :: List.filterMap identity
                 [ Maybe.map Attributes.min payload.min
@@ -214,25 +248,51 @@ viewKnobNumber msg name number payload =
         []
 
 
+cssRadioGroup : List Css.Style
+cssRadioGroup =
+    [ Css.marginTop (Css.px -4)
+    ]
+
+
+styledRadioLabel : List (Html msg) -> Html msg
+styledRadioLabel =
+    styled label
+        [ Css.display Css.block
+        , Css.paddingTop (Css.px 4)
+        , Css.cursor Css.pointer
+        ]
+        []
+
+
+styledRadioText : String -> Html msg
+styledRadioText =
+    styled span
+        [ Css.marginLeft (Css.px 4)
+        ]
+        []
+        << List.singleton
+        << text
+
+
 viewKnobRadio : String -> List String -> String -> Html Msg
 viewKnobRadio name options current =
     Keyed.node "div"
-        []
+        [ Attributes.css cssRadioGroup
+        ]
         (List.map
             (\value ->
                 ( value
-                , div []
-                    [ label []
-                        [ input
-                            [ Attributes.type_ "radio"
-                            , Attributes.name name
-                            , Attributes.value value
-                            , Attributes.checked (value == current)
-                            , Events.onCheck (\_ -> UpdateString name value)
-                            ]
-                            []
-                        , text value
+                , styledRadioLabel
+                    [ input
+                        [ Attributes.type_ "radio"
+                        , Attributes.name name
+                        , Attributes.value value
+                        , Attributes.tabindex 0
+                        , Attributes.checked (value == current)
+                        , Events.onCheck (\_ -> UpdateString name value)
                         ]
+                        []
+                    , styledRadioText value
                     ]
                 )
             )
@@ -243,7 +303,9 @@ viewKnobRadio name options current =
 viewKnobSelect : String -> List String -> String -> Html Msg
 viewKnobSelect name options current =
     Keyed.node "select"
-        [ Attributes.name name
+        [ Attributes.css (cssInput ++ [ Css.property "-webkit-appearance" "menulist" ])
+        , Attributes.name name
+        , Attributes.tabindex 0
         , Events.onInput (UpdateString name)
         ]
         (List.map
@@ -251,6 +313,7 @@ viewKnobSelect name options current =
                 ( value
                 , option
                     [ Attributes.value value
+                    , Attributes.tabindex 0
                     , Attributes.selected (value == current)
                     ]
                     [ text value
@@ -264,9 +327,11 @@ viewKnobSelect name options current =
 viewKnobColor : String -> String -> Html Msg
 viewKnobColor name color =
     input
-        [ Attributes.type_ "color"
+        [ Attributes.css (cssInput ++ [ Css.padding2 Css.zero (Css.px 2) ])
+        , Attributes.type_ "color"
         , Attributes.name name
         , Attributes.value color
+        , Attributes.tabindex 0
         , Events.onInput (UpdateColor name)
         ]
         []
@@ -275,9 +340,11 @@ viewKnobColor name color =
 viewKnobDate : String -> String -> Html Msg
 viewKnobDate name value =
     input
-        [ Attributes.type_ "date"
+        [ Attributes.css cssInput
+        , Attributes.type_ "date"
         , Attributes.name name
         , Attributes.value value
+        , Attributes.tabindex 0
         , Events.onInput (UpdateDate name)
         ]
         []
@@ -286,9 +353,11 @@ viewKnobDate name value =
 viewKnobTime : String -> String -> Html Msg
 viewKnobTime name value =
     input
-        [ Attributes.type_ "time"
+        [ Attributes.css cssInput
+        , Attributes.type_ "time"
         , Attributes.name name
         , Attributes.value value
+        , Attributes.tabindex 0
         , Events.onInput (UpdateTime name)
         ]
         []
@@ -305,6 +374,7 @@ viewKnobFile name =
         [ Attributes.type_ "file"
         , Attributes.multiple True
         , Attributes.name name
+        , Attributes.tabindex 0
         , Events.on "change" (Decode.map (UpdateFiles name) filesDecoder)
         ]
         []
@@ -494,6 +564,7 @@ styledRoot =
         [ Css.width (Css.pct 100)
         , Css.verticalAlign Css.middle
         , Css.borderCollapse Css.collapse
+        , Css.color Palette.dark
         , Css.fontSize (Css.px 13)
         , Css.fontFamilies Palette.font
         ]
