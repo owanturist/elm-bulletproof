@@ -23,6 +23,7 @@ cssButton =
     , Css.fontSize (Css.px 0)
     , Css.outline Css.none
     , Css.cursor Css.pointer
+    , Css.property "user-select" "none"
 
     --
     , Css.focus

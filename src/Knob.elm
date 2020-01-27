@@ -12,12 +12,11 @@ module Knob exposing
     )
 
 import AVL.Dict as Dict exposing (Dict)
-import Checkbox exposing (checkbox)
 import Color exposing (Color)
 import Css
 import Date exposing (Date, Time)
 import File exposing (File)
-import Html.Styled exposing (Html, input, label, option, span, styled, table, td, text, textarea, tr)
+import Html.Styled as Html exposing (Html, input, label, option, span, styled, table, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -174,9 +173,18 @@ update msg state =
 -- V I E W
 
 
+styledCheckbox : List (Html.Attribute msg) -> Html msg
+styledCheckbox attributes =
+    styled input
+        [ Css.margin Css.zero
+        ]
+        (Attributes.type_ "checkbox" :: attributes)
+        []
+
+
 viewKnobBool : String -> Bool -> Html Msg
 viewKnobBool name checked =
-    checkbox
+    styledCheckbox
         [ Attributes.name name
         , Attributes.checked checked
         , Events.onCheck (UpdateBool name)
@@ -250,7 +258,7 @@ viewKnobNumber msg name number payload =
 
 cssRadioGroup : List Css.Style
 cssRadioGroup =
-    [ Css.marginTop (Css.px -4)
+    [ Css.marginTop (Css.px -8)
     ]
 
 
@@ -258,7 +266,7 @@ styledRadioLabel : List (Html msg) -> Html msg
 styledRadioLabel =
     styled label
         [ Css.display Css.block
-        , Css.paddingTop (Css.px 4)
+        , Css.paddingTop (Css.px 8)
         , Css.cursor Css.pointer
         ]
         []
@@ -267,11 +275,20 @@ styledRadioLabel =
 styledRadioText : String -> Html msg
 styledRadioText =
     styled span
-        [ Css.marginLeft (Css.px 4)
+        [ Css.marginLeft (Css.px 8)
         ]
         []
         << List.singleton
         << text
+
+
+styledRadio : List (Html.Attribute msg) -> Html msg
+styledRadio attributes =
+    styled input
+        [ Css.margin Css.zero
+        ]
+        (Attributes.type_ "radio" :: attributes)
+        []
 
 
 viewKnobRadio : String -> List String -> String -> Html Msg
@@ -283,15 +300,13 @@ viewKnobRadio name options current =
             (\value ->
                 ( value
                 , styledRadioLabel
-                    [ input
-                        [ Attributes.type_ "radio"
-                        , Attributes.name name
+                    [ styledRadio
+                        [ Attributes.name name
                         , Attributes.value value
                         , Attributes.tabindex 0
                         , Attributes.checked (value == current)
                         , Events.onCheck (\_ -> UpdateString name value)
                         ]
-                        []
                     , styledRadioText value
                     ]
                 )
