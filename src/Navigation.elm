@@ -19,7 +19,7 @@ import Utils exposing (ifelse, onSpaceOrEnter)
 
 
 type alias Model =
-    Set (List String)
+    Set Story.Path
 
 
 initial : Model
@@ -27,12 +27,12 @@ initial =
     Set.empty
 
 
-open : List String -> Model -> Model
+open : Story.Path -> Model -> Model
 open path model =
     openHelp [] path model
 
 
-openHelp : List String -> List String -> Model -> Model
+openHelp : Story.Path -> Story.Path -> Model -> Model
 openHelp prev path model =
     case path of
         [] ->
@@ -51,8 +51,8 @@ openHelp prev path model =
 
 
 type Msg
-    = GoToStory (List String)
-    | Toggle (List String)
+    = GoToStory Story.Path
+    | Toggle Story.Path
 
 
 update : Router.Key -> Msg -> Model -> ( Model, Cmd Msg )
@@ -73,7 +73,7 @@ update key msg model =
 -- V I E W
 
 
-toKey : List String -> String
+toKey : Story.Path -> String
 toKey =
     String.join "<-@->"
 
@@ -103,7 +103,7 @@ styledIconHolder =
         []
 
 
-viewTodo : List String -> String -> ( String, Html msg )
+viewTodo : Story.Path -> String -> ( String, Html msg )
 viewTodo path title =
     ( toKey ("TODO" :: title :: path)
     , div
@@ -133,7 +133,7 @@ styledLabel =
         []
 
 
-viewLabel : List String -> String -> ( String, Html msg )
+viewLabel : Story.Path -> String -> ( String, Html msg )
 viewLabel path title =
     ( toKey ("LABEL" :: title :: path)
     , styledLabel
@@ -173,7 +173,7 @@ cssItem active =
         :: cssStaticItem active
 
 
-viewStoryLink : Bool -> List String -> String -> ( String, Html Msg )
+viewStoryLink : Bool -> Story.Path -> String -> ( String, Html Msg )
 viewStoryLink active path title =
     let
         storyPath =
@@ -205,7 +205,7 @@ styledFolder active =
     styled div (Css.cursor Css.pointer :: cssItem active)
 
 
-viewFolder : Model -> List String -> List String -> String -> List (Story Renderer) -> List ( String, Html Msg )
+viewFolder : Model -> Story.Path -> Story.Path -> String -> List (Story Renderer) -> List ( String, Html Msg )
 viewFolder model current path title stories =
     let
         folderPath =
@@ -248,7 +248,7 @@ viewFolder model current path title stories =
         :: List.concatMap (viewItem model nextCurrent folderPath) (ifelse opened stories [])
 
 
-viewItem : Model -> List String -> List String -> Story Renderer -> List ( String, Html Msg )
+viewItem : Model -> Story.Path -> Story.Path -> Story Renderer -> List ( String, Html Msg )
 viewItem model current path story =
     case story of
         Story.Label title ->
@@ -285,7 +285,7 @@ cssContainer =
     ]
 
 
-view : List String -> List (Story Renderer) -> Model -> Html Msg
+view : Story.Path -> List (Story Renderer) -> Model -> Html Msg
 view current stories model =
     Keyed.node "div"
         [ css cssContainer

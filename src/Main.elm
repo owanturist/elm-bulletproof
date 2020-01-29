@@ -101,19 +101,23 @@ type alias Viewport =
 type alias State =
     { key : Browser.Navigation.Key
     , viewport : Viewport
-    , current : List String
+    , store : Story.Store
+    , current : Story.Path
     , dragging : Dragging
     , navigation : Navigation.Model
     }
 
 
 type Model
-    = Model Settings State (Dict (List String) Addons)
+    = Model Settings State (Dict Story.Path Addons)
 
 
 init : List (Story Renderer) -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories () url key =
     let
+        store =
+            Story.makeStore stories
+
         ( initialStoryPath, initialCmd ) =
             case Router.parse url of
                 Router.ToStory storyPath ->
@@ -121,7 +125,8 @@ init stories () url key =
 
                 Router.ToNotFound ->
                     ( []
-                    , Story.firstPath stories
+                    , store.first
+                        |> Maybe.withDefault []
                         |> Router.ToStory
                         |> Router.replace key
                     )
@@ -133,6 +138,7 @@ init stories () url key =
         defaultSettings
         { key = key
         , viewport = Viewport 0 0
+        , store = store
         , current = initialStoryPath
         , dragging = NoDragging
         , navigation = Navigation.open initialFolderPath Navigation.initial
@@ -164,7 +170,7 @@ type Msg
     | Drag Int
     | DragEnd
     | NavigationMsg Navigation.Msg
-    | KnobMsg (List String) Knob.Msg
+    | KnobMsg Story.Path Knob.Msg
     | StoryMsg ()
 
 
@@ -332,7 +338,19 @@ update msg (Model settings state addons) =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Browser.Events.onResize ViewportChanged
+    Sub.batch
+        [ Browser.Events.onResize ViewportChanged
+        , Decode.field "keyCode" Decode.int
+            |> Decode.andThen
+                (\keyCode ->
+                    let
+                        _ =
+                            Debug.log "" keyCode
+                    in
+                    Decode.fail "Unhandled"
+                )
+            |> Browser.Events.onKeyPress
+        ]
 
 
 
@@ -722,7 +740,7 @@ view stories (Model settings state addons) =
             [ styledNavigation settings.navigationWidth
                 [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
                 ]
-            , case Story.find state.current stories of
+            , case Story.get state.current state.store of
                 Nothing ->
                     viewEmpty
 

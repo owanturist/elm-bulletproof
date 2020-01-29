@@ -1,6 +1,7 @@
 module Router exposing (Key, Route(..), parse, push, replace, toString)
 
 import Browser.Navigation
+import Story
 import Url exposing (Url)
 import Url.Builder
 
@@ -10,7 +11,7 @@ type alias Key =
 
 
 type Route
-    = ToStory (List String)
+    = ToStory Story.Path
     | ToNotFound
 
 
