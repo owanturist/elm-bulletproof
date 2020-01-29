@@ -258,15 +258,19 @@ viewKnobNumber msg name number payload =
 
 cssRadioGroup : List Css.Style
 cssRadioGroup =
-    [ Css.marginTop (Css.px -8)
+    [ Css.displayFlex
+    , Css.flexDirection Css.column
+    , Css.alignItems Css.flexStart
+    , Css.marginTop (Css.px -8)
     ]
 
 
 styledRadioLabel : List (Html msg) -> Html msg
 styledRadioLabel =
     styled label
-        [ Css.display Css.block
-        , Css.paddingTop (Css.px 8)
+        [ Css.displayFlex
+        , Css.alignItems Css.center
+        , Css.marginTop (Css.px 8)
         , Css.cursor Css.pointer
         ]
         []
