@@ -49,6 +49,7 @@ type alias Settings =
     , dockOrientation : Orientation
     , addPaddings : Bool
     , darkBackground : Bool
+    , showGrid : Bool
     }
 
 
@@ -60,6 +61,7 @@ defaultSettings =
     , dockOrientation = Horizontal
     , addPaddings = False
     , darkBackground = False
+    , showGrid = False
     }
 
 
@@ -167,6 +169,7 @@ type Msg
     | UrlChanged Url
     | ViewportChanged Int Int
     | ToggleDockOrientation
+    | ToggleGrid
     | TogglePaddings
     | ToggleBackground
     | StartNavigationResizing Int
@@ -219,6 +222,11 @@ update msg (Model settings state addons) =
 
                 Vertical ->
                     Model { settings | dockOrientation = Horizontal } state addons
+            , Cmd.none
+            )
+
+        ToggleGrid ->
+            ( Model { settings | showGrid = not settings.showGrid } state addons
             , Cmd.none
             )
 
@@ -375,7 +383,11 @@ styledStoryContainer settings =
         , Css.minWidth (Css.pct 100)
         , Css.minHeight (Css.pct 100)
         , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
-        , Css.batch (cssGrid settings)
+        , if settings.showGrid then
+            Css.batch (cssGrid settings)
+
+          else
+            Css.batch []
         ]
         []
 
@@ -508,38 +520,41 @@ cssNextButton =
     ]
 
 
+viewToggleGrid : Bool -> Html Msg
+viewToggleGrid showGrid =
+    button
+        { onPress = ToggleGrid
+        , dark = showGrid
+        }
+        [ Attributes.title (ifelse showGrid "Hide background grid" "Show background grid")
+        ]
+        [ Icon.grid
+        ]
+
+
 viewToggleBackground : Bool -> Html Msg
 viewToggleBackground darkBackground =
-    let
-        ( title, icon ) =
-            if darkBackground then
-                ( "Set light background", Icon.fillDrop )
-
-            else
-                ( "Set dark background", Icon.fill )
-    in
-    button ToggleBackground
-        [ Attributes.title title
+    button
+        { onPress = ToggleBackground
+        , dark = darkBackground
+        }
+        [ Attributes.title (ifelse darkBackground "Set light background" "Set dark background")
+        , Attributes.css cssNextButton
         ]
-        [ icon
+        [ Icon.fillDrop
         ]
 
 
 viewTogglePaddings : Bool -> Html Msg
 viewTogglePaddings addPaddings =
-    let
-        ( title, icon ) =
-            if addPaddings then
-                ( "Remove paddings", Icon.bordersBold )
-
-            else
-                ( "Add paddings", Icon.bordersThin )
-    in
-    button TogglePaddings
-        [ Attributes.title title
+    button
+        { onPress = TogglePaddings
+        , dark = addPaddings
+        }
+        [ Attributes.title (ifelse addPaddings "Remove paddings" "Add paddings")
         , Attributes.css cssNextButton
         ]
-        [ icon
+        [ Icon.bordersBold
         ]
 
 
@@ -554,7 +569,10 @@ viewToggleDockOrientation dockOrientation =
                 Vertical ->
                     ( "Dock to bottom", Icon.dockVertical )
     in
-    button ToggleDockOrientation
+    button
+        { onPress = ToggleDockOrientation
+        , dark = False
+        }
         [ Attributes.title title
         , Attributes.css cssNextButton
         ]
@@ -569,7 +587,8 @@ viewDock settings knobs =
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
         , styledDockHeader
-            [ viewToggleBackground settings.darkBackground
+            [ viewToggleGrid settings.showGrid
+            , viewToggleBackground settings.darkBackground
             , viewTogglePaddings settings.addPaddings
             , viewToggleDockOrientation settings.dockOrientation
             ]

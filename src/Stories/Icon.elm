@@ -57,6 +57,7 @@ story =
             , ( "squareBordered", Icon.squareBordered )
             , ( "fill", Icon.fill )
             , ( "fillDrop", Icon.fillDrop )
+            , ( "grid", Icon.grid )
             ]
                 |> List.map viewBlock
                 |> viewContainer (Css.hex color.hex)
