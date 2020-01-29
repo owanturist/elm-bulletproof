@@ -50,6 +50,7 @@ story =
                 ]
         , storyStories
         , storyFolders
+        , storyTodo
         , storyLabels
         ]
 
@@ -199,6 +200,74 @@ storyFolders =
                 , ( "Story #3", 3 )
                 , ( "Inactive", -1 )
                 ]
+        ]
+
+
+storyTodo : Bulletproof.Story
+storyTodo =
+    Bulletproof.folderOf "Todos"
+        [ Bulletproof.storyOf "Alone"
+            (\title ->
+                Navigation.view []
+                    [ Bulletproof.todo title
+                    ]
+                    Navigation.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Todo Title" "Standalone"
+
+        --
+        , Bulletproof.storyOf "Stories around"
+            (Navigation.view []
+                [ Bulletproof.todo "Todo #1"
+                , Bulletproof.storyOf "Some story" dummy
+                , Bulletproof.todo "Todo #2"
+                , Bulletproof.folderOf "Empty Folder" []
+                , Bulletproof.todo "Todo #3"
+                , Bulletproof.folderOf "Folder"
+                    [ Bulletproof.storyOf "Another story" dummy
+                    ]
+                ]
+                Navigation.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Nested"
+            (\open5 ->
+                Navigation.view []
+                    [ Bulletproof.todo "Todo #0"
+                    , Bulletproof.storyOf "Story #1" dummy
+                    , Bulletproof.storyOf "Story #2" dummy
+                    , Bulletproof.todo "Todo #1"
+                    , Bulletproof.folderOf "Folder #1"
+                        [ Bulletproof.storyOf "Story #3" dummy
+                        , Bulletproof.todo "Todo #2"
+                        , Bulletproof.folderOf "Folder #2" []
+                        , Bulletproof.folderOf "Folder #3"
+                            [ Bulletproof.todo "Todo #3"
+                            , Bulletproof.storyOf "Story #4" dummy
+                            , Bulletproof.folderOf "Folder #4" []
+                            ]
+                        ]
+                    , Bulletproof.folderOf "Folder #5"
+                        [ Bulletproof.todo "Todo #4"
+                        , Bulletproof.storyOf "Story #5" dummy
+                        ]
+                    ]
+                    (List.foldl Navigation.open
+                        Navigation.initial
+                        [ [ "Folder #1", "Folder #3", "Folder #4" ]
+                        , if open5 then
+                            [ "Folder #5" ]
+
+                          else
+                            []
+                        ]
+                    )
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.bool "Open Folder #5" False
         ]
 
 

@@ -103,6 +103,20 @@ styledIconHolder =
         []
 
 
+viewTodo : List String -> String -> ( String, Html msg )
+viewTodo path title =
+    ( toKey ("TODO" :: title :: path)
+    , div
+        [ css (cssStaticItem False)
+        , Attributes.tabindex -1
+        ]
+        [ viewSpacer (List.length path)
+        , styledIconHolder [ Icon.tools ]
+        , text title
+        ]
+    )
+
+
 styledLabel : List (Html msg) -> Html msg
 styledLabel =
     styled div
@@ -119,18 +133,18 @@ styledLabel =
         []
 
 
-viewLabel : Int -> String -> ( String, Html msg )
-viewLabel nesting title =
-    ( toKey [ "LABEL", title ]
+viewLabel : List String -> String -> ( String, Html msg )
+viewLabel path title =
+    ( toKey ("LABEL" :: title :: path)
     , styledLabel
-        [ viewSpacer nesting
+        [ viewSpacer (List.length path)
         , text (String.toUpper title)
         ]
     )
 
 
-cssItem : Bool -> List Css.Style
-cssItem active =
+cssStaticItem : Bool -> List Css.Style
+cssStaticItem active =
     [ Css.display Css.block
     , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 4) (Css.px 8)
     , Css.textDecoration Css.none
@@ -145,17 +159,18 @@ cssItem active =
 
       else
         Css.batch []
-
-    --
-    , Css.focus
-        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
-        ]
-
-    --
-    , Css.hover
-        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
-        ]
     ]
+
+
+cssItem : Bool -> List Css.Style
+cssItem active =
+    Css.focus
+        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
+        ]
+        :: Css.hover
+            [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
+            ]
+        :: cssStaticItem active
 
 
 viewStoryLink : Bool -> List String -> String -> ( String, Html Msg )
@@ -237,7 +252,11 @@ viewItem : Model -> List String -> List String -> Story Renderer -> List ( Strin
 viewItem model current path story =
     case story of
         Story.Label title ->
-            [ viewLabel (List.length path) title
+            [ viewLabel path title
+            ]
+
+        Story.Todo title ->
+            [ viewTodo path title
             ]
 
         Story.Single storyID _ ->

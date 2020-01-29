@@ -49,6 +49,9 @@ bool name defaultValue story =
         Label title ->
             Label title
 
+        Todo title ->
+            Todo title
+
         Single storyID payload ->
             Single storyID
                 { knobs = ( name, Bool defaultValue ) :: payload.knobs
@@ -74,6 +77,9 @@ string name defaultValue story =
     case story of
         Label title ->
             Label title
+
+        Todo title ->
+            Todo title
 
         Single storyID payload ->
             Single storyID
@@ -151,6 +157,9 @@ int name defaultValue properties story =
         Label title ->
             Label title
 
+        Todo title ->
+            Todo title
+
         Single storyID payload ->
             let
                 ( range_, limits ) =
@@ -181,6 +190,9 @@ float name defaultValue properties story =
         Label title ->
             Label title
 
+        Todo title ->
+            Todo title
+
         Single storyID payload ->
             let
                 ( range_, limits ) =
@@ -210,6 +222,9 @@ makeChoice choice choiceName name options story =
     case story of
         Label title ->
             Label title
+
+        Todo title ->
+            Todo title
 
         Single storyID payload ->
             Single storyID
@@ -261,6 +276,9 @@ color name defaultValue story =
         Label title ->
             Label title
 
+        Todo title ->
+            Todo title
+
         Single storyID payload ->
             let
                 defaultColor =
@@ -291,6 +309,9 @@ date name defaultValue story =
     case story of
         Label title ->
             Label title
+
+        Todo title ->
+            Todo title
 
         Single storyID payload ->
             let
@@ -323,6 +344,9 @@ time name defaultValue story =
         Label title ->
             Label title
 
+        Todo title ->
+            Todo title
+
         Single storyID payload ->
             let
                 defaultTime =
@@ -353,6 +377,9 @@ files name story =
     case story of
         Label title ->
             Label title
+
+        Todo title ->
+            Todo title
 
         Single storyID payload ->
             Single storyID

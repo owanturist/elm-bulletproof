@@ -9,6 +9,7 @@ module Bulletproof exposing
     , label
     , program
     , storyOf
+    , todo
     )
 
 import Element exposing (Element)
@@ -55,9 +56,14 @@ folderOf title stories =
     Story.Batch title stories
 
 
+todo : String -> Story
+todo title =
+    Story.Todo title
+
+
 label : String -> Story
-label =
-    Story.Label
+label title =
+    Story.Label title
 
 
 type alias Program =
