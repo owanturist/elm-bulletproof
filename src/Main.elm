@@ -364,25 +364,41 @@ update msg (Model settings state addons) =
 
 keyCodeToMsg : Int -> Maybe Msg
 keyCodeToMsg keyCode =
-    if List.member keyCode [ 106, 74, 112, 80 ] then
-        -- j, J, p, P
+    if List.member keyCode [ 107, 75, 112, 80 ] then
+        -- k, K, p, P
         Just GoToPrevStory
 
-    else if List.member keyCode [ 107, 75, 110, 78 ] then
-        -- k, K, n, N
+    else if List.member keyCode [ 106, 74, 110, 78 ] then
+        -- j, J, n, N
         Just GoToNextStory
 
     else
         Nothing
 
 
+keyNavigationDecoder : Decoder Msg
+keyNavigationDecoder =
+    Decode.at [ "target", "tagName" ] Decode.string
+        |> Decode.andThen
+            (\tagName ->
+                if List.member tagName [ "INPUT", "TEXTAREA" ] then
+                    Decode.fail "Unhandled"
+
+                else
+                    Decode.field "keyCode" Decode.int
+            )
+        |> Decode.andThen
+            (keyCodeToMsg
+                >> Maybe.map Decode.succeed
+                >> Maybe.withDefault (Decode.fail "Unhandled")
+            )
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
-        , Decode.field "keyCode" Decode.int
-            |> Decode.andThen (Maybe.withDefault (Decode.fail "Unhandled") << Maybe.map Decode.succeed << keyCodeToMsg)
-            |> Browser.Events.onKeyPress
+        , Browser.Events.onKeyPress keyNavigationDecoder
         ]
 
 
