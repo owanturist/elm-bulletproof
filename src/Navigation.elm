@@ -172,7 +172,7 @@ viewStoryLink active path title =
         [ css (cssItem active)
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
-        , Attributes.title title
+        , Attributes.title (String.join " / " exactStoryPath)
         , Router.ToStory exactStoryPath
             |> Router.toString
             |> Attributes.href
@@ -215,7 +215,7 @@ viewFolder model current path title stories =
     , styledFolder active
         [ Attributes.attribute "role" "button"
         , Attributes.tabindex 0
-        , Attributes.title title
+        , Attributes.title (String.join " / " (List.reverse folderPath))
         , Events.onClick (Toggle folderPath)
         , onSpaceOrEnter (Toggle folderPath)
         ]
