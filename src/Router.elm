@@ -3,7 +3,6 @@ module Router exposing (Key, Route(..), parse, push, replace, toString)
 import Browser.Navigation
 import Url exposing (Url)
 import Url.Builder
-import Url.Parser exposing ((</>), Parser, s, string)
 
 
 type alias Key =
@@ -15,27 +14,14 @@ type Route
     | ToNotFound
 
 
-parser : Parser (Route -> a) a
-parser =
-    Url.Parser.oneOf
-        [ Url.Parser.map List.singleton (s "story" </> string)
-
-        --
-        , Url.Parser.map
-            (\componentID storyID -> [ componentID, storyID ])
-            (s "story" </> string </> string)
-
-        --
-        , Url.Parser.map
-            (\folderID componentID storyID -> [ folderID, componentID, storyID ])
-            (s "story" </> string </> string </> string)
-        ]
-        |> Url.Parser.map (ToStory << List.filterMap Url.percentDecode)
-
-
 parse : Url -> Route
-parse =
-    Maybe.withDefault ToNotFound << Url.Parser.parse parser
+parse url =
+    case String.split "/" (String.dropLeft 1 url.path) of
+        "story" :: path ->
+            ToStory (List.filterMap Url.percentDecode path)
+
+        _ ->
+            ToNotFound
 
 
 toString : Route -> String
