@@ -354,17 +354,27 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStory : Settings -> List (Html msg) -> Html msg
-styledStory settings =
+styledStoryScroller : List (Html msg) -> Html msg
+styledStoryScroller =
     styled div
-        [ Css.all Css.initial
-        , Css.position Css.relative
-        , Css.zIndex (Css.int 1)
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
-        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
+        [ Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.overflow Css.auto
         , Css.cursor Css.inherit
+        ]
+        []
+
+
+styledStoryContainer : Settings -> List (Html msg) -> Html msg
+styledStoryContainer settings =
+    styled div
+        [ Css.all Css.initial
+        , Css.boxSizing Css.borderBox
+        , Css.display Css.table
+        , Css.position Css.relative
+        , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
+        , Css.minWidth (Css.pct 100)
+        , Css.minHeight (Css.pct 100)
+        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , Css.batch (cssGrid settings)
         ]
         []
@@ -575,6 +585,7 @@ styledWorkspace dockOrientation =
         [ Css.position Css.relative
         , Css.displayFlex
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.minWidth Css.zero
         , Css.backgroundColor Palette.white
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
         , case dockOrientation of
@@ -598,8 +609,10 @@ viewWorkspace payload settings state addons =
                 text error
 
             Ok (Renderer.Renderer layout) ->
-                styledStory settings
-                    [ Html.Styled.map StoryMsg layout
+                styledStoryScroller
+                    [ styledStoryContainer settings
+                        [ Html.Styled.map StoryMsg layout
+                        ]
                     ]
         , Knob.view payload.knobs addons.knobs
             |> Html.Styled.map (KnobMsg state.current)
