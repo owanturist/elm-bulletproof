@@ -169,6 +169,8 @@ type Msg
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
+    | GoToPrevStory
+    | GoToNextStory
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
     | StoryMsg ()
@@ -307,6 +309,30 @@ update msg (Model settings state addons) =
             , Cmd.none
             )
 
+        GoToPrevStory ->
+            case Story.prev state.current state.store of
+                Nothing ->
+                    ( Model settings state addons
+                    , Cmd.none
+                    )
+
+                Just prevStoryPath ->
+                    ( Model settings { state | navigation = Navigation.open prevStoryPath state.navigation } addons
+                    , Router.push state.key (Router.ToStory prevStoryPath)
+                    )
+
+        GoToNextStory ->
+            case Story.next state.current state.store of
+                Nothing ->
+                    ( Model settings state addons
+                    , Cmd.none
+                    )
+
+                Just nextStoryPath ->
+                    ( Model settings { state | navigation = Navigation.open nextStoryPath state.navigation } addons
+                    , Router.push state.key (Router.ToStory nextStoryPath)
+                    )
+
         NavigationMsg msgOfNavigation ->
             let
                 ( nextNavigation, cmdOfNavigation ) =
@@ -336,19 +362,26 @@ update msg (Model settings state addons) =
 -- S U B S C R I P T I O N S
 
 
+keyCodeToMsg : Int -> Maybe Msg
+keyCodeToMsg keyCode =
+    if List.member keyCode [ 106, 74, 112, 80 ] then
+        -- j, J, p, P
+        Just GoToPrevStory
+
+    else if List.member keyCode [ 107, 75, 110, 78 ] then
+        -- k, K, n, N
+        Just GoToNextStory
+
+    else
+        Nothing
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
         , Decode.field "keyCode" Decode.int
-            |> Decode.andThen
-                (\keyCode ->
-                    let
-                        _ =
-                            Debug.log "" keyCode
-                    in
-                    Decode.fail "Unhandled"
-                )
+            |> Decode.andThen (Maybe.withDefault (Decode.fail "Unhandled") << Maybe.map Decode.succeed << keyCodeToMsg)
             |> Browser.Events.onKeyPress
         ]
 

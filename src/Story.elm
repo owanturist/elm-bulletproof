@@ -1,4 +1,4 @@
-module Story exposing (Path, Payload, Store, Story(..), get, makeStore)
+module Story exposing (Path, Payload, Store, Story(..), get, makeStore, next, prev)
 
 import AVL.Dict as Dict exposing (Dict)
 import Addons exposing (Addons)
@@ -24,8 +24,8 @@ type alias Path =
 
 
 type alias Connection =
-    { next : Path
-    , prev : Path
+    { prev : Path
+    , next : Path
     , payload : Payload Renderer
     }
 
@@ -68,7 +68,7 @@ makeStore stories =
 
 
 makeStoreL : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
-makeStoreL path story ( prev, store ) =
+makeStoreL path story ( prevStory, store ) =
     case story of
         Single storyID payload ->
             let
@@ -76,7 +76,7 @@ makeStoreL path story ( prev, store ) =
                     List.reverse (storyID :: path)
             in
             ( Just storyPath
-            , case prev of
+            , case prevStory of
                 Nothing ->
                     { first = Just storyPath
                     , last = store.last
@@ -91,14 +91,14 @@ makeStoreL path story ( prev, store ) =
             )
 
         Batch folderID substories ->
-            List.foldl (makeStoreL (folderID :: path)) ( prev, store ) substories
+            List.foldl (makeStoreL (folderID :: path)) ( prevStory, store ) substories
 
         _ ->
-            ( prev, store )
+            ( prevStory, store )
 
 
 makeStoreR : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
-makeStoreR path story ( next, store ) =
+makeStoreR path story ( nextStory, store ) =
     case story of
         Single storyID _ ->
             let
@@ -107,11 +107,11 @@ makeStoreR path story ( next, store ) =
             in
             case Dict.get storyPath store.connections of
                 Nothing ->
-                    ( next, store )
+                    ( nextStory, store )
 
                 Just connection ->
                     ( Just storyPath
-                    , case next of
+                    , case nextStory of
                         Nothing ->
                             { first = store.first
                             , last = Just storyPath
@@ -126,12 +126,38 @@ makeStoreR path story ( next, store ) =
                     )
 
         Batch folderID substories ->
-            List.foldr (makeStoreR (folderID :: path)) ( next, store ) substories
+            List.foldr (makeStoreR (folderID :: path)) ( nextStory, store ) substories
 
         _ ->
-            ( next, store )
+            ( nextStory, store )
 
 
 get : Path -> Store -> Maybe (Payload Renderer)
 get path store =
     Maybe.map .payload (Dict.get path store.connections)
+
+
+next : Path -> Store -> Maybe Path
+next path store =
+    Maybe.andThen
+        (\connection ->
+            if connection.next == path then
+                Nothing
+
+            else
+                Just connection.next
+        )
+        (Dict.get path store.connections)
+
+
+prev : Path -> Store -> Maybe Path
+prev path store =
+    Maybe.andThen
+        (\connection ->
+            if connection.prev == path then
+                Nothing
+
+            else
+                Just connection.prev
+        )
+        (Dict.get path store.connections)
