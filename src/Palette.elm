@@ -9,10 +9,16 @@ module Palette exposing
     , gray
     , gray50
     , smoke
+    , transparent
     , white
     )
 
 import Css
+
+
+transparent : Css.Color
+transparent =
+    Css.rgba 0 0 0 0
 
 
 blue : Css.Color

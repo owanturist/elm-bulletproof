@@ -359,13 +359,65 @@ styledStory settings =
     styled div
         [ Css.all Css.initial
         , Css.position Css.relative
+        , Css.zIndex (Css.int 1)
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.border3 (Css.px (ifelse settings.addPaddings 12 0)) Css.solid Css.transparent
+        , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
         , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , Css.overflow Css.auto
         , Css.cursor Css.inherit
+        , Css.batch (cssGrid settings)
         ]
         []
+
+
+linearGradient : Float -> String -> String
+linearGradient angle color =
+    [ "linear-gradient("
+    , String.join ","
+        [ String.fromFloat angle ++ "deg"
+        , color ++ " 0px"
+        , color ++ " 1px"
+        , "transparent 1px"
+        , "transparent 100%"
+        ]
+    , ")"
+    ]
+        |> String.concat
+
+
+cssGrid : Settings -> List Css.Style
+cssGrid settings =
+    let
+        ( smallColor, bigColor ) =
+            if settings.darkBackground then
+                ( "#444", "#666" )
+
+            else
+                ( "#eee", "#ccc" )
+
+        shift =
+            ifelse settings.addPaddings 10 0
+    in
+    [ Css.backgroundPosition2 (Css.px (toFloat shift)) (Css.px (toFloat shift))
+
+    --
+    , [ "100px 100px"
+      , "100px 100px"
+      , "10px 10px"
+      , "10px 10px"
+      ]
+        |> String.join ","
+        |> Css.property "background-size"
+
+    --
+    , [ linearGradient 0 bigColor
+      , linearGradient 270 bigColor
+      , linearGradient 0 smallColor
+      , linearGradient 270 smallColor
+      ]
+        |> String.join ","
+        |> Css.property "background-image"
+    ]
 
 
 viewDragger : Orientation -> List (Html.Styled.Attribute msg) -> Html msg
