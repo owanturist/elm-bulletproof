@@ -30,7 +30,8 @@ import Utils exposing (ifelse)
 
 
 type alias Settings =
-    { navigationWidth : Int
+    { navigationVisible : Bool
+    , navigationWidth : Int
     , dockWidth : Int
     , dockHeight : Int
     , dockOrientation : Orientation
@@ -42,7 +43,8 @@ type alias Settings =
 
 defaultSettings : Settings
 defaultSettings =
-    { navigationWidth = 200
+    { navigationVisible = True
+    , navigationWidth = 200
     , dockWidth = 400
     , dockHeight = 300
     , dockOrientation = Horizontal
@@ -161,6 +163,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ViewportChanged Int Int
+    | ToggleNavigationVisibility
     | ToggleDockOrientation
     | ToggleGrid
     | TogglePaddings
@@ -201,6 +204,11 @@ update msg (Model settings state addons) =
 
                 Router.ToNotFound ->
                     Model settings { state | current = [] } addons
+            , Cmd.none
+            )
+
+        ToggleNavigationVisibility ->
+            ( Model { settings | navigationVisible = not settings.navigationVisible } state addons
             , Cmd.none
             )
 
@@ -371,7 +379,7 @@ keyCodeToMsg keyCode =
         'j' ->
             Just GoToNextStory
 
-        'd' ->
+        'o' ->
             Just ToggleDockOrientation
 
         'p' ->
@@ -382,6 +390,9 @@ keyCodeToMsg keyCode =
 
         'b' ->
             Just ToggleBackground
+
+        'n' ->
+            Just ToggleNavigationVisibility
 
         _ ->
             Nothing
@@ -685,9 +696,13 @@ styledWorkspace dockOrientation =
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Addons -> Html Msg
 viewWorkspace payload settings state addons =
     styledWorkspace settings.dockOrientation
-        [ viewDragger Vertical
-            [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
-            ]
+        [ if settings.navigationVisible then
+            viewDragger Vertical
+                [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
+                ]
+
+          else
+            text ""
         , case Result.map ((|>) addons) payload.view of
             Err error ->
                 text error
@@ -797,9 +812,13 @@ view stories (Model settings state addons) =
             settings.dockOrientation
             state.dragging
             attrs
-            [ styledNavigation settings.navigationWidth
-                [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
-                ]
+            [ if settings.navigationVisible then
+                styledNavigation settings.navigationWidth
+                    [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
+                    ]
+
+              else
+                text ""
             , case Story.get state.current state.store of
                 Nothing ->
                     viewEmpty
