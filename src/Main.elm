@@ -443,7 +443,6 @@ styledStoryScroller =
     styled div
         [ Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.overflow Css.auto
-        , Css.cursor Css.inherit
         ]
         []
 
@@ -724,8 +723,8 @@ viewEmpty =
     text "Nothing to show"
 
 
-styledGlobal : Html msg
-styledGlobal =
+styledGlobal : Settings -> Dragging -> Html msg
+styledGlobal settings dragging =
     global
         [ Css.Global.body
             [ Css.backgroundColor Palette.cloud
@@ -737,40 +736,40 @@ styledGlobal =
             [ Css.minHeight (Css.pct 100)
             , Css.height (Css.pct 100)
             ]
+        , case dragging of
+            NoDragging ->
+                Css.Global.everything []
+
+            NavigationResizing _ _ ->
+                Css.Global.everything
+                    [ Css.property "user-select" "none !important"
+                    , Css.cursor Css.ewResize |> Css.important
+                    ]
+
+            DockResizing _ _ ->
+                Css.Global.everything
+                    [ Css.property "user-select" "none !important"
+                    , case settings.dockOrientation of
+                        Horizontal ->
+                            Css.cursor Css.nsResize |> Css.important
+
+                        Vertical ->
+                            Css.cursor Css.ewResize |> Css.important
+                    ]
         ]
 
 
-viewRoot : Orientation -> Dragging -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-viewRoot dockOrientation dragging attributes children =
+viewRoot : Settings -> Dragging -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+viewRoot settings dragging attributes children =
     styled div
         [ Css.displayFlex
         , Css.flexDirection Css.row
         , Css.flexWrap Css.noWrap
         , Css.width (Css.pct 100)
         , Css.height (Css.pct 100)
-        , case dragging of
-            NoDragging ->
-                Css.batch []
-
-            NavigationResizing _ _ ->
-                Css.batch
-                    [ Css.property "user-select" "none"
-                    , Css.cursor Css.ewResize
-                    ]
-
-            DockResizing _ _ ->
-                Css.batch
-                    [ Css.property "user-select" "none"
-                    , case dockOrientation of
-                        Horizontal ->
-                            Css.cursor Css.nsResize
-
-                        Vertical ->
-                            Css.cursor Css.ewResize
-                    ]
         ]
         attributes
-        (styledGlobal :: children)
+        (styledGlobal settings dragging :: children)
 
 
 styledNavigation : Int -> List (Html msg) -> Html msg
@@ -809,7 +808,7 @@ view stories (Model settings state addons) =
     in
     Browser.Document "Bulletproof"
         [ viewRoot
-            settings.dockOrientation
+            settings
             state.dragging
             attrs
             [ if settings.navigationVisible then
