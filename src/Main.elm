@@ -30,7 +30,8 @@ import Utils exposing (ifelse)
 
 
 type alias Settings =
-    { navigationVisible : Bool
+    { fullscreen : Bool
+    , navigationVisible : Bool
     , navigationWidth : Int
     , dockVisible : Bool
     , dockWidth : Int
@@ -44,7 +45,8 @@ type alias Settings =
 
 defaultSettings : Settings
 defaultSettings =
-    { navigationVisible = True
+    { fullscreen = False
+    , navigationVisible = True
     , navigationWidth = 200
     , dockVisible = True
     , dockWidth = 400
@@ -165,6 +167,7 @@ type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ViewportChanged Int Int
+    | ToggleFullscreen
     | ToggleNavigationVisibility
     | ToggleDockVisibility
     | ToggleDockOrientation
@@ -210,13 +213,48 @@ update msg (Model settings state addons) =
             , Cmd.none
             )
 
+        ToggleFullscreen ->
+            let
+                nextSettings =
+                    if not settings.navigationVisible && not settings.dockVisible then
+                        -- it seems like fullscreen
+                        { settings | fullscreen = False, navigationVisible = True, dockVisible = True }
+
+                    else
+                        -- just toggle it
+                        { settings | fullscreen = not settings.fullscreen }
+            in
+            ( Model nextSettings state addons
+            , Cmd.none
+            )
+
         ToggleNavigationVisibility ->
-            ( Model { settings | navigationVisible = not settings.navigationVisible } state addons
+            let
+                nextSettings =
+                    if settings.fullscreen then
+                        -- if it's fullscreen user expects turn visibility on
+                        { settings | fullscreen = False, navigationVisible = True, dockVisible = False }
+
+                    else
+                        -- just toggle it
+                        { settings | navigationVisible = not settings.navigationVisible }
+            in
+            ( Model nextSettings state addons
             , Cmd.none
             )
 
         ToggleDockVisibility ->
-            ( Model { settings | dockVisible = not settings.dockVisible } state addons
+            let
+                nextSettings =
+                    if settings.fullscreen then
+                        -- if it's fullscreen user expects turn visibility on
+                        { settings | fullscreen = False, navigationVisible = False, dockVisible = True }
+
+                    else
+                        -- just toggle it
+                        { settings | dockVisible = not settings.dockVisible }
+            in
+            ( Model nextSettings state addons
             , Cmd.none
             )
 
@@ -404,6 +442,9 @@ keyCodeToMsg keyCode =
 
         'd' ->
             Just ToggleDockVisibility
+
+        'f' ->
+            Just ToggleFullscreen
 
         _ ->
             Nothing
@@ -612,7 +653,7 @@ viewToggleGrid showGrid =
         { onPress = ToggleGrid
         , dark = showGrid
         }
-        [ Attributes.title (ifelse showGrid "Hide background grid" "Show background grid")
+        [ Attributes.title (ifelse showGrid "(g) Hide background grid" "(g) Show background grid")
         ]
         [ Icon.grid
         ]
@@ -624,7 +665,7 @@ viewToggleBackground darkBackground =
         { onPress = ToggleBackground
         , dark = darkBackground
         }
-        [ Attributes.title (ifelse darkBackground "Set light background" "Set dark background")
+        [ Attributes.title (ifelse darkBackground "(b) Set light background" "(b) Set dark background")
         , Attributes.css cssNextButton
         ]
         [ Icon.fillDrop
@@ -637,7 +678,7 @@ viewTogglePaddings addPaddings =
         { onPress = TogglePaddings
         , dark = addPaddings
         }
-        [ Attributes.title (ifelse addPaddings "Remove paddings" "Add paddings")
+        [ Attributes.title (ifelse addPaddings "(p) Remove paddings" "(p) Add paddings")
         , Attributes.css cssNextButton
         ]
         [ Icon.bordersBold
@@ -650,10 +691,10 @@ viewToggleDockOrientation dockOrientation =
         ( title, icon ) =
             case dockOrientation of
                 Horizontal ->
-                    ( "Dock to right", Icon.dockHorizontal )
+                    ( "(o) Dock to right", Icon.dockHorizontal )
 
                 Vertical ->
-                    ( "Dock to bottom", Icon.dockVertical )
+                    ( "(o) Dock to bottom", Icon.dockVertical )
     in
     button
         { onPress = ToggleDockOrientation
@@ -706,7 +747,7 @@ styledWorkspace dockOrientation =
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Addons -> Html Msg
 viewWorkspace payload settings state addons =
     styledWorkspace settings.dockOrientation
-        [ if settings.navigationVisible then
+        [ if settings.navigationVisible && not settings.fullscreen then
             viewDragger Vertical
                 [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
                 ]
@@ -723,7 +764,7 @@ viewWorkspace payload settings state addons =
                         [ Html.map StoryMsg layout
                         ]
                     ]
-        , if settings.dockVisible then
+        , if settings.dockVisible && not settings.fullscreen then
             Knob.view payload.knobs addons.knobs
                 |> Html.map (KnobMsg state.current)
                 |> viewDock settings
@@ -827,7 +868,7 @@ view stories (Model settings state addons) =
             settings
             state.dragging
             attrs
-            [ if settings.navigationVisible then
+            [ if settings.navigationVisible && not settings.fullscreen then
                 styledNavigation settings.navigationWidth
                     [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
                     ]
