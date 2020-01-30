@@ -32,6 +32,7 @@ import Utils exposing (ifelse)
 type alias Settings =
     { navigationVisible : Bool
     , navigationWidth : Int
+    , dockVisible : Bool
     , dockWidth : Int
     , dockHeight : Int
     , dockOrientation : Orientation
@@ -45,6 +46,7 @@ defaultSettings : Settings
 defaultSettings =
     { navigationVisible = True
     , navigationWidth = 200
+    , dockVisible = True
     , dockWidth = 400
     , dockHeight = 300
     , dockOrientation = Horizontal
@@ -164,6 +166,7 @@ type Msg
     | UrlChanged Url
     | ViewportChanged Int Int
     | ToggleNavigationVisibility
+    | ToggleDockVisibility
     | ToggleDockOrientation
     | ToggleGrid
     | TogglePaddings
@@ -209,6 +212,11 @@ update msg (Model settings state addons) =
 
         ToggleNavigationVisibility ->
             ( Model { settings | navigationVisible = not settings.navigationVisible } state addons
+            , Cmd.none
+            )
+
+        ToggleDockVisibility ->
+            ( Model { settings | dockVisible = not settings.dockVisible } state addons
             , Cmd.none
             )
 
@@ -393,6 +401,9 @@ keyCodeToMsg keyCode =
 
         'n' ->
             Just ToggleNavigationVisibility
+
+        'd' ->
+            Just ToggleDockVisibility
 
         _ ->
             Nothing
@@ -712,9 +723,13 @@ viewWorkspace payload settings state addons =
                         [ Html.map StoryMsg layout
                         ]
                     ]
-        , Knob.view payload.knobs addons.knobs
-            |> Html.map (KnobMsg state.current)
-            |> viewDock settings
+        , if settings.dockVisible then
+            Knob.view payload.knobs addons.knobs
+                |> Html.map (KnobMsg state.current)
+                |> viewDock settings
+
+          else
+            text ""
         ]
 
 
