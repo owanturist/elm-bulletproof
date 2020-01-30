@@ -364,16 +364,27 @@ update msg (Model settings state addons) =
 
 keyCodeToMsg : Int -> Maybe Msg
 keyCodeToMsg keyCode =
-    if List.member keyCode [ 107, 75, 112, 80 ] then
-        -- k, K, p, P
-        Just GoToPrevStory
+    case Char.fromCode keyCode of
+        'k' ->
+            Just GoToPrevStory
 
-    else if List.member keyCode [ 106, 74, 110, 78 ] then
-        -- j, J, n, N
-        Just GoToNextStory
+        'j' ->
+            Just GoToNextStory
 
-    else
-        Nothing
+        'd' ->
+            Just ToggleDockOrientation
+
+        'p' ->
+            Just TogglePaddings
+
+        'g' ->
+            Just ToggleGrid
+
+        'b' ->
+            Just ToggleBackground
+
+        _ ->
+            Nothing
 
 
 keyNavigationDecoder : Decoder Msg
