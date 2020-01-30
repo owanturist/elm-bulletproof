@@ -546,25 +546,25 @@ viewDragger orientation attributes =
 
 styledDock : Settings -> List (Html msg) -> Html msg
 styledDock settings =
+    let
+        ( ruleBorder, flexBasis ) =
+            case settings.dockOrientation of
+                Horizontal ->
+                    ( Css.borderTop3, settings.dockHeight )
+
+                Vertical ->
+                    ( Css.borderLeft3, settings.dockWidth )
+    in
     styled div
         [ Css.boxSizing Css.borderBox
         , Css.displayFlex
         , Css.flexDirection Css.column
         , Css.position Css.relative
-        , case settings.dockOrientation of
-            Horizontal ->
-                Css.batch
-                    [ Css.flex3 Css.zero Css.zero (Css.px (toFloat settings.dockHeight))
-                    , Css.borderTop3 (Css.px 2) Css.solid Palette.smoke
-                    ]
-
-            Vertical ->
-                Css.batch
-                    [ Css.flex3 Css.zero Css.zero (Css.px (toFloat settings.dockWidth))
-                    , Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
-                    ]
+        , Css.flex2 Css.zero Css.zero
+        , ruleBorder (Css.px 2) Css.solid Palette.smoke
         ]
-        []
+        [ Attributes.style "flex-basis" (String.fromInt flexBasis ++ "px")
+        ]
 
 
 styledDockHeader : List (Html msg) -> Html msg
@@ -775,10 +775,11 @@ viewRoot settings dragging attributes children =
 styledNavigation : Int -> List (Html msg) -> Html msg
 styledNavigation size =
     styled nav
-        [ Css.flex3 Css.zero Css.zero (Css.px (toFloat size))
+        [ Css.flex2 Css.zero Css.zero
         , Css.overflow Css.auto
         ]
-        []
+        [ Attributes.style "flex-basis" (String.fromInt size ++ "px")
+        ]
 
 
 view : List (Story Renderer) -> Model -> Browser.Document Msg
