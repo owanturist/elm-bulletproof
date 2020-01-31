@@ -14,6 +14,7 @@ import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Icon
 import Json.Decode as Decode exposing (Decoder, decodeString)
+import Json.Encode exposing (encode)
 import Knob
 import Navigation
 import Palette
@@ -107,7 +108,8 @@ init stories settingsJSON url key =
 
 
 type Msg
-    = UrlRequested Browser.UrlRequest
+    = NoOp
+    | UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ViewportChanged Int Int
     | ToggleFullscreen
@@ -125,12 +127,22 @@ type Msg
     | GoToNextStory
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
-    | StoryMsg ()
+
+
+saveSettings : (String -> Cmd msg) -> Settings -> Cmd Msg
+saveSettings onSettingsChange settings =
+    Settings.encoder settings
+        |> encode 0
+        |> onSettingsChange
+        |> Cmd.map (always NoOp)
 
 
 update : (String -> Cmd msg) -> Msg -> Model -> ( Model, Cmd Msg )
 update onSettingsChange msg (Model settings state addons) =
     case msg of
+        NoOp ->
+            ( Model settings state addons, Cmd.none )
+
         UrlRequested (Browser.Internal url) ->
             ( Model settings state addons
             , Browser.Navigation.pushUrl state.key (Url.toString url)
@@ -141,11 +153,6 @@ update onSettingsChange msg (Model settings state addons) =
             , Browser.Navigation.load path
             )
 
-        ViewportChanged width height ->
-            ( Model settings { state | viewport = Viewport width height } addons
-            , Cmd.none
-            )
-
         UrlChanged url ->
             ( case Router.parse url of
                 Router.ToStory storyPath ->
@@ -153,6 +160,11 @@ update onSettingsChange msg (Model settings state addons) =
 
                 Router.ToNotFound ->
                     Model settings { state | current = [] } addons
+            , Cmd.none
+            )
+
+        ViewportChanged width height ->
+            ( Model settings { state | viewport = Viewport width height } addons
             , Cmd.none
             )
 
@@ -168,7 +180,7 @@ update onSettingsChange msg (Model settings state addons) =
                         { settings | fullscreen = not settings.fullscreen }
             in
             ( Model nextSettings state addons
-            , Cmd.none
+            , saveSettings onSettingsChange nextSettings
             )
 
         ToggleNavigationVisibility ->
@@ -183,7 +195,7 @@ update onSettingsChange msg (Model settings state addons) =
                         { settings | navigationVisible = not settings.navigationVisible }
             in
             ( Model nextSettings state addons
-            , Cmd.none
+            , saveSettings onSettingsChange nextSettings
             )
 
         ToggleDockVisibility ->
@@ -198,38 +210,54 @@ update onSettingsChange msg (Model settings state addons) =
                         { settings | dockVisible = not settings.dockVisible }
             in
             ( Model nextSettings state addons
-            , Cmd.none
+            , saveSettings onSettingsChange nextSettings
             )
 
         ToggleDockOrientation ->
-            ( case settings.dockOrientation of
-                Horizontal ->
-                    let
-                        nextDockWidth =
-                            min
-                                settings.dockWidth
-                                (state.viewport.width - Settings.minStoryWidth - settings.navigationWidth)
-                    in
-                    Model { settings | dockOrientation = Vertical, dockWidth = nextDockWidth } state addons
+            let
+                nextSettings =
+                    case settings.dockOrientation of
+                        Horizontal ->
+                            let
+                                nextDockWidth =
+                                    min
+                                        settings.dockWidth
+                                        (state.viewport.width - Settings.minStoryWidth - settings.navigationWidth)
+                            in
+                            { settings | dockOrientation = Vertical, dockWidth = nextDockWidth }
 
-                Vertical ->
-                    Model { settings | dockOrientation = Horizontal } state addons
-            , Cmd.none
+                        Vertical ->
+                            { settings | dockOrientation = Horizontal }
+            in
+            ( Model nextSettings state addons
+            , saveSettings onSettingsChange nextSettings
             )
 
         ToggleGrid ->
-            ( Model { settings | showGrid = not settings.showGrid } state addons
-            , Cmd.none
+            let
+                nextSettings =
+                    { settings | showGrid = not settings.showGrid }
+            in
+            ( Model nextSettings state addons
+            , saveSettings onSettingsChange nextSettings
             )
 
         TogglePaddings ->
-            ( Model { settings | addPaddings = not settings.addPaddings } state addons
-            , Cmd.none
+            let
+                nextSettings =
+                    { settings | addPaddings = not settings.addPaddings }
+            in
+            ( Model nextSettings state addons
+            , saveSettings onSettingsChange nextSettings
             )
 
         ToggleBackground ->
-            ( Model { settings | darkBackground = not settings.darkBackground } state addons
-            , Cmd.none
+            let
+                nextSettings =
+                    { settings | darkBackground = not settings.darkBackground }
+            in
+            ( Model nextSettings state addons
+            , saveSettings onSettingsChange nextSettings
             )
 
         StartNavigationResizing start ->
@@ -303,7 +331,7 @@ update onSettingsChange msg (Model settings state addons) =
 
         DragEnd ->
             ( Model settings { state | dragging = NoDragging } addons
-            , Cmd.none
+            , saveSettings onSettingsChange settings
             )
 
         GoToPrevStory ->
@@ -350,9 +378,6 @@ update onSettingsChange msg (Model settings state addons) =
             ( Model settings state (Dict.insert path nextStoryAddons addons)
             , Cmd.none
             )
-
-        StoryMsg () ->
-            ( Model settings state addons, Cmd.none )
 
 
 
@@ -704,7 +729,7 @@ viewWorkspace payload settings state addons =
             Ok (Renderer.Renderer layout) ->
                 styledStoryScroller
                     [ styledStoryContainer settings
-                        [ Html.map StoryMsg layout
+                        [ Html.map (always NoOp) layout
                         ]
                     ]
         , if settings.dockVisible && not settings.fullscreen then

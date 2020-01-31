@@ -4,13 +4,7 @@
   "description": "Make your components Bulletproof",
   "main": "index.js",
   "scripts": {
-    "test": "elm-test --compiler ./node_modules/.bin/elm",
-    "predemo-build": "rm -rf ./build && mkdir build && cp ./tests/index.html ./build/",
-    "demo-build": "elm make --output=./build/bundle.js ./tests/Stories.elm",
-    "demo-serve": "http-server ./build --proxy http://localhost:8080?",
-    "demo": "npm run demo-build && npm run demo-serve",
-    "demo:optimize": "npm run demo-build -- --optimize && npm run demo-serve",
-    "demo:debug": "npm run demo-build -- --debug && npm run demo-serve"
+    "test": "elm-test --compiler ./node_modules/.bin/elm"
   },
   "repository": {
     "type": "git",
@@ -30,8 +24,7 @@
     "elm": "^0.19.1-3",
     "elm-analyse": "^0.16.5",
     "elm-format": "^0.8.2",
-    "elm-test": "^0.19.1-revision2",
-    "http-server": "^0.12.1"
+    "elm-test": "^0.19.1-revision2"
   },
   "directories": {
     "test": "tests"

@@ -15,9 +15,13 @@
         (function() {
             var SETTINGS_KEY = 'bf_settings'
 
-            window.Elm.Stories.init({
+            var { ports } = window.Elm.Stories.init({
                 flags: localStorage.getItem(SETTINGS_KEY)
             });
+
+            ports.save_settings.subscribe(function(settings) {
+                localStorage.setItem(SETTINGS_KEY, settings)
+            })
         })()
     </script>
 </body>
