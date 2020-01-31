@@ -757,7 +757,9 @@ styledGlobal settings dragging =
             [ Css.Global.html
             , Css.Global.body
             ]
-            [ Css.minHeight (Css.pct 100)
+            [ Css.margin Css.zero
+            , Css.padding Css.zero
+            , Css.minHeight (Css.pct 100)
             , Css.height (Css.pct 100)
             ]
         , case dragging of
