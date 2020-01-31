@@ -57,13 +57,13 @@ bool name defaultValue story =
                 { knobs = ( name, Bool defaultValue ) :: payload.knobs
                 , view =
                     Result.map
-                        (\view state ->
-                            case extract name state.knobs of
+                        (\view knobs ->
+                            case extract name knobs of
                                 Just (BoolValue value) ->
-                                    view state value
+                                    view knobs value
 
                                 _ ->
-                                    view state defaultValue
+                                    view knobs defaultValue
                         )
                         payload.view
                 }
@@ -86,13 +86,13 @@ string name defaultValue story =
                 { knobs = ( name, String defaultValue ) :: payload.knobs
                 , view =
                     Result.map
-                        (\view state ->
-                            case extract name state.knobs of
+                        (\view knobs ->
+                            case extract name knobs of
                                 Just (StringValue value) ->
-                                    view state value
+                                    view knobs value
 
                                 _ ->
-                                    view state defaultValue
+                                    view knobs defaultValue
                         )
                         payload.view
                 }
@@ -169,13 +169,13 @@ int name defaultValue properties story =
                 { knobs = ( name, Int range_ defaultValue limits ) :: payload.knobs
                 , view =
                     Result.map
-                        (\view state ->
-                            case extract name state.knobs of
+                        (\view knobs ->
+                            case extract name knobs of
                                 Just (IntValue str) ->
-                                    view state (Maybe.withDefault defaultValue (String.toInt str))
+                                    view knobs (Maybe.withDefault defaultValue (String.toInt str))
 
                                 _ ->
-                                    view state defaultValue
+                                    view knobs defaultValue
                         )
                         payload.view
                 }
@@ -202,13 +202,13 @@ float name defaultValue properties story =
                 { knobs = ( name, Float range_ defaultValue limits ) :: payload.knobs
                 , view =
                     Result.map
-                        (\view state ->
-                            case extract name state.knobs of
+                        (\view knobs ->
+                            case extract name knobs of
                                 Just (FloatValue str) ->
-                                    view state (Maybe.withDefault defaultValue (String.toFloat str))
+                                    view knobs (Maybe.withDefault defaultValue (String.toFloat str))
 
                                 _ ->
-                                    view state defaultValue
+                                    view knobs defaultValue
                         )
                         payload.view
                 }
@@ -236,10 +236,10 @@ makeChoice choice choiceName name options story =
 
                         Just ( firstLabel, firstValue ) ->
                             Result.map
-                                (\view state ->
+                                (\view knobs ->
                                     let
                                         selected =
-                                            case extract name state.knobs of
+                                            case extract name knobs of
                                                 Just (StringValue value) ->
                                                     value
 
@@ -251,7 +251,7 @@ makeChoice choice choiceName name options story =
                                         |> List.head
                                         |> Maybe.map Tuple.second
                                         |> Maybe.withDefault firstValue
-                                        |> view state
+                                        |> view knobs
                                 )
                                 payload.view
                 }
@@ -288,13 +288,13 @@ color name defaultValue story =
                 { knobs = ( name, Color defaultColor ) :: payload.knobs
                 , view =
                     Result.map2
-                        (\default view state ->
-                            case extract name state.knobs of
+                        (\default view knobs ->
+                            case extract name knobs of
                                 Just (ColorValue (Just value)) ->
-                                    view state value
+                                    view knobs value
 
                                 _ ->
-                                    view state default
+                                    view knobs default
                         )
                         (Result.fromMaybe ("Color in '" ++ name ++ "' is invalid.") defaultColor)
                         payload.view
@@ -322,13 +322,13 @@ date name defaultValue story =
                 { knobs = ( name, Date defaultDate ) :: payload.knobs
                 , view =
                     Result.map2
-                        (\default view state ->
-                            case extract name state.knobs of
+                        (\default view knobs ->
+                            case extract name knobs of
                                 Just (DateValue (Just value)) ->
-                                    view state (Date.dateFromPosix value)
+                                    view knobs (Date.dateFromPosix value)
 
                                 _ ->
-                                    view state (Date.dateFromPosix default)
+                                    view knobs (Date.dateFromPosix default)
                         )
                         (Result.fromMaybe ("Date in '" ++ name ++ "' is invalid.") defaultDate)
                         payload.view
@@ -356,13 +356,13 @@ time name defaultValue story =
                 { knobs = ( name, Time defaultTime ) :: payload.knobs
                 , view =
                     Result.map2
-                        (\default view state ->
-                            case extract name state.knobs of
+                        (\default view knobs ->
+                            case extract name knobs of
                                 Just (TimeValue (Just value)) ->
-                                    view state value
+                                    view knobs value
 
                                 _ ->
-                                    view state default
+                                    view knobs default
                         )
                         (Result.fromMaybe ("Time in '" ++ name ++ "' is invalid.") defaultTime)
                         payload.view
@@ -386,13 +386,13 @@ files name story =
                 { knobs = ( name, Files ) :: payload.knobs
                 , view =
                     Result.map
-                        (\view state ->
-                            case extract name state.knobs of
+                        (\view knobs ->
+                            case extract name knobs of
                                 Just (FileValue value) ->
-                                    view state value
+                                    view knobs value
 
                                 _ ->
-                                    view state []
+                                    view knobs []
                         )
                         payload.view
                 }

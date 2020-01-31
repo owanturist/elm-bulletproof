@@ -1,7 +1,6 @@
 module Story exposing (Path, Payload, Store, Story(..), get, makeStore, next, prev)
 
 import AVL.Dict as Dict exposing (Dict)
-import Addons exposing (Addons)
 import Knob exposing (Knob)
 import Renderer exposing (Renderer)
 
@@ -15,7 +14,7 @@ type Story view
 
 type alias Payload view =
     { knobs : List ( String, Knob )
-    , view : Result String (Addons -> view)
+    , view : Result String (Knob.State -> view)
     }
 
 
