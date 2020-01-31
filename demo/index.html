@@ -12,7 +12,13 @@
     <script src="/bundle.js"></script>
 
     <script>
-        window.Elm.Stories.init();
+        (function() {
+            var SETTINGS_KEY = 'bf_settings'
+
+            window.Elm.Stories.init({
+                flags: localStorage.getItem(SETTINGS_KEY)
+            });
+        })()
     </script>
 </body>
 </html>

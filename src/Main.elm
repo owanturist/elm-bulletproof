@@ -13,7 +13,7 @@ import Html.Styled as Html exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Icon
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode exposing (Decoder, decodeString)
 import Knob
 import Navigation
 import Palette
@@ -56,9 +56,14 @@ type Model
     = Model Settings State (Dict Story.Path Addons)
 
 
-init : List (Story Renderer) -> () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init stories () url key =
+init : List (Story Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init stories settingsJSON url key =
     let
+        initialSettings =
+            settingsJSON
+                |> Maybe.andThen (Result.toMaybe << decodeString Settings.decoder)
+                |> Maybe.withDefault Settings.default
+
         store =
             Story.makeStore stories
 
@@ -79,7 +84,7 @@ init stories () url key =
             List.take (List.length initialStoryPath - 1) initialStoryPath
     in
     ( Model
-        Settings.default
+        initialSettings
         { key = key
         , viewport = Viewport 0 0
         , store = store
@@ -123,8 +128,8 @@ type Msg
     | StoryMsg ()
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg (Model settings state addons) =
+update : (String -> Cmd msg) -> Msg -> Model -> ( Model, Cmd Msg )
+update onSettingsChange msg (Model settings state addons) =
     case msg of
         UrlRequested (Browser.Internal url) ->
             ( Model settings state addons
@@ -828,14 +833,14 @@ view stories (Model settings state addons) =
 
 
 type alias Program =
-    Platform.Program () Model Msg
+    Platform.Program (Maybe String) Model Msg
 
 
-run : List (Story Renderer) -> Program
-run stories =
+run : (String -> Cmd msg) -> List (Story Renderer) -> Program
+run onSettingsChange stories =
     Browser.application
         { init = init stories
-        , update = update
+        , update = update onSettingsChange
         , view = view stories
         , subscriptions = subscriptions
         , onUrlRequest = UrlRequested

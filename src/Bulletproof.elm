@@ -70,6 +70,6 @@ type alias Program =
     Main.Program
 
 
-program : List Story -> Program
-program stories =
-    Main.run stories
+program : (String -> Cmd msg) -> List Story -> Program
+program onSettingsChange stories =
+    Main.run onSettingsChange stories
