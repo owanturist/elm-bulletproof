@@ -145,7 +145,7 @@ storyRadio =
             )
 
         --
-        , Bulletproof.storyOf "Repeatet"
+        , Bulletproof.storyOf "Duplicates"
             (Knob.view
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
@@ -205,7 +205,7 @@ storySelect =
             )
 
         --
-        , Bulletproof.storyOf "Repeatet"
+        , Bulletproof.storyOf "Duplicates"
             (Knob.view
                 [ ( "Select"
                   , Knob.Choice Knob.Select
@@ -324,6 +324,16 @@ story =
     Bulletproof.folderOf "Knob"
         [ Bulletproof.storyOf "Empty"
             (Knob.view [] Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Duplicates"
+            (Knob.view
+                [ ( "Knob #2", Knob.Bool True )
+                , ( "Knob #1", Knob.String "Text" )
+                ]
+                Knob.initial
                 |> Bulletproof.fromElmCss
             )
 
