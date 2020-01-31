@@ -1,4 +1,4 @@
-module Demo exposing (main)
+module Stories exposing (main)
 
 import Bulletproof
 import Stories.Button
