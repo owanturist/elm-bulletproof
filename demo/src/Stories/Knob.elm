@@ -258,7 +258,7 @@ storyColor =
     Bulletproof.folderOf "Color"
         [ Bulletproof.storyOf "Invalid"
             (Knob.view
-                [ ( "Color", Knob.Color (Color.fromString "asd") )
+                [ ( "Color", Knob.Color (Color.fromString "invalid") )
                 ]
                 Knob.initial
                 |> Bulletproof.fromElmCss
@@ -280,7 +280,7 @@ storyDate =
     Bulletproof.folderOf "Date"
         [ Bulletproof.storyOf "Invalid"
             (Knob.view
-                [ ( "Date", Knob.Date Nothing )
+                [ ( "Date", Knob.Date (Date.parseStringToPosix "invalid") )
                 ]
                 Knob.initial
                 |> Bulletproof.fromElmCss
@@ -289,7 +289,29 @@ storyDate =
         --
         , Bulletproof.storyOf "Valid"
             (Knob.view
-                [ ( "Date", Knob.Date (Just (Time.millisToPosix 0)) )
+                [ ( "Date", Knob.Date (Date.parseStringToPosix "12/02/2013") )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+        ]
+
+
+storyTime : Bulletproof.Story
+storyTime =
+    Bulletproof.folderOf "Time"
+        [ Bulletproof.storyOf "Invalid"
+            (Knob.view
+                [ ( "Time", Knob.Time (Date.timeFromString "invalid") )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Valid"
+            (Knob.view
+                [ ( "Time", Knob.Time (Date.timeFromString "02:41") )
                 ]
                 Knob.initial
                 |> Bulletproof.fromElmCss
@@ -359,6 +381,9 @@ story =
 
         --
         , storyDate
+
+        --
+        , storyTime
 
         --
         , Bulletproof.storyOf "All Together"
