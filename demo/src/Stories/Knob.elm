@@ -253,6 +253,28 @@ storySelect =
         ]
 
 
+storyColor : Bulletproof.Story
+storyColor =
+    Bulletproof.folderOf "Color"
+        [ Bulletproof.storyOf "Invalid"
+            (Knob.view
+                [ ( "Color", Knob.Color (Color.fromString "asd") )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Valid"
+            (Knob.view
+                [ ( "Color", Knob.Color (Color.fromString "#c9c") )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+        ]
+
+
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Knob"
@@ -309,6 +331,9 @@ story =
 
         --
         , storySelect
+
+        --
+        , storyColor
 
         --
         , Bulletproof.storyOf "All Together"
