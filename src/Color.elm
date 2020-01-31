@@ -1,4 +1,4 @@
-module Color exposing (Color, fromString)
+module Color exposing (Color, fromString, makeColor)
 
 import Hex
 

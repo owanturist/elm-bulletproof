@@ -44,10 +44,10 @@ type alias Story =
 
 
 storyOf : String -> view -> Story.Story view
-storyOf title view_ =
+storyOf title view =
     Story.Single title
         { knobs = []
-        , view = Ok (\_ -> view_)
+        , view = always view
         }
 
 

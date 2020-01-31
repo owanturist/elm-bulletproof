@@ -720,16 +720,15 @@ viewWorkspace payload settings state knobs =
 
           else
             text ""
-        , case Result.map ((|>) knobs) payload.view of
-            Err error ->
-                text error
 
-            Ok (Renderer.Renderer layout) ->
-                styledStoryScroller
-                    [ styledStoryContainer settings
-                        [ Html.map (always NoOp) layout
-                        ]
-                    ]
+        --
+        , styledStoryScroller
+            [ styledStoryContainer settings
+                [ Html.map (always NoOp) (Renderer.unwrap (payload.view knobs))
+                ]
+            ]
+
+        --
         , if settings.dockVisible && not settings.fullscreen then
             Knob.view payload.knobs knobs
                 |> Html.map (KnobMsg state.current)

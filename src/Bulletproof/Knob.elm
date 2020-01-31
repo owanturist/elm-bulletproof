@@ -56,20 +56,20 @@ bool name defaultValue story =
             Single storyID
                 { knobs = ( name, Bool defaultValue ) :: payload.knobs
                 , view =
-                    Result.map
-                        (\view knobs ->
-                            case extract name knobs of
-                                Just (BoolValue value) ->
-                                    view knobs value
+                    \knobs ->
+                        case extract name knobs of
+                            Just (BoolValue value) ->
+                                payload.view knobs value
 
-                                _ ->
-                                    view knobs defaultValue
-                        )
-                        payload.view
+                            _ ->
+                                payload.view knobs defaultValue
                 }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 string : String -> String -> Story (String -> a) -> Story a
@@ -85,20 +85,20 @@ string name defaultValue story =
             Single storyID
                 { knobs = ( name, String defaultValue ) :: payload.knobs
                 , view =
-                    Result.map
-                        (\view knobs ->
-                            case extract name knobs of
-                                Just (StringValue value) ->
-                                    view knobs value
+                    \knobs ->
+                        case extract name knobs of
+                            Just (StringValue value) ->
+                                payload.view knobs value
 
-                                _ ->
-                                    view knobs defaultValue
-                        )
-                        payload.view
+                            _ ->
+                                payload.view knobs defaultValue
                 }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 type Property num
@@ -168,20 +168,20 @@ int name defaultValue properties story =
             Single storyID
                 { knobs = ( name, Int range_ defaultValue limits ) :: payload.knobs
                 , view =
-                    Result.map
-                        (\view knobs ->
-                            case extract name knobs of
-                                Just (IntValue str) ->
-                                    view knobs (Maybe.withDefault defaultValue (String.toInt str))
+                    \knobs ->
+                        case extract name knobs of
+                            Just (IntValue str) ->
+                                payload.view knobs (Maybe.withDefault defaultValue (String.toInt str))
 
-                                _ ->
-                                    view knobs defaultValue
-                        )
-                        payload.view
+                            _ ->
+                                payload.view knobs defaultValue
                 }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
@@ -201,20 +201,20 @@ float name defaultValue properties story =
             Single storyID
                 { knobs = ( name, Float range_ defaultValue limits ) :: payload.knobs
                 , view =
-                    Result.map
-                        (\view knobs ->
-                            case extract name knobs of
-                                Just (FloatValue str) ->
-                                    view knobs (Maybe.withDefault defaultValue (String.toFloat str))
+                    \knobs ->
+                        case extract name knobs of
+                            Just (FloatValue str) ->
+                                payload.view knobs (Maybe.withDefault defaultValue (String.toFloat str))
 
-                                _ ->
-                                    view knobs defaultValue
-                        )
-                        payload.view
+                            _ ->
+                                payload.view knobs defaultValue
                 }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -227,37 +227,37 @@ makeChoice choice choiceName name options story =
             Todo title
 
         Single storyID payload ->
-            Single storyID
-                { knobs = ( name, Choice choice (List.map Tuple.first options) ) :: payload.knobs
-                , view =
-                    case List.head options of
-                        Nothing ->
-                            Err (choiceName ++ " Knob '" ++ name ++ "' expects at least one option")
+            case List.head options of
+                Nothing ->
+                    Fail [ choiceName ++ " Knob '" ++ name ++ "' expects at least one option" ]
 
-                        Just ( firstLabel, firstValue ) ->
-                            Result.map
-                                (\view knobs ->
-                                    let
-                                        selected =
-                                            case extract name knobs of
-                                                Just (StringValue value) ->
-                                                    value
+                Just ( firstLabel, firstValue ) ->
+                    Single storyID
+                        { knobs = ( name, Choice choice firstLabel (List.map Tuple.first options) ) :: payload.knobs
+                        , view =
+                            \knobs ->
+                                let
+                                    selected =
+                                        case extract name knobs of
+                                            Just (StringValue value) ->
+                                                value
 
-                                                _ ->
-                                                    firstLabel
-                                    in
-                                    options
-                                        |> List.filter ((==) selected << Tuple.first)
-                                        |> List.head
-                                        |> Maybe.map Tuple.second
-                                        |> Maybe.withDefault firstValue
-                                        |> view knobs
-                                )
-                                payload.view
-                }
+                                            _ ->
+                                                firstLabel
+                                in
+                                options
+                                    |> List.filter ((==) selected << Tuple.first)
+                                    |> List.head
+                                    |> Maybe.map Tuple.second
+                                    |> Maybe.withDefault firstValue
+                                    |> payload.view knobs
+                        }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -280,28 +280,28 @@ color name defaultValue story =
             Todo title
 
         Single storyID payload ->
-            let
-                defaultColor =
-                    Color.fromString defaultValue
-            in
-            Single storyID
-                { knobs = ( name, Color defaultColor ) :: payload.knobs
-                , view =
-                    Result.map2
-                        (\default view knobs ->
-                            case extract name knobs of
-                                Just (ColorValue (Just value)) ->
-                                    view knobs value
+            case Color.fromString defaultValue of
+                Nothing ->
+                    Fail [ "Color `" ++ defaultValue ++ "` is invalid." ]
 
-                                _ ->
-                                    view knobs default
-                        )
-                        (Result.fromMaybe ("Color in '" ++ name ++ "' is invalid.") defaultColor)
-                        payload.view
-                }
+                Just defaultColor ->
+                    Single storyID
+                        { knobs = ( name, Color defaultColor ) :: payload.knobs
+                        , view =
+                            \knobs ->
+                                case extract name knobs of
+                                    Just (ColorValue (Just value)) ->
+                                        payload.view knobs value
+
+                                    _ ->
+                                        payload.view knobs defaultColor
+                        }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 date : String -> String -> Story (Date -> a) -> Story a
@@ -314,28 +314,28 @@ date name defaultValue story =
             Todo title
 
         Single storyID payload ->
-            let
-                defaultDate =
-                    Date.parseStringToPosix defaultValue
-            in
-            Single storyID
-                { knobs = ( name, Date defaultDate ) :: payload.knobs
-                , view =
-                    Result.map2
-                        (\default view knobs ->
-                            case extract name knobs of
-                                Just (DateValue (Just value)) ->
-                                    view knobs (Date.dateFromPosix value)
+            case Date.parseStringToPosix defaultValue of
+                Nothing ->
+                    Fail [ "Date `" ++ defaultValue ++ "` is invalid" ]
 
-                                _ ->
-                                    view knobs (Date.dateFromPosix default)
-                        )
-                        (Result.fromMaybe ("Date in '" ++ name ++ "' is invalid.") defaultDate)
-                        payload.view
-                }
+                Just defaultDate ->
+                    Single storyID
+                        { knobs = ( name, Date defaultDate ) :: payload.knobs
+                        , view =
+                            \knobs ->
+                                case extract name knobs of
+                                    Just (DateValue (Just value)) ->
+                                        payload.view knobs (Date.dateFromPosix value)
+
+                                    _ ->
+                                        payload.view knobs (Date.dateFromPosix defaultDate)
+                        }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 time : String -> String -> Story (Time -> a) -> Story a
@@ -348,28 +348,28 @@ time name defaultValue story =
             Todo title
 
         Single storyID payload ->
-            let
-                defaultTime =
-                    Date.timeFromString defaultValue
-            in
-            Single storyID
-                { knobs = ( name, Time defaultTime ) :: payload.knobs
-                , view =
-                    Result.map2
-                        (\default view knobs ->
-                            case extract name knobs of
-                                Just (TimeValue (Just value)) ->
-                                    view knobs value
+            case Date.timeFromString defaultValue of
+                Nothing ->
+                    Fail [ "Time `" ++ defaultValue ++ "` is invalid" ]
 
-                                _ ->
-                                    view knobs default
-                        )
-                        (Result.fromMaybe ("Time in '" ++ name ++ "' is invalid.") defaultTime)
-                        payload.view
-                }
+                Just defaultTime ->
+                    Single storyID
+                        { knobs = ( name, Time defaultTime ) :: payload.knobs
+                        , view =
+                            \knobs ->
+                                case extract name knobs of
+                                    Just (TimeValue (Just value)) ->
+                                        payload.view knobs value
+
+                                    _ ->
+                                        payload.view knobs defaultTime
+                        }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors
 
 
 files : String -> Story (List File -> a) -> Story a
@@ -385,17 +385,17 @@ files name story =
             Single storyID
                 { knobs = ( name, Files ) :: payload.knobs
                 , view =
-                    Result.map
-                        (\view knobs ->
-                            case extract name knobs of
-                                Just (FileValue value) ->
-                                    view knobs value
+                    \knobs ->
+                        case extract name knobs of
+                            Just (FileValue value) ->
+                                payload.view knobs value
 
-                                _ ->
-                                    view knobs []
-                        )
-                        payload.view
+                            _ ->
+                                payload.view knobs []
                 }
 
         Batch folderID stories ->
             Batch folderID stories
+
+        Fail errors ->
+            Fail errors

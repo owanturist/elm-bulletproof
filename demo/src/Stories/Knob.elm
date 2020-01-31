@@ -138,19 +138,11 @@ storyFloat =
 storyRadio : Bulletproof.Story
 storyRadio =
     Bulletproof.folderOf "Radio"
-        [ Bulletproof.storyOf "Empty"
-            (Knob.view
-                [ ( "Radio", Knob.Choice Knob.Radio [] )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
-        , Bulletproof.storyOf "Duplicates"
+        [ Bulletproof.storyOf "Duplicates"
             (Knob.view
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
+                        "Option #1"
                         [ "Option #1"
                         , "Option #1"
                         ]
@@ -165,6 +157,7 @@ storyRadio =
             (Knob.view
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
+                        "Option #1"
                         [ "Option #1"
                         ]
                   )
@@ -184,6 +177,7 @@ storyRadio =
                     [ Knob.view
                         [ ( "Radio"
                           , Knob.Choice Knob.Radio
+                                "Option #1"
                                 [ "Option #1"
                                 , String.repeat n "ALongLine"
                                 , "Option #3"
@@ -212,7 +206,7 @@ storyRadio =
                     [ ( "Radio"
                       , List.range 1 n
                             |> List.map (\i -> "Option #" ++ String.fromInt i)
-                            |> Knob.Choice Knob.Radio
+                            |> Knob.Choice Knob.Radio "Option #1"
                       )
                     ]
                     Knob.initial
@@ -230,19 +224,11 @@ storyRadio =
 storySelect : Bulletproof.Story
 storySelect =
     Bulletproof.folderOf "Select"
-        [ Bulletproof.storyOf "Empty"
-            (Knob.view
-                [ ( "Select", Knob.Choice Knob.Select [] )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
-        , Bulletproof.storyOf "Duplicates"
+        [ Bulletproof.storyOf "Duplicates"
             (Knob.view
                 [ ( "Select"
                   , Knob.Choice Knob.Select
+                        "Option #1"
                         [ "Option #1"
                         , "Option #1"
                         ]
@@ -257,6 +243,7 @@ storySelect =
             (Knob.view
                 [ ( "Select"
                   , Knob.Choice Knob.Select
+                        "Option #1"
                         [ "Option #1"
                         ]
                   )
@@ -276,6 +263,7 @@ storySelect =
                     [ Knob.view
                         [ ( "Select"
                           , Knob.Choice Knob.Select
+                                "Option #1"
                                 [ "Option #1"
                                 , String.repeat n "ALongLine"
                                 , "Option #3"
@@ -304,7 +292,7 @@ storySelect =
                     [ ( "Select"
                       , List.range 1 n
                             |> List.map (\i -> "Option #" ++ String.fromInt i)
-                            |> Knob.Choice Knob.Select
+                            |> Knob.Choice Knob.Select "Option #1"
                       )
                     ]
                     Knob.initial
@@ -316,72 +304,6 @@ storySelect =
                 , Bulletproof.Knob.min 2
                 , Bulletproof.Knob.max 20
                 ]
-        ]
-
-
-storyColor : Bulletproof.Story
-storyColor =
-    Bulletproof.folderOf "Color"
-        [ Bulletproof.storyOf "Invalid"
-            (Knob.view
-                [ ( "Color", Knob.Color (Color.fromString "invalid") )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
-        , Bulletproof.storyOf "Valid"
-            (Knob.view
-                [ ( "Color", Knob.Color (Color.fromString "#c9c") )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-        ]
-
-
-storyDate : Bulletproof.Story
-storyDate =
-    Bulletproof.folderOf "Date"
-        [ Bulletproof.storyOf "Invalid"
-            (Knob.view
-                [ ( "Date", Knob.Date (Date.parseStringToPosix "invalid") )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
-        , Bulletproof.storyOf "Valid"
-            (Knob.view
-                [ ( "Date", Knob.Date (Date.parseStringToPosix "12/02/2013") )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-        ]
-
-
-storyTime : Bulletproof.Story
-storyTime =
-    Bulletproof.folderOf "Time"
-        [ Bulletproof.storyOf "Invalid"
-            (Knob.view
-                [ ( "Time", Knob.Time (Date.timeFromString "invalid") )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
-        , Bulletproof.storyOf "Valid"
-            (Knob.view
-                [ ( "Time", Knob.Time (Date.timeFromString "02:41") )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
         ]
 
 
@@ -453,15 +375,6 @@ story =
         , storySelect
 
         --
-        , storyColor
-
-        --
-        , storyDate
-
-        --
-        , storyTime
-
-        --
         , Bulletproof.storyOf "All Together"
             (Knob.view
                 (List.reverse
@@ -471,11 +384,11 @@ story =
                     , ( "Float", Knob.Float False 0.1 { min = Nothing, max = Nothing, step = Nothing } )
                     , ( "Int Range", Knob.Float True 1 { min = Just -10, max = Just 10, step = Just 2 } )
                     , ( "Float Range", Knob.Float True 0.5 { min = Just -1, max = Just 1, step = Just 0.5 } )
-                    , ( "Radio", Knob.Choice Knob.Radio [ "first", "second", "third" ] )
-                    , ( "Select", Knob.Choice Knob.Select [ "first", "second", "third" ] )
-                    , ( "Color", Knob.Color (Color.fromString "#ff0") )
-                    , ( "Date", Knob.Date (Just (Time.millisToPosix 0)) )
-                    , ( "Time", Knob.Time (Date.timeFromString "16:00") )
+                    , ( "Radio", Knob.Choice Knob.Radio "first" [ "first", "second", "third" ] )
+                    , ( "Select", Knob.Choice Knob.Select "first" [ "first", "second", "third" ] )
+                    , ( "Color", Knob.Color (Color.makeColor "#ffff00" 255 255 0) )
+                    , ( "Date", Knob.Date (Time.millisToPosix 0) )
+                    , ( "Time", Knob.Time (Date.Time 2 20) )
                     , ( "Files", Knob.Files )
                     ]
                 )

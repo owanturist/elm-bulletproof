@@ -10,11 +10,12 @@ type Story view
     | Todo String
     | Single String (Payload view)
     | Batch String (List (Story Renderer))
+    | Fail (List String)
 
 
 type alias Payload view =
     { knobs : List ( String, Knob )
-    , view : Result String (Knob.State -> view)
+    , view : Knob.State -> view
     }
 
 

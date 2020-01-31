@@ -272,6 +272,10 @@ viewItem model current path story =
         Story.Batch folderID stories ->
             viewFolder model current path folderID stories
 
+        Story.Fail _ ->
+            [-- TODO handle fails
+            ]
+
 
 cssContainer : List Css.Style
 cssContainer =

@@ -31,10 +31,10 @@ type Knob
     | String String
     | Int Bool Int (Limits Int)
     | Float Bool Float (Limits Float)
-    | Choice Choice (List String)
-    | Color (Maybe Color)
-    | Date (Maybe Time.Posix)
-    | Time (Maybe Time)
+    | Choice Choice String (List String)
+    | Color Color
+    | Date Time.Posix
+    | Time Time
     | Files
 
 
@@ -513,10 +513,7 @@ viewKnob state name knob =
                 , value = value
                 }
 
-        Choice _ [] ->
-            text "No Options available"
-
-        Choice Radio ((defaultValue :: _) as options) ->
+        Choice Radio defaultValue options ->
             case extract name state of
                 Just (StringValue string) ->
                     viewKnobRadio name options string
@@ -524,7 +521,7 @@ viewKnob state name knob =
                 _ ->
                     viewKnobRadio name options defaultValue
 
-        Choice Select ((defaultValue :: _) as options) ->
+        Choice Select defaultValue options ->
             case extract name state of
                 Just (StringValue string) ->
                     viewKnobSelect name options string
@@ -532,10 +529,7 @@ viewKnob state name knob =
                 _ ->
                     viewKnobSelect name options defaultValue
 
-        Color Nothing ->
-            viewKnobColor name ""
-
-        Color (Just defaultValue) ->
+        Color defaultValue ->
             case extract name state of
                 Just (ColorValue Nothing) ->
                     viewKnobColor name ""
@@ -546,10 +540,7 @@ viewKnob state name knob =
                 _ ->
                     viewKnobColor name defaultValue.hex
 
-        Date Nothing ->
-            viewKnobDate name ""
-
-        Date (Just defaultValue) ->
+        Date defaultValue ->
             case extract name state of
                 Just (DateValue Nothing) ->
                     viewKnobDate name ""
@@ -560,10 +551,7 @@ viewKnob state name knob =
                 _ ->
                     viewKnobDate name (Date.posixToString defaultValue)
 
-        Time Nothing ->
-            viewKnobTime name ""
-
-        Time (Just defaultValue) ->
+        Time defaultValue ->
             case extract name state of
                 Just (TimeValue Nothing) ->
                     viewKnobTime name ""
