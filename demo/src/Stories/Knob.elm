@@ -133,6 +133,66 @@ storyFloat =
         ]
 
 
+storyRadio : Bulletproof.Story
+storyRadio =
+    Bulletproof.folderOf "Radio"
+        [ Bulletproof.storyOf "Empty"
+            (Knob.view
+                [ ( "Radio", Knob.Choice Knob.Radio [] )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Repeatet"
+            (Knob.view
+                [ ( "Radio"
+                  , Knob.Choice Knob.Radio
+                        [ "Option #1"
+                        , "Option #1"
+                        ]
+                  )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Single"
+            (Knob.view
+                [ ( "Radio"
+                  , Knob.Choice Knob.Radio
+                        [ "Option #1"
+                        ]
+                  )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Multiple"
+            (\n ->
+                Knob.view
+                    [ ( "Radio"
+                      , List.range 1 n
+                            |> List.map (\i -> "Option #" ++ String.fromInt i)
+                            |> Knob.Choice Knob.Radio
+                      )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Amount of Options"
+                5
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 20
+                ]
+        ]
+
+
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Knob"
@@ -183,6 +243,9 @@ story =
 
         --
         , storyFloat
+
+        --
+        , storyRadio
 
         --
         , Bulletproof.storyOf "All Together"
