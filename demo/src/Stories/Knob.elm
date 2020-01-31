@@ -67,6 +67,28 @@ storyString =
         ]
 
 
+storyBool : Bulletproof.Story
+storyBool =
+    Bulletproof.folderOf "Bool"
+        [ Bulletproof.storyOf "Unchecked"
+            (Knob.view
+                [ ( "Bool", Knob.Bool False )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Checked"
+            (Knob.view
+                [ ( "Bool", Knob.Bool True )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+        ]
+
+
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Knob"
@@ -108,6 +130,9 @@ story =
 
         --
         , storyString
+
+        --
+        , storyBool
 
         --
         , Bulletproof.storyOf "All Together"
