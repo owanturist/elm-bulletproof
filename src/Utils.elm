@@ -1,5 +1,6 @@
-module Utils exposing (ifelse, onSpaceOrEnter)
+module Utils exposing (duplicates, ifelse, onSpaceOrEnter)
 
+import AVL.Set as Set
 import Html.Styled as Html
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder)
@@ -30,3 +31,25 @@ keyDecoder keys msg =
 onSpaceOrEnter : msg -> Html.Attribute msg
 onSpaceOrEnter =
     Events.preventDefaultOn "keypress" << keyDecoder [ 13, 32 ]
+
+
+duplicates : (a -> comparable) -> List a -> Maybe (List a)
+duplicates toKey list =
+    let
+        ( _, result ) =
+            List.foldr
+                (\element ( uniq, acc ) ->
+                    if Set.member (toKey element) uniq then
+                        ( uniq, element :: acc )
+
+                    else
+                        ( Set.insert (toKey element) uniq, acc )
+                )
+                ( Set.empty, [] )
+                list
+    in
+    if List.isEmpty result then
+        Nothing
+
+    else
+        Just result
