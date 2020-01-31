@@ -8,6 +8,65 @@ import Knob
 import Time
 
 
+storyString : Bulletproof.Story
+storyString =
+    Bulletproof.folderOf "String"
+        [ Bulletproof.storyOf "Empty"
+            (Knob.view
+                [ ( "String", Knob.String "" )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Single line"
+            (Knob.view
+                [ ( "String", Knob.String "A single line" )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Single long line"
+            (\n ->
+                Knob.view
+                    [ ( "String", Knob.String (String.repeat n "ASingleLongLine") )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Repeat String"
+                100
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 200
+                ]
+
+        --
+        , Bulletproof.storyOf "Multiline"
+            (\n ->
+                Knob.view
+                    [ ( "String"
+                      , List.range 1 n
+                            |> List.map (\i -> "A line #" ++ String.fromInt i)
+                            |> String.join "\n"
+                            |> Knob.String
+                      )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Repeat String"
+                100
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 200
+                ]
+        ]
+
+
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Knob"
@@ -46,6 +105,9 @@ story =
                 , Bulletproof.Knob.min 1
                 , Bulletproof.Knob.max 50
                 ]
+
+        --
+        , storyString
 
         --
         , Bulletproof.storyOf "All Together"
