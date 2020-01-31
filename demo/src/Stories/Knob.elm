@@ -111,6 +111,28 @@ storyInt =
         ]
 
 
+storyFloat : Bulletproof.Story
+storyFloat =
+    Bulletproof.folderOf "Float"
+        [ Bulletproof.storyOf "Input"
+            (Knob.view
+                [ ( "Float", Knob.Float False 0.21 { min = Nothing, max = Nothing, step = Nothing } )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Range"
+            (Knob.view
+                [ ( "Float", Knob.Float True 0.21 { min = Nothing, max = Nothing, step = Nothing } )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+        ]
+
+
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Knob"
@@ -158,6 +180,9 @@ story =
 
         --
         , storyInt
+
+        --
+        , storyFloat
 
         --
         , Bulletproof.storyOf "All Together"

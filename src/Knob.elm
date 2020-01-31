@@ -508,8 +508,8 @@ viewKnob state name knob =
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 limits.min
-                , max = Maybe.withDefault 100 limits.max
-                , step = Maybe.withDefault 1 limits.step
+                , max = Maybe.withDefault 1 limits.max
+                , step = Maybe.withDefault 0.01 limits.step
                 , value = value
                 }
 
