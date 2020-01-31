@@ -89,6 +89,28 @@ storyBool =
         ]
 
 
+storyInt : Bulletproof.Story
+storyInt =
+    Bulletproof.folderOf "Int"
+        [ Bulletproof.storyOf "Input"
+            (Knob.view
+                [ ( "Int", Knob.Int False 0 { min = Nothing, max = Nothing, step = Nothing } )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+
+        --
+        , Bulletproof.storyOf "Range"
+            (Knob.view
+                [ ( "Int", Knob.Int True 0 { min = Nothing, max = Nothing, step = Nothing } )
+                ]
+                Knob.initial
+                |> Bulletproof.fromElmCss
+            )
+        ]
+
+
 story : Bulletproof.Story
 story =
     Bulletproof.folderOf "Knob"
@@ -133,6 +155,9 @@ story =
 
         --
         , storyBool
+
+        --
+        , storyInt
 
         --
         , Bulletproof.storyOf "All Together"
