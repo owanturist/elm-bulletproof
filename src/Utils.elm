@@ -1,4 +1,4 @@
-module Utils exposing (duplicates, ifelse, onSpaceOrEnter)
+module Utils exposing (duplicates, ifelse, nonBlank, onSpaceOrEnter)
 
 import AVL.Set as Set
 import Html.Styled as Html
@@ -53,3 +53,13 @@ duplicates toKey list =
 
     else
         Just result
+
+
+nonBlank : String -> Maybe String
+nonBlank str =
+    case String.trim str of
+        "" ->
+            Nothing
+
+        trimmed ->
+            Just trimmed

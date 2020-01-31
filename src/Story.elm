@@ -1,6 +1,7 @@
 module Story exposing (Path, Payload, Store, Story(..), get, makeStore, next, prev)
 
 import AVL.Dict as Dict exposing (Dict)
+import Error
 import Knob exposing (Knob)
 import Renderer exposing (Renderer)
 
@@ -10,7 +11,7 @@ type Story view
     | Todo String
     | Single String (Payload view)
     | Batch String (List (Story Renderer))
-    | Fail (List String)
+    | Fail (List Error.Reason)
 
 
 type alias Payload view =

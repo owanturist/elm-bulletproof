@@ -22,9 +22,11 @@ module Bulletproof.Knob exposing
 
 import Color
 import Date
+import Error
 import File
 import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
 import Story exposing (Story(..))
+import Utils exposing (ifelse, nonBlank)
 
 
 type alias File =
@@ -153,23 +155,26 @@ propertiesToNumberPayload =
 
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
-    case story of
-        Label title ->
+    case ( nonBlank name, story ) of
+        ( _, Label title ) ->
             Label title
 
-        Todo title ->
+        ( _, Todo title ) ->
             Todo title
 
-        Single storyID payload ->
+        ( Nothing, Single _ _ ) ->
+            Fail [ Error.EmptyKnob ]
+
+        ( Just trimmedName, Single storyID payload ) ->
             let
                 ( range_, limits ) =
                     propertiesToNumberPayload properties
             in
             Single storyID
-                { knobs = ( name, Int range_ defaultValue limits ) :: payload.knobs
+                { knobs = ( trimmedName, Int range_ defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract name knobs of
+                        case extract trimmedName knobs of
                             Just (IntValue str) ->
                                 payload.view knobs (Maybe.withDefault defaultValue (String.toInt str))
 
@@ -177,32 +182,38 @@ int name defaultValue properties story =
                                 payload.view knobs defaultValue
                 }
 
-        Batch folderID stories ->
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnob :: errors)
+
+        ( _, Fail errors ) ->
             Fail errors
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
-    case story of
-        Label title ->
+    case ( nonBlank name, story ) of
+        ( _, Label title ) ->
             Label title
 
-        Todo title ->
+        ( _, Todo title ) ->
             Todo title
 
-        Single storyID payload ->
+        ( Nothing, Single _ _ ) ->
+            Fail [ Error.EmptyKnob ]
+
+        ( Just trimmedName, Single storyID payload ) ->
             let
                 ( range_, limits ) =
                     propertiesToNumberPayload properties
             in
             Single storyID
-                { knobs = ( name, Float range_ defaultValue limits ) :: payload.knobs
+                { knobs = ( trimmedName, Float range_ defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract name knobs of
+                        case extract trimmedName knobs of
                             Just (FloatValue str) ->
                                 payload.view knobs (Maybe.withDefault defaultValue (String.toFloat str))
 
@@ -210,64 +221,84 @@ float name defaultValue properties story =
                                 payload.view knobs defaultValue
                 }
 
-        Batch folderID stories ->
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnob :: errors)
+
+        ( _, Fail errors ) ->
             Fail errors
 
 
-makeChoice : Choice -> String -> String -> List ( String, option ) -> Story (option -> a) -> Story a
-makeChoice choice choiceName name options story =
-    case story of
-        Label title ->
+makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
+makeChoice choice name options story =
+    case ( nonBlank name, List.head options, story ) of
+        ( _, _, Label title ) ->
             Label title
 
-        Todo title ->
+        ( _, _, Todo title ) ->
             Todo title
 
-        Single storyID payload ->
-            case List.head options of
-                Nothing ->
-                    Fail [ choiceName ++ " Knob '" ++ name ++ "' expects at least one option" ]
+        ( Nothing, _, Single _ _ ) ->
+            Fail [ Error.EmptyKnob ]
 
-                Just ( firstLabel, firstValue ) ->
-                    Single storyID
-                        { knobs = ( name, Choice choice firstLabel (List.map Tuple.first options) ) :: payload.knobs
-                        , view =
-                            \knobs ->
-                                let
-                                    selected =
-                                        case extract name knobs of
-                                            Just (StringValue value) ->
-                                                value
+        ( Just trimmedName, Nothing, Single _ _ ) ->
+            case choice of
+                Radio ->
+                    Fail [ Error.EmptyRadio trimmedName ]
 
-                                            _ ->
-                                                firstLabel
-                                in
-                                options
-                                    |> List.filter ((==) selected << Tuple.first)
-                                    |> List.head
-                                    |> Maybe.map Tuple.second
-                                    |> Maybe.withDefault firstValue
-                                    |> payload.view knobs
-                        }
+                Select ->
+                    Fail [ Error.EmptySelect trimmedName ]
 
-        Batch folderID stories ->
+        ( Just trimmedName, Just ( firstLabel, firstValue ), Single storyID payload ) ->
+            Single storyID
+                { knobs = ( trimmedName, Choice choice firstLabel (List.map Tuple.first options) ) :: payload.knobs
+                , view =
+                    \knobs ->
+                        let
+                            selected =
+                                case extract trimmedName knobs of
+                                    Just (StringValue value) ->
+                                        value
+
+                                    _ ->
+                                        firstLabel
+                        in
+                        options
+                            |> List.filter ((==) selected << Tuple.first)
+                            |> List.head
+                            |> Maybe.map Tuple.second
+                            |> Maybe.withDefault firstValue
+                            |> payload.view knobs
+                }
+
+        ( _, _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( Nothing, _, Fail errors ) ->
+            Fail (Error.EmptyKnob :: errors)
+
+        ( Just trimmedName, Nothing, Fail errors ) ->
+            case choice of
+                Radio ->
+                    Fail (Error.EmptyRadio trimmedName :: errors)
+
+                Select ->
+                    Fail (Error.EmptySelect trimmedName :: errors)
+
+        ( _, _, Fail errors ) ->
             Fail errors
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
 radio =
-    makeChoice Radio "Radio"
+    makeChoice Radio
 
 
 select : String -> List ( String, option ) -> Story (option -> a) -> Story a
 select =
-    makeChoice Select "Select"
+    makeChoice Select
 
 
 color : String -> String -> Story (Color -> a) -> Story a
