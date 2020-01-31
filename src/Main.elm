@@ -19,6 +19,7 @@ import Navigation
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
+import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Task
 import Url exposing (Url)
@@ -26,70 +27,7 @@ import Utils exposing (ifelse)
 
 
 
--- S E T T I N G S
-
-
-type alias Settings =
-    { fullscreen : Bool
-    , navigationVisible : Bool
-    , navigationWidth : Int
-    , dockVisible : Bool
-    , dockWidth : Int
-    , dockHeight : Int
-    , dockOrientation : Orientation
-    , addPaddings : Bool
-    , darkBackground : Bool
-    , showGrid : Bool
-    }
-
-
-defaultSettings : Settings
-defaultSettings =
-    { fullscreen = False
-    , navigationVisible = True
-    , navigationWidth = 200
-    , dockVisible = True
-    , dockWidth = 400
-    , dockHeight = 300
-    , dockOrientation = Horizontal
-    , addPaddings = False
-    , darkBackground = False
-    , showGrid = False
-    }
-
-
-minNavigationWidth : Int
-minNavigationWidth =
-    100
-
-
-minDockWidth : Int
-minDockWidth =
-    300
-
-
-minDockHeight : Int
-minDockHeight =
-    200
-
-
-minStoryWidth : Int
-minStoryWidth =
-    300
-
-
-minStoryHeight : Int
-minStoryHeight =
-    200
-
-
-
 -- M O D E L
-
-
-type Orientation
-    = Horizontal
-    | Vertical
 
 
 type Dragging
@@ -141,7 +79,7 @@ init stories () url key =
             List.take (List.length initialStoryPath - 1) initialStoryPath
     in
     ( Model
-        defaultSettings
+        Settings.default
         { key = key
         , viewport = Viewport 0 0
         , store = store
@@ -265,7 +203,7 @@ update msg (Model settings state addons) =
                         nextDockWidth =
                             min
                                 settings.dockWidth
-                                (state.viewport.width - minStoryWidth - settings.navigationWidth)
+                                (state.viewport.width - Settings.minStoryWidth - settings.navigationWidth)
                     in
                     Model { settings | dockOrientation = Vertical, dockWidth = nextDockWidth } state addons
 
@@ -313,8 +251,8 @@ update msg (Model settings state addons) =
                     let
                         nextNavigationWidth =
                             clamp
-                                minNavigationWidth
-                                (state.viewport.width - minStoryWidth - minDockWidth)
+                                Settings.minNavigationWidth
+                                (state.viewport.width - Settings.minStoryWidth - Settings.minDockWidth)
                                 (initial + end - start)
 
                         nextDockWidth =
@@ -325,7 +263,7 @@ update msg (Model settings state addons) =
                                 Vertical ->
                                     min
                                         settings.dockWidth
-                                        (state.viewport.width - minStoryWidth - nextNavigationWidth)
+                                        (state.viewport.width - Settings.minStoryWidth - nextNavigationWidth)
                     in
                     Model { settings | navigationWidth = nextNavigationWidth, dockWidth = nextDockWidth } state addons
 
@@ -335,8 +273,8 @@ update msg (Model settings state addons) =
                             let
                                 nextDockHeight =
                                     clamp
-                                        minDockHeight
-                                        (state.viewport.height - minStoryHeight)
+                                        Settings.minDockHeight
+                                        (state.viewport.height - Settings.minStoryHeight)
                                         (initial + start - end)
                             in
                             Model { settings | dockHeight = nextDockHeight } state addons
@@ -345,14 +283,14 @@ update msg (Model settings state addons) =
                             let
                                 nextDockWidth =
                                     clamp
-                                        minDockWidth
-                                        (state.viewport.width - minStoryWidth - minNavigationWidth)
+                                        Settings.minDockWidth
+                                        (state.viewport.width - Settings.minStoryWidth - Settings.minNavigationWidth)
                                         (initial + start - end)
 
                                 nextNavigationWidth =
                                     min
                                         settings.navigationWidth
-                                        (state.viewport.width - minStoryWidth - nextDockWidth)
+                                        (state.viewport.width - Settings.minStoryWidth - nextDockWidth)
                             in
                             Model { settings | dockWidth = nextDockWidth, navigationWidth = nextNavigationWidth } state addons
             , Cmd.none
