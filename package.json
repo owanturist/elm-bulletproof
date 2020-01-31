@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "elm-test --compiler ./node_modules/.bin/elm",
-    "predemo-build": "rm -rf build",
-    "demo-build": "elm make --output=./build/index.html tests/Stories.elm",
+    "predemo-build": "rm -rf ./build && mkdir build && cp ./tests/index.html ./build/",
+    "demo-build": "elm make --output=./build/bundle.js ./tests/Stories.elm",
     "demo-serve": "http-server ./build --proxy http://localhost:8080?",
     "demo": "npm run demo-build && npm run demo-serve",
+    "demo:optimize": "npm run demo-build -- --optimize && npm run demo-serve",
     "demo:debug": "npm run demo-build -- --debug && npm run demo-serve"
   },
   "repository": {
