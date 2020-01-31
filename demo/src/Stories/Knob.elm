@@ -3,7 +3,9 @@ module Stories.Knob exposing (story)
 import Bulletproof
 import Bulletproof.Knob
 import Color
+import Css
 import Date
+import Html.Styled exposing (div, styled)
 import Knob
 import Time
 
@@ -172,6 +174,38 @@ storyRadio =
             )
 
         --
+        , Bulletproof.storyOf "Long options"
+            (\width n ->
+                styled div
+                    [ Css.width (Css.px (toFloat width))
+                    , Css.backgroundColor (Css.hex "#ccc")
+                    ]
+                    []
+                    [ Knob.view
+                        [ ( "Radio"
+                          , Knob.Choice Knob.Radio
+                                [ "Option #1"
+                                , String.repeat n "ALongLine"
+                                , "Option #3"
+                                ]
+                          )
+                        ]
+                        Knob.initial
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Container Width"
+                300
+                [ Bulletproof.Knob.min 0
+                ]
+            |> Bulletproof.Knob.int "Repeat String"
+                100
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 200
+                ]
+
+        --
         , Bulletproof.storyOf "Multiple"
             (\n ->
                 Knob.view
@@ -230,6 +264,38 @@ storySelect =
                 Knob.initial
                 |> Bulletproof.fromElmCss
             )
+
+        --
+        , Bulletproof.storyOf "Long options"
+            (\width n ->
+                styled div
+                    [ Css.width (Css.px (toFloat width))
+                    , Css.backgroundColor (Css.hex "#ccc")
+                    ]
+                    []
+                    [ Knob.view
+                        [ ( "Select"
+                          , Knob.Choice Knob.Select
+                                [ "Option #1"
+                                , String.repeat n "ALongLine"
+                                , "Option #3"
+                                ]
+                          )
+                        ]
+                        Knob.initial
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Container Width"
+                300
+                [ Bulletproof.Knob.min 0
+                ]
+            |> Bulletproof.Knob.int "Repeat String"
+                100
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 200
+                ]
 
         --
         , Bulletproof.storyOf "Multiple"
