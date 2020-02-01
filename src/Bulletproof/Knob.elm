@@ -26,7 +26,7 @@ import Error
 import File
 import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
 import Story exposing (Story(..))
-import Utils exposing (ifelse, nonBlank)
+import Utils exposing (nonBlank)
 
 
 type alias File =
@@ -156,14 +156,11 @@ propertiesToNumberPayload =
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
     case ( nonBlank name, story ) of
-        ( _, Label title ) ->
-            Label title
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
 
-        ( _, Todo title ) ->
-            Todo title
-
-        ( Nothing, Single _ _ ) ->
-            Fail [ Error.EmptyKnob ]
+        ( Nothing, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
 
         ( Just trimmedName, Single storyID payload ) ->
             let
@@ -182,11 +179,14 @@ int name defaultValue properties story =
                                 payload.view knobs defaultValue
                 }
 
+        ( _, Label title ) ->
+            Label title
+
+        ( _, Todo title ) ->
+            Todo title
+
         ( _, Batch folderID stories ) ->
             Batch folderID stories
-
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnob :: errors)
 
         ( _, Fail errors ) ->
             Fail errors
@@ -195,14 +195,11 @@ int name defaultValue properties story =
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
     case ( nonBlank name, story ) of
-        ( _, Label title ) ->
-            Label title
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
 
-        ( _, Todo title ) ->
-            Todo title
-
-        ( Nothing, Single _ _ ) ->
-            Fail [ Error.EmptyKnob ]
+        ( Nothing, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
 
         ( Just trimmedName, Single storyID payload ) ->
             let
@@ -221,11 +218,14 @@ float name defaultValue properties story =
                                 payload.view knobs defaultValue
                 }
 
+        ( _, Label title ) ->
+            Label title
+
+        ( _, Todo title ) ->
+            Todo title
+
         ( _, Batch folderID stories ) ->
             Batch folderID stories
-
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnob :: errors)
 
         ( _, Fail errors ) ->
             Fail errors
@@ -234,16 +234,21 @@ float name defaultValue properties story =
 makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice name options story =
     case ( nonBlank name, List.head options, story ) of
-        ( _, _, Label title ) ->
-            Label title
+        ( Nothing, _, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
 
-        ( _, _, Todo title ) ->
-            Todo title
+        ( Nothing, _, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
 
-        ( Nothing, _, Single _ _ ) ->
-            Fail [ Error.EmptyKnob ]
+        ( Just trimmedName, Nothing, Fail errors ) ->
+            case choice of
+                Radio ->
+                    Fail (Error.EmptyRadio trimmedName :: errors)
 
-        ( Just trimmedName, Nothing, Single _ _ ) ->
+                Select ->
+                    Fail (Error.EmptySelect trimmedName :: errors)
+
+        ( Just trimmedName, Nothing, _ ) ->
             case choice of
                 Radio ->
                     Fail [ Error.EmptyRadio trimmedName ]
@@ -273,19 +278,14 @@ makeChoice choice name options story =
                             |> payload.view knobs
                 }
 
+        ( _, _, Label title ) ->
+            Label title
+
+        ( _, _, Todo title ) ->
+            Todo title
+
         ( _, _, Batch folderID stories ) ->
             Batch folderID stories
-
-        ( Nothing, _, Fail errors ) ->
-            Fail (Error.EmptyKnob :: errors)
-
-        ( Just trimmedName, Nothing, Fail errors ) ->
-            case choice of
-                Radio ->
-                    Fail (Error.EmptyRadio trimmedName :: errors)
-
-                Select ->
-                    Fail (Error.EmptySelect trimmedName :: errors)
 
         ( _, _, Fail errors ) ->
             Fail errors
@@ -303,116 +303,137 @@ select =
 
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
-    case story of
-        Label title ->
+    case ( nonBlank name, Color.fromString defaultValue, story ) of
+        ( Nothing, _, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
+
+        ( Nothing, _, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
+
+        ( Just trimmedName, Nothing, Fail errors ) ->
+            Fail (Error.InvalidColor trimmedName defaultValue :: errors)
+
+        ( Just trimmedName, Nothing, _ ) ->
+            Fail [ Error.InvalidColor trimmedName defaultValue ]
+
+        ( Just trimmedName, Just defaultColor, Single storyID payload ) ->
+            Single storyID
+                { knobs = ( trimmedName, Color defaultColor ) :: payload.knobs
+                , view =
+                    \knobs ->
+                        case extract trimmedName knobs of
+                            Just (ColorValue (Just value)) ->
+                                payload.view knobs value
+
+                            _ ->
+                                payload.view knobs defaultColor
+                }
+
+        ( _, _, Label title ) ->
             Label title
 
-        Todo title ->
+        ( _, _, Todo title ) ->
             Todo title
 
-        Single storyID payload ->
-            case Color.fromString defaultValue of
-                Nothing ->
-                    Fail [ "Color `" ++ defaultValue ++ "` is invalid." ]
-
-                Just defaultColor ->
-                    Single storyID
-                        { knobs = ( name, Color defaultColor ) :: payload.knobs
-                        , view =
-                            \knobs ->
-                                case extract name knobs of
-                                    Just (ColorValue (Just value)) ->
-                                        payload.view knobs value
-
-                                    _ ->
-                                        payload.view knobs defaultColor
-                        }
-
-        Batch folderID stories ->
+        ( _, _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( _, _, Fail errors ) ->
             Fail errors
 
 
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
-    case story of
-        Label title ->
+    case ( nonBlank name, Date.parseStringToPosix defaultValue, story ) of
+        ( Nothing, _, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
+
+        ( Nothing, _, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
+
+        ( Just trimmedName, Nothing, Fail errors ) ->
+            Fail (Error.InvalidDate trimmedName defaultValue :: errors)
+
+        ( Just trimmedName, Nothing, _ ) ->
+            Fail [ Error.InvalidDate trimmedName defaultValue ]
+
+        ( Just trimmedName, Just defaultDate, Single storyID payload ) ->
+            Single storyID
+                { knobs = ( trimmedName, Date defaultDate ) :: payload.knobs
+                , view =
+                    \knobs ->
+                        case extract trimmedName knobs of
+                            Just (DateValue (Just value)) ->
+                                payload.view knobs (Date.dateFromPosix value)
+
+                            _ ->
+                                payload.view knobs (Date.dateFromPosix defaultDate)
+                }
+
+        ( _, _, Label title ) ->
             Label title
 
-        Todo title ->
+        ( _, _, Todo title ) ->
             Todo title
 
-        Single storyID payload ->
-            case Date.parseStringToPosix defaultValue of
-                Nothing ->
-                    Fail [ "Date `" ++ defaultValue ++ "` is invalid" ]
-
-                Just defaultDate ->
-                    Single storyID
-                        { knobs = ( name, Date defaultDate ) :: payload.knobs
-                        , view =
-                            \knobs ->
-                                case extract name knobs of
-                                    Just (DateValue (Just value)) ->
-                                        payload.view knobs (Date.dateFromPosix value)
-
-                                    _ ->
-                                        payload.view knobs (Date.dateFromPosix defaultDate)
-                        }
-
-        Batch folderID stories ->
+        ( _, _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( _, _, Fail errors ) ->
             Fail errors
 
 
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
-    case story of
-        Label title ->
+    case ( nonBlank name, Date.timeFromString defaultValue, story ) of
+        ( Nothing, _, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
+
+        ( Nothing, _, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
+
+        ( Just trimmedName, Nothing, Fail errors ) ->
+            Fail (Error.InvalidTime trimmedName defaultValue :: errors)
+
+        ( Just trimmedName, Nothing, _ ) ->
+            Fail [ Error.InvalidTime trimmedName defaultValue ]
+
+        ( Just trimmedName, Just defaultTime, Single storyID payload ) ->
+            Single storyID
+                { knobs = ( trimmedName, Time defaultTime ) :: payload.knobs
+                , view =
+                    \knobs ->
+                        case extract trimmedName knobs of
+                            Just (TimeValue (Just value)) ->
+                                payload.view knobs value
+
+                            _ ->
+                                payload.view knobs defaultTime
+                }
+
+        ( _, _, Label title ) ->
             Label title
 
-        Todo title ->
+        ( _, _, Todo title ) ->
             Todo title
 
-        Single storyID payload ->
-            case Date.timeFromString defaultValue of
-                Nothing ->
-                    Fail [ "Time `" ++ defaultValue ++ "` is invalid" ]
-
-                Just defaultTime ->
-                    Single storyID
-                        { knobs = ( name, Time defaultTime ) :: payload.knobs
-                        , view =
-                            \knobs ->
-                                case extract name knobs of
-                                    Just (TimeValue (Just value)) ->
-                                        payload.view knobs value
-
-                                    _ ->
-                                        payload.view knobs defaultTime
-                        }
-
-        Batch folderID stories ->
+        ( _, _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( _, _, Fail errors ) ->
             Fail errors
 
 
 files : String -> Story (List File -> a) -> Story a
 files name story =
-    case story of
-        Label title ->
-            Label title
+    case ( nonBlank name, story ) of
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
 
-        Todo title ->
-            Todo title
+        ( Nothing, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
 
-        Single storyID payload ->
+        ( _, Single storyID payload ) ->
             Single storyID
                 { knobs = ( name, Files ) :: payload.knobs
                 , view =
@@ -425,8 +446,14 @@ files name story =
                                 payload.view knobs []
                 }
 
-        Batch folderID stories ->
+        ( _, Label title ) ->
+            Label title
+
+        ( _, Todo title ) ->
+            Todo title
+
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( _, Fail errors ) ->
             Fail errors

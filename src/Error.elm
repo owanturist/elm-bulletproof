@@ -2,11 +2,14 @@ module Error exposing (Error, Reason(..))
 
 
 type Reason
-    = EmptyTitle
+    = EmptyLabelTitle
+    | EmptyStoryTitle
+    | EmptyTodoTitle
+    | EmptyFolderTitle
+    | EmptyKnobTitle
     | DuplicateLabels String
     | DuplicateStories String
     | DuplicateFolders String
-    | EmptyKnob
     | DuplicateKnob String
     | EmptyRadio String
     | DuplicateRadio String (List String)
