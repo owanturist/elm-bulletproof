@@ -9,8 +9,8 @@ type Story error view
     = Label String
     | Todo String
     | Single String (Payload view)
+    | Fail String (List error)
     | Batch String (List (Story error Renderer))
-    | Fail (List error)
 
 
 type alias Payload view =

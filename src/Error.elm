@@ -38,8 +38,8 @@ type Reason
     | DuplicateKnob String Int
     | EmptyRadio String
     | EmptySelect String
-    | DuplicateRadioOptions String Int
-    | DuplicateSelectOptions String Int
+    | DuplicateRadioOptions String String Int
+    | DuplicateSelectOptions String String Int
     | InvalidIntStep String Int
     | InvalidIntLeftBoundary String Int Int
     | InvalidIntRightBoundary String Int Int
@@ -163,25 +163,27 @@ validateChoice choice rawName options =
 
                 Knob.Select ->
                     ( EmptySelect, DuplicateSelectOptions )
-
-        duplicateReasons =
-            List.map
-                (\( name, n ) -> duplicateReason name n)
-                (countList Tuple.first options)
     in
-    case ( nonBlank rawName, List.head options ) of
-        ( Nothing, _ ) ->
-            Err (EmptyKnobTitle :: duplicateReasons)
+    case nonBlank rawName of
+        Nothing ->
+            Err [ EmptyKnobTitle ]
 
-        ( Just name, Nothing ) ->
-            Err (emptyReason name :: duplicateReasons)
+        Just name ->
+            case List.head options of
+                Nothing ->
+                    Err [ emptyReason name ]
 
-        ( Just name, Just ( selected, option ) ) ->
-            if List.isEmpty duplicateReasons then
-                Ok { name = name, selected = selected, option = option }
+                Just ( selected, option ) ->
+                    case
+                        List.map
+                            (\( value, n ) -> duplicateReason name value n)
+                            (countList Tuple.first options)
+                    of
+                        [] ->
+                            Ok { name = name, selected = selected, option = option }
 
-            else
-                Err duplicateReasons
+                        duplicateReasons ->
+                            Err duplicateReasons
 
 
 validateColor : String -> String -> Result Reason { name : String, color : Color }
@@ -287,7 +289,7 @@ validateStory path story counters =
         Story.Label rawTitle ->
             case nonBlank rawTitle of
                 Nothing ->
-                    ( Err [ Error path EmptyLabelTitle ]
+                    ( Err [ Error (List.reverse path) EmptyLabelTitle ]
                     , counters
                     )
 
@@ -299,7 +301,7 @@ validateStory path story counters =
         Story.Todo rawTitle ->
             case nonBlank rawTitle of
                 Nothing ->
-                    ( Err [ Error path EmptyTodoTitle ]
+                    ( Err [ Error (List.reverse path) EmptyTodoTitle ]
                     , counters
                     )
 
@@ -311,7 +313,7 @@ validateStory path story counters =
         Story.Single rawTitle payload ->
             case nonBlank rawTitle of
                 Nothing ->
-                    ( Err [ Error path EmptyStoryTitle ]
+                    ( Err [ Error (List.reverse path) EmptyStoryTitle ]
                     , counters
                     )
 
@@ -329,10 +331,22 @@ validateStory path story counters =
                     , { counters | stories = count title counters.stories }
                     )
 
+        Story.Fail rawTitle reasons ->
+            case nonBlank rawTitle of
+                Nothing ->
+                    ( Err [ Error (List.reverse path) EmptyStoryTitle ]
+                    , counters
+                    )
+
+                Just title ->
+                    ( Err (List.map (Error (List.reverse (title :: path))) reasons)
+                    , { counters | stories = count title counters.stories }
+                    )
+
         Story.Batch rawTitle substories ->
             case nonBlank rawTitle of
                 Nothing ->
-                    ( Err [ Error path EmptyFolderTitle ]
+                    ( Err [ Error (List.reverse path) EmptyFolderTitle ]
                     , counters
                     )
 
@@ -340,11 +354,6 @@ validateStory path story counters =
                     ( Result.map (Story.Batch title) (validateStories (title :: path) substories)
                     , { counters | folders = count title counters.folders }
                     )
-
-        Story.Fail reasons ->
-            ( Err (List.map (Error (List.reverse path)) reasons)
-            , counters
-            )
 
 
 validateStories : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
@@ -428,11 +437,11 @@ viewReason reason =
         EmptySelect name ->
             text ("EmptySelect `" ++ name ++ "`")
 
-        DuplicateRadioOptions name n ->
-            text ("DuplicateRadioOptions `" ++ name ++ "` " ++ String.fromInt n ++ " times")
+        DuplicateRadioOptions name option n ->
+            text ("DuplicateRadioOptions `" ++ name ++ "`: `" ++ option ++ "` " ++ String.fromInt n ++ " times")
 
-        DuplicateSelectOptions name n ->
-            text ("DuplicateSelectOptions `" ++ name ++ "` " ++ String.fromInt n ++ " times")
+        DuplicateSelectOptions name option n ->
+            text ("DuplicateSelectOptions `" ++ name ++ "`: `" ++ option ++ "` " ++ String.fromInt n ++ " times")
 
         InvalidIntStep name step ->
             text ("InvalidIntStep `" ++ name ++ "` " ++ String.fromInt step ++ " <= 0")

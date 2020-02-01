@@ -36,14 +36,14 @@ type alias Story view =
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case ( Error.validateBool name, story ) of
-        ( Err reason, Story.Fail reasons ) ->
-            Story.Fail (reason :: reasons)
+        ( Err reason, Story.Fail title reasons ) ->
+            Story.Fail title (reason :: reasons)
 
-        ( Err reason, _ ) ->
-            Story.Fail [ reason ]
+        ( Err reason, Story.Single title _ ) ->
+            Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Bool defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -61,24 +61,24 @@ bool name defaultValue story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case ( Error.validateString name, story ) of
-        ( Err reason, Story.Fail reasons ) ->
-            Story.Fail (reason :: reasons)
+        ( Err reason, Story.Fail title reasons ) ->
+            Story.Fail title (reason :: reasons)
 
-        ( Err reason, _ ) ->
-            Story.Fail [ reason ]
+        ( Err reason, Story.Single title _ ) ->
+            Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, String defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -96,11 +96,11 @@ string name defaultValue story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 type Property num
@@ -160,14 +160,14 @@ int name defaultValue properties story =
             propertiesToNumberPayload properties
     in
     case ( Error.validateInt name defaultValue limits, story ) of
-        ( Err reasons_, Story.Fail reasons ) ->
-            Story.Fail (reasons_ ++ reasons)
+        ( Err reasons_, Story.Fail title reasons ) ->
+            Story.Fail title (reasons_ ++ reasons)
 
-        ( Err reasons, _ ) ->
-            Story.Fail reasons
+        ( Err reasons, Story.Single title _ ) ->
+            Story.Fail title reasons
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Int asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -185,11 +185,11 @@ int name defaultValue properties story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
@@ -199,14 +199,14 @@ float name defaultValue properties story =
             propertiesToNumberPayload properties
     in
     case ( Error.validateFloat name defaultValue limits, story ) of
-        ( Err reasons_, Story.Fail reasons ) ->
-            Story.Fail (reasons_ ++ reasons)
+        ( Err reasons_, Story.Fail title reasons ) ->
+            Story.Fail title (reasons_ ++ reasons)
 
-        ( Err reasons, _ ) ->
-            Story.Fail reasons
+        ( Err reasons, Story.Single title _ ) ->
+            Story.Fail title reasons
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Float asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -224,28 +224,28 @@ float name defaultValue properties story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice name options story =
     case ( Error.validateChoice choice name options, story ) of
-        ( Err reasons, Story.Fail reasons_ ) ->
-            Story.Fail (reasons ++ reasons_)
+        ( Err reasons, Story.Fail title reasons_ ) ->
+            Story.Fail title (reasons ++ reasons_)
 
-        ( Err reasons, _ ) ->
-            Story.Fail reasons
+        ( Err reasons, Story.Single title _ ) ->
+            Story.Fail title reasons
 
-        ( Ok config, Story.Single storyID payload ) ->
+        ( Ok config, Story.Single title payload ) ->
             let
                 optionsDict =
                     Dict.fromList options
             in
-            Story.Single storyID
+            Story.Single title
                 { knobs = ( config.name, Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -267,11 +267,11 @@ makeChoice choice name options story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -291,14 +291,14 @@ type alias Color =
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case ( Error.validateColor name defaultValue, story ) of
-        ( Err reason, Story.Fail reasons ) ->
-            Story.Fail (reason :: reasons)
+        ( Err reason, Story.Fail title reasons ) ->
+            Story.Fail title (reason :: reasons)
 
-        ( Err reason, _ ) ->
-            Story.Fail [ reason ]
+        ( Err reason, Story.Single title _ ) ->
+            Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Color config.color ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -316,11 +316,11 @@ color name defaultValue story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 type alias Date =
@@ -330,14 +330,14 @@ type alias Date =
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
     case ( Error.validateDate name defaultValue, story ) of
-        ( Err reason, Story.Fail reasons ) ->
-            Story.Fail (reason :: reasons)
+        ( Err reason, Story.Fail title reasons ) ->
+            Story.Fail title (reason :: reasons)
 
-        ( Err reason, _ ) ->
-            Story.Fail [ reason ]
+        ( Err reason, Story.Single title _ ) ->
+            Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Date config.date ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -355,11 +355,11 @@ date name defaultValue story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 type alias Time =
@@ -369,14 +369,14 @@ type alias Time =
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case ( Error.validateTime name defaultValue, story ) of
-        ( Err reason, Story.Fail reasons ) ->
-            Story.Fail (reason :: reasons)
+        ( Err reason, Story.Fail title reasons ) ->
+            Story.Fail title (reason :: reasons)
 
-        ( Err reason, _ ) ->
-            Story.Fail [ reason ]
+        ( Err reason, Story.Single title _ ) ->
+            Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Time config.time ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -394,11 +394,11 @@ time name defaultValue story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons
 
 
 type alias File =
@@ -408,14 +408,14 @@ type alias File =
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case ( Error.validateFile name, story ) of
-        ( Err reason, Story.Fail reasons ) ->
-            Story.Fail (reason :: reasons)
+        ( Err reason, Story.Fail title reasons ) ->
+            Story.Fail title (reason :: reasons)
 
-        ( Err reason, _ ) ->
-            Story.Fail [ reason ]
+        ( Err reason, Story.Single title _ ) ->
+            Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single storyID payload ) ->
-            Story.Single storyID
+        ( Ok config, Story.Single title payload ) ->
+            Story.Single title
                 { knobs = ( config.name, Files ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -433,8 +433,8 @@ files name story =
         ( _, Story.Todo title ) ->
             Story.Todo title
 
-        ( _, Story.Batch folderID stories ) ->
-            Story.Batch folderID stories
+        ( _, Story.Batch title stories ) ->
+            Story.Batch title stories
 
-        ( _, Story.Fail reasons ) ->
-            Story.Fail reasons
+        ( _, Story.Fail title reasons ) ->
+            Story.Fail title reasons

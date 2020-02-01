@@ -272,7 +272,7 @@ viewItem model current path story =
         Story.Batch folderID stories ->
             viewFolder model current path folderID stories
 
-        Story.Fail _ ->
+        Story.Fail _ _ ->
             []
 
 
