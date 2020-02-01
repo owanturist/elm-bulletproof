@@ -172,8 +172,8 @@ int name defaultValue properties story =
                 , view =
                     \knobs ->
                         case extract trimmedName knobs of
-                            Just (IntValue str) ->
-                                payload.view knobs (Maybe.withDefault defaultValue (String.toInt str))
+                            Just (IntValue val) ->
+                                payload.view knobs (Maybe.withDefault defaultValue val)
 
                             _ ->
                                 payload.view knobs defaultValue
@@ -211,8 +211,8 @@ float name defaultValue properties story =
                 , view =
                     \knobs ->
                         case extract trimmedName knobs of
-                            Just (FloatValue str) ->
-                                payload.view knobs (Maybe.withDefault defaultValue (String.toFloat str))
+                            Just (FloatValue val) ->
+                                payload.view knobs (Maybe.withDefault defaultValue val)
 
                             _ ->
                                 payload.view knobs defaultValue
