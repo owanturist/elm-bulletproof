@@ -220,6 +220,64 @@ validateTime rawName value =
             Ok { name = name, time = time }
 
 
+type alias Counter =
+    { counts : Dict String Int
+    , duplicates : List String
+    }
+
+
+initialCounter : Counter
+initialCounter =
+    Counter Dict.empty []
+
+
+count : String -> Counter -> Counter
+count title { counts, duplicates } =
+    case Dict.get title counts of
+        Nothing ->
+            Counter (Dict.insert title 1 counts) duplicates
+
+        Just 1 ->
+            Counter (Dict.insert title 2 counts) (title :: duplicates)
+
+        Just n ->
+            Counter (Dict.insert title (n + 1) counts) duplicates
+
+
+incount : Counter -> List ( String, Int )
+incount { counts, duplicates } =
+    List.filterMap
+        (\key -> Maybe.map (Tuple.pair key) (Dict.get key counts))
+        duplicates
+
+
+countList : (a -> String) -> List a -> List ( String, Int )
+countList toKey list =
+    incount (List.foldr (count << toKey) initialCounter list)
+
+
+type alias FolderCounters =
+    { labels : Counter
+    , stories : Counter
+    , folders : Counter
+    }
+
+
+incountFolder : Story.Path -> FolderCounters -> List Error
+incountFolder path { labels, stories, folders } =
+    List.concatMap
+        (\( reason, incounts ) -> List.map (\( title, n ) -> Error path (reason title n)) incounts)
+        [ ( DuplicateLabels, incount labels )
+        , ( DuplicateStories, incount stories )
+        , ( DuplicateFolders, incount folders )
+        ]
+
+
+initialFolderCounters : FolderCounters
+initialFolderCounters =
+    FolderCounters initialCounter initialCounter initialCounter
+
+
 validateStory : Story.Path -> Story Reason Renderer -> FolderCounters -> ( Result (List Error) (Story Never Renderer), FolderCounters )
 validateStory path story counters =
     case story of
@@ -284,64 +342,6 @@ validateStory path story counters =
             ( Err (List.map (Error (List.reverse path)) reasons)
             , counters
             )
-
-
-type alias Counter =
-    { counts : Dict String Int
-    , duplicates : List String
-    }
-
-
-initialCounter : Counter
-initialCounter =
-    Counter Dict.empty []
-
-
-count : String -> Counter -> Counter
-count title { counts, duplicates } =
-    case Dict.get title counts of
-        Nothing ->
-            Counter (Dict.insert title 1 counts) duplicates
-
-        Just 1 ->
-            Counter (Dict.insert title 2 counts) (title :: duplicates)
-
-        Just n ->
-            Counter (Dict.insert title (n + 1) counts) duplicates
-
-
-incount : Counter -> List ( String, Int )
-incount { counts, duplicates } =
-    List.filterMap
-        (\key -> Maybe.map (Tuple.pair key) (Dict.get key counts))
-        duplicates
-
-
-countList : (a -> String) -> List a -> List ( String, Int )
-countList toKey list =
-    incount (List.foldr (count << toKey) initialCounter list)
-
-
-type alias FolderCounters =
-    { labels : Counter
-    , stories : Counter
-    , folders : Counter
-    }
-
-
-incountFolder : Story.Path -> FolderCounters -> List Error
-incountFolder path { labels, stories, folders } =
-    List.concatMap
-        (\( reason, incounts ) -> List.map (\( title, n ) -> Error path (reason title n)) incounts)
-        [ ( DuplicateLabels, incount labels )
-        , ( DuplicateStories, incount stories )
-        , ( DuplicateFolders, incount folders )
-        ]
-
-
-initialFolderCounters : FolderCounters
-initialFolderCounters =
-    FolderCounters initialCounter initialCounter initialCounter
 
 
 validateStories : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
