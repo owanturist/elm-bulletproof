@@ -1,6 +1,6 @@
 module Utils exposing (duplicates, ifelse, nonBlank, onSpaceOrEnter)
 
-import AVL.Set as Set
+import AVL.Dict as Dict
 import Html.Styled as Html
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder)
@@ -33,26 +33,34 @@ onSpaceOrEnter =
     Events.preventDefaultOn "keypress" << keyDecoder [ 13, 32 ]
 
 
-duplicates : (a -> comparable) -> List a -> Maybe (List a)
+duplicates : (a -> Maybe comparable) -> List a -> List ( comparable, Int )
 duplicates toKey list =
     let
-        ( _, result ) =
+        ( counts, keys ) =
             List.foldr
-                (\element ( uniq, acc ) ->
-                    if Set.member (toKey element) uniq then
-                        ( uniq, element :: acc )
+                (\element ( counter, acc ) ->
+                    case toKey element of
+                        Nothing ->
+                            ( counter, acc )
 
-                    else
-                        ( Set.insert (toKey element) uniq, acc )
+                        Just key ->
+                            case Dict.get key counter of
+                                Nothing ->
+                                    ( Dict.insert key 1 counter
+                                    , acc
+                                    )
+
+                                Just count ->
+                                    ( Dict.insert key (count + 1) counter
+                                    , key :: acc
+                                    )
                 )
-                ( Set.empty, [] )
+                ( Dict.empty, [] )
                 list
     in
-    if List.isEmpty result then
-        Nothing
-
-    else
-        Just result
+    List.filterMap
+        (\key -> Maybe.map (Tuple.pair key) (Dict.get key counts))
+        keys
 
 
 nonBlank : String -> Maybe String

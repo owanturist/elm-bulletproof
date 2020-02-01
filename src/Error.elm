@@ -14,7 +14,7 @@ import Color exposing (Color)
 import Date exposing (Time)
 import Knob
 import Time
-import Utils exposing (ifelse, nonBlank)
+import Utils exposing (duplicates, ifelse, nonBlank)
 
 
 type Reason
@@ -29,8 +29,8 @@ type Reason
     | DuplicateKnob String
     | EmptyRadio String
     | EmptySelect String
-    | DuplicateRadio String (List String)
-    | DuplicateSelect String (List String)
+    | DuplicateRadioOptions String (List ( String, Int ))
+    | DuplicateSelectOptions String (List ( String, Int ))
     | InvalidIntStep String Int
     | InvalidIntLeftBoundary String Int Int
     | InvalidIntRightBoundary String Int Int
@@ -144,7 +144,15 @@ validateChoice choice rawName options =
                     Err (EmptySelect name)
 
         ( Just name, Just ( selected, option ) ) ->
-            Ok { name = name, selected = selected, option = option }
+            case ( duplicates (Just << Tuple.first) options, choice ) of
+                ( [], _ ) ->
+                    Ok { name = name, selected = selected, option = option }
+
+                ( pairs, Knob.Radio ) ->
+                    Err (DuplicateRadioOptions name pairs)
+
+                ( pairs, Knob.Select ) ->
+                    Err (DuplicateSelectOptions name pairs)
 
 
 validateColor : String -> String -> Result Reason { name : String, color : Color }
