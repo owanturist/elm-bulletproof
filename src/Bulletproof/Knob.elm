@@ -35,7 +35,7 @@ type alias Story view =
 
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
-    case ( Error.validateNameOnly name, story ) of
+    case ( Error.validateBool name, story ) of
         ( Err error, Story.Fail errors ) ->
             Story.Fail (error :: errors)
 
@@ -70,7 +70,7 @@ bool name defaultValue story =
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
-    case ( Error.validateNameOnly name, story ) of
+    case ( Error.validateString name, story ) of
         ( Err error, Story.Fail errors ) ->
             Story.Fail (error :: errors)
 
@@ -407,7 +407,7 @@ type alias File =
 
 files : String -> Story (List File -> a) -> Story a
 files name story =
-    case ( Error.validateNameOnly name, story ) of
+    case ( Error.validateFile name, story ) of
         ( Err error, Story.Fail errors ) ->
             Story.Fail (error :: errors)
 

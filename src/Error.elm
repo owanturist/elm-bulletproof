@@ -1,13 +1,15 @@
 module Error exposing
     ( Error
-    , Reason(..)
+    , Reason
+    , validateBool
     , validateChoice
     , validateColor
     , validateDate
+    , validateFile
     , validateFloat
     , validateInt
-    , validateNameOnly
     , validateStories
+    , validateString
     , validateTime
     )
 
@@ -54,14 +56,29 @@ type alias Error =
     }
 
 
-validateNameOnly : String -> Result Reason { name : String }
-validateNameOnly rawName =
+validateOnlyKnobName : String -> Result Reason { name : String }
+validateOnlyKnobName rawName =
     case nonBlank rawName of
         Nothing ->
             Err EmptyKnobTitle
 
         Just name ->
             Ok { name = name }
+
+
+validateString : String -> Result Reason { name : String }
+validateString =
+    validateOnlyKnobName
+
+
+validateBool : String -> Result Reason { name : String }
+validateBool =
+    validateOnlyKnobName
+
+
+validateFile : String -> Result Reason { name : String }
+validateFile =
+    validateOnlyKnobName
 
 
 validateLimits :
@@ -171,7 +188,7 @@ validateColor rawName value =
             Err EmptyKnobTitle
 
         ( Just name, Nothing ) ->
-            Err (InvalidDate name value)
+            Err (InvalidColor name value)
 
         ( Just name, Just color ) ->
             Ok { name = name, color = color }
@@ -206,34 +223,62 @@ validateTime rawName value =
 validateStory : Story.Path -> Story Reason Renderer -> FolderCounters -> ( Result (List Error) (Story Never Renderer), FolderCounters )
 validateStory path story counters =
     case story of
-        Story.Label title ->
-            ( Ok (Story.Label title)
-            , { counters | labels = count title counters.labels }
-            )
+        Story.Label rawTitle ->
+            case nonBlank rawTitle of
+                Nothing ->
+                    ( Err [ Error path EmptyLabelTitle ]
+                    , counters
+                    )
 
-        Story.Todo title ->
-            ( Ok (Story.Todo title)
-            , { counters | stories = count title counters.stories }
-            )
+                Just title ->
+                    ( Ok (Story.Label title)
+                    , { counters | labels = count title counters.labels }
+                    )
 
-        Story.Single title payload ->
-            ( case
-                countList Tuple.first payload.knobs
-                    |> List.map (\( name, n ) -> DuplicateKnob name n)
-                    |> List.map (Error (List.reverse (title :: path)))
-              of
-                [] ->
-                    Ok (Story.Single title payload)
+        Story.Todo rawTitle ->
+            case nonBlank rawTitle of
+                Nothing ->
+                    ( Err [ Error path EmptyTodoTitle ]
+                    , counters
+                    )
 
-                duplicates ->
-                    Err duplicates
-            , { counters | stories = count title counters.stories }
-            )
+                Just title ->
+                    ( Ok (Story.Todo title)
+                    , { counters | stories = count title counters.stories }
+                    )
 
-        Story.Batch title substories ->
-            ( Result.map (Story.Batch title) (validateStories (title :: path) substories)
-            , { counters | folders = count title counters.folders }
-            )
+        Story.Single rawTitle payload ->
+            case nonBlank rawTitle of
+                Nothing ->
+                    ( Err [ Error path EmptyStoryTitle ]
+                    , counters
+                    )
+
+                Just title ->
+                    ( case
+                        countList Tuple.first payload.knobs
+                            |> List.map (\( name, n ) -> DuplicateKnob name n)
+                            |> List.map (Error (List.reverse (title :: path)))
+                      of
+                        [] ->
+                            Ok (Story.Single title payload)
+
+                        errors ->
+                            Err errors
+                    , { counters | stories = count title counters.stories }
+                    )
+
+        Story.Batch rawTitle substories ->
+            case nonBlank rawTitle of
+                Nothing ->
+                    ( Err [ Error path EmptyFolderTitle ]
+                    , counters
+                    )
+
+                Just title ->
+                    ( Result.map (Story.Batch title) (validateStories (title :: path) substories)
+                    , { counters | folders = count title counters.folders }
+                    )
 
         Story.Fail reasons ->
             ( Err (List.map (Error (List.reverse path)) reasons)
