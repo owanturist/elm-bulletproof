@@ -7,12 +7,15 @@ module Error exposing
     , validateFloat
     , validateInt
     , validateNameOnly
+    , validateStories
     , validateTime
     )
 
 import Color exposing (Color)
 import Date exposing (Time)
 import Knob
+import Renderer exposing (Renderer)
+import Story exposing (Story)
 import Time
 import Utils exposing (duplicates, ifelse, nonBlank)
 
@@ -45,7 +48,7 @@ type Reason
 
 
 type alias Error =
-    { path : List String
+    { path : Story.Path
     , reason : Reason
     }
 
@@ -192,3 +195,43 @@ validateTime rawName value =
 
         ( Just name, Just time ) ->
             Ok { name = name, time = time }
+
+
+validateStory : Story.Path -> Story Reason Renderer -> Result (List Error) (Story Never Renderer)
+validateStory path story =
+    case story of
+        Story.Label title ->
+            Ok (Story.Label title)
+
+        Story.Todo title ->
+            Ok (Story.Todo title)
+
+        Story.Single title payload ->
+            Ok (Story.Single title payload)
+
+        Story.Batch title substories ->
+            Result.map (Story.Batch title) (validateStories (title :: path) substories)
+
+        Story.Fail reasons ->
+            Err (List.map (Error (List.reverse path)) reasons)
+
+
+validateStories : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
+validateStories path stories =
+    List.foldr
+        (\story acc ->
+            case ( validateStory path story, acc ) of
+                ( Err errors_, Err errors ) ->
+                    Err (errors_ ++ errors)
+
+                ( Err errors, Ok _ ) ->
+                    Err errors
+
+                ( Ok _, Err errors ) ->
+                    Err errors
+
+                ( Ok nextStory, Ok nextStories ) ->
+                    Ok (nextStory :: nextStories)
+        )
+        (Ok [])
+        stories
