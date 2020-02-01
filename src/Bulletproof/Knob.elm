@@ -20,30 +20,30 @@ module Bulletproof.Knob exposing
     , time
     )
 
+import AVL.Dict as Dict
 import Color
 import Date
 import Error
 import File
 import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
 import Story exposing (Story(..))
-import Utils exposing (nonBlank)
 
 
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
-    case ( nonBlank name, story ) of
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateNameOnly name, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( Just trimmedName, Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, Bool defaultValue ) :: payload.knobs
+                { knobs = ( config.name, Bool defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (BoolValue value) ->
                                 payload.view knobs value
 
@@ -66,19 +66,19 @@ bool name defaultValue story =
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
-    case ( nonBlank name, story ) of
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateNameOnly name, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( Just trimmedName, Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, String defaultValue ) :: payload.knobs
+                { knobs = ( config.name, String defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (StringValue value) ->
                                 payload.view knobs value
 
@@ -151,23 +151,23 @@ propertiesToNumberPayload =
 
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
-    case ( nonBlank name, story ) of
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    let
+        ( asRange, limits ) =
+            propertiesToNumberPayload properties
+    in
+    case ( Error.validateInt name defaultValue limits, story ) of
+        ( Err errors_, Fail errors ) ->
+            Fail (errors_ ++ errors)
 
-        ( Nothing, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err errors, _ ) ->
+            Fail errors
 
-        ( Just trimmedName, Single storyID payload ) ->
-            let
-                ( asRange, limits ) =
-                    propertiesToNumberPayload properties
-            in
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, Int asRange defaultValue limits ) :: payload.knobs
+                { knobs = ( config.name, Int asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (IntValue val) ->
                                 payload.view knobs (Maybe.withDefault defaultValue val)
 
@@ -190,23 +190,23 @@ int name defaultValue properties story =
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
-    case ( nonBlank name, story ) of
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    let
+        ( asRange, limits ) =
+            propertiesToNumberPayload properties
+    in
+    case ( Error.validateFloat name defaultValue limits, story ) of
+        ( Err errors_, Fail errors ) ->
+            Fail (errors_ ++ errors)
 
-        ( Nothing, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err errors, _ ) ->
+            Fail errors
 
-        ( Just trimmedName, Single storyID payload ) ->
-            let
-                ( asRange, limits ) =
-                    propertiesToNumberPayload properties
-            in
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, Float asRange defaultValue limits ) :: payload.knobs
+                { knobs = ( config.name, Float asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (FloatValue val) ->
                                 payload.view knobs (Maybe.withDefault defaultValue val)
 
@@ -229,61 +229,44 @@ float name defaultValue properties story =
 
 makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice name options story =
-    case ( nonBlank name, List.head options, story ) of
-        ( Nothing, _, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateChoice choice name options, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( Just trimmedName, Nothing, Fail errors ) ->
-            case choice of
-                Radio ->
-                    Fail (Error.EmptyRadio trimmedName :: errors)
-
-                Select ->
-                    Fail (Error.EmptySelect trimmedName :: errors)
-
-        ( Just trimmedName, Nothing, _ ) ->
-            case choice of
-                Radio ->
-                    Fail [ Error.EmptyRadio trimmedName ]
-
-                Select ->
-                    Fail [ Error.EmptySelect trimmedName ]
-
-        ( Just trimmedName, Just ( firstLabel, firstValue ), Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
+            let
+                optionsDict =
+                    Dict.fromList options
+            in
             Single storyID
-                { knobs = ( trimmedName, Choice choice firstLabel (List.map Tuple.first options) ) :: payload.knobs
+                { knobs = ( config.name, Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
                 , view =
                     \knobs ->
                         let
-                            selected =
-                                case extract trimmedName knobs of
-                                    Just (StringValue value) ->
-                                        value
+                            value =
+                                case extract config.name knobs of
+                                    Just (StringValue key) ->
+                                        Maybe.withDefault config.option (Dict.get key optionsDict)
 
                                     _ ->
-                                        firstLabel
+                                        config.option
                         in
-                        options
-                            |> List.filter ((==) selected << Tuple.first)
-                            |> List.head
-                            |> Maybe.map Tuple.second
-                            |> Maybe.withDefault firstValue
-                            |> payload.view knobs
+                        payload.view knobs value
                 }
 
-        ( _, _, Label title ) ->
+        ( _, Label title ) ->
             Label title
 
-        ( _, _, Todo title ) ->
+        ( _, Todo title ) ->
             Todo title
 
-        ( _, _, Batch folderID stories ) ->
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        ( _, _, Fail errors ) ->
+        ( _, Fail errors ) ->
             Fail errors
 
 
@@ -303,42 +286,36 @@ type alias Color =
 
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
-    case ( nonBlank name, Color.fromString defaultValue, story ) of
-        ( Nothing, _, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateColor name defaultValue, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( Just trimmedName, Nothing, Fail errors ) ->
-            Fail (Error.InvalidColor trimmedName defaultValue :: errors)
-
-        ( Just trimmedName, Nothing, _ ) ->
-            Fail [ Error.InvalidColor trimmedName defaultValue ]
-
-        ( Just trimmedName, Just defaultColor, Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, Color defaultColor ) :: payload.knobs
+                { knobs = ( config.name, Color config.color ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (ColorValue (Just value)) ->
                                 payload.view knobs value
 
                             _ ->
-                                payload.view knobs defaultColor
+                                payload.view knobs config.color
                 }
 
-        ( _, _, Label title ) ->
+        ( _, Label title ) ->
             Label title
 
-        ( _, _, Todo title ) ->
+        ( _, Todo title ) ->
             Todo title
 
-        ( _, _, Batch folderID stories ) ->
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        ( _, _, Fail errors ) ->
+        ( _, Fail errors ) ->
             Fail errors
 
 
@@ -348,42 +325,36 @@ type alias Date =
 
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
-    case ( nonBlank name, Date.parseStringToPosix defaultValue, story ) of
-        ( Nothing, _, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateDate name defaultValue, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( Just trimmedName, Nothing, Fail errors ) ->
-            Fail (Error.InvalidDate trimmedName defaultValue :: errors)
-
-        ( Just trimmedName, Nothing, _ ) ->
-            Fail [ Error.InvalidDate trimmedName defaultValue ]
-
-        ( Just trimmedName, Just defaultDate, Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, Date defaultDate ) :: payload.knobs
+                { knobs = ( config.name, Date config.date ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (DateValue (Just value)) ->
                                 payload.view knobs (Date.dateFromPosix value)
 
                             _ ->
-                                payload.view knobs (Date.dateFromPosix defaultDate)
+                                payload.view knobs (Date.dateFromPosix config.date)
                 }
 
-        ( _, _, Label title ) ->
+        ( _, Label title ) ->
             Label title
 
-        ( _, _, Todo title ) ->
+        ( _, Todo title ) ->
             Todo title
 
-        ( _, _, Batch folderID stories ) ->
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        ( _, _, Fail errors ) ->
+        ( _, Fail errors ) ->
             Fail errors
 
 
@@ -393,42 +364,36 @@ type alias Time =
 
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
-    case ( nonBlank name, Date.timeFromString defaultValue, story ) of
-        ( Nothing, _, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateTime name defaultValue, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( Just trimmedName, Nothing, Fail errors ) ->
-            Fail (Error.InvalidTime trimmedName defaultValue :: errors)
-
-        ( Just trimmedName, Nothing, _ ) ->
-            Fail [ Error.InvalidTime trimmedName defaultValue ]
-
-        ( Just trimmedName, Just defaultTime, Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( trimmedName, Time defaultTime ) :: payload.knobs
+                { knobs = ( config.name, Time config.time ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract trimmedName knobs of
+                        case extract config.name knobs of
                             Just (TimeValue (Just value)) ->
                                 payload.view knobs value
 
                             _ ->
-                                payload.view knobs defaultTime
+                                payload.view knobs config.time
                 }
 
-        ( _, _, Label title ) ->
+        ( _, Label title ) ->
             Label title
 
-        ( _, _, Todo title ) ->
+        ( _, Todo title ) ->
             Todo title
 
-        ( _, _, Batch folderID stories ) ->
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        ( _, _, Fail errors ) ->
+        ( _, Fail errors ) ->
             Fail errors
 
 
@@ -438,19 +403,19 @@ type alias File =
 
 files : String -> Story (List File -> a) -> Story a
 files name story =
-    case ( nonBlank name, story ) of
-        ( Nothing, Fail errors ) ->
-            Fail (Error.EmptyKnobTitle :: errors)
+    case ( Error.validateNameOnly name, story ) of
+        ( Err error, Fail errors ) ->
+            Fail (error :: errors)
 
-        ( Nothing, _ ) ->
-            Fail [ Error.EmptyKnobTitle ]
+        ( Err error, _ ) ->
+            Fail [ error ]
 
-        ( _, Single storyID payload ) ->
+        ( Ok config, Single storyID payload ) ->
             Single storyID
-                { knobs = ( name, Files ) :: payload.knobs
+                { knobs = ( config.name, Files ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract name knobs of
+                        case extract config.name knobs of
                             Just (FileValue value) ->
                                 payload.view knobs value
 
