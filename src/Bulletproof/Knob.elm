@@ -234,11 +234,11 @@ float name defaultValue properties story =
 makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice name options story =
     case ( Error.validateChoice choice name options, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err errors, Story.Fail errors_ ) ->
+            Story.Fail (errors ++ errors_)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err errors, _ ) ->
+            Story.Fail errors
 
         ( Ok config, Story.Single storyID payload ) ->
             let

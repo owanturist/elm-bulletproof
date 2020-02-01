@@ -11,13 +11,14 @@ module Error exposing
     , validateTime
     )
 
+import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Date exposing (Time)
 import Knob
 import Renderer exposing (Renderer)
 import Story exposing (Story)
 import Time
-import Utils exposing (duplicates, ifelse, nonBlank)
+import Utils exposing (ifelse, nonBlank)
 
 
 type Reason
@@ -26,14 +27,14 @@ type Reason
     | EmptyTodoTitle
     | EmptyFolderTitle
     | EmptyKnobTitle
-    | DuplicateLabels String
-    | DuplicateStories String
-    | DuplicateFolders String
-    | DuplicateKnob String
+    | DuplicateLabels String Int
+    | DuplicateStories String Int
+    | DuplicateFolders String Int
+    | DuplicateKnob String Int
     | EmptyRadio String
     | EmptySelect String
-    | DuplicateRadioOptions String (List ( String, Int ))
-    | DuplicateSelectOptions String (List ( String, Int ))
+    | DuplicateRadioOptions String Int
+    | DuplicateSelectOptions String Int
     | InvalidIntStep String Int
     | InvalidIntLeftBoundary String Int Int
     | InvalidIntRightBoundary String Int Int
@@ -132,30 +133,35 @@ validateFloat rawName float limits =
                     Err reasons
 
 
-validateChoice : Knob.Choice -> String -> List ( String, option ) -> Result Reason { name : String, selected : String, option : option }
+validateChoice : Knob.Choice -> String -> List ( String, option ) -> Result (List Reason) { name : String, selected : String, option : option }
 validateChoice choice rawName options =
-    case ( nonBlank rawName, List.head options ) of
-        ( Nothing, _ ) ->
-            Err EmptyKnobTitle
-
-        ( Just name, Nothing ) ->
+    let
+        ( emptyReason, duplicateReason ) =
             case choice of
                 Knob.Radio ->
-                    Err (EmptyRadio name)
+                    ( EmptyRadio, DuplicateRadioOptions )
 
                 Knob.Select ->
-                    Err (EmptySelect name)
+                    ( EmptySelect, DuplicateSelectOptions )
+
+        duplicateReasons =
+            List.map
+                (\( name, n ) -> duplicateReason name n)
+                (countList Tuple.first options)
+    in
+    case ( nonBlank rawName, List.head options ) of
+        ( Nothing, _ ) ->
+            Err (EmptyKnobTitle :: duplicateReasons)
+
+        ( Just name, Nothing ) ->
+            Err (emptyReason name :: duplicateReasons)
 
         ( Just name, Just ( selected, option ) ) ->
-            case ( duplicates (Just << Tuple.first) options, choice ) of
-                ( [], _ ) ->
-                    Ok { name = name, selected = selected, option = option }
+            if List.isEmpty duplicateReasons then
+                Ok { name = name, selected = selected, option = option }
 
-                ( pairs, Knob.Radio ) ->
-                    Err (DuplicateRadioOptions name pairs)
-
-                ( pairs, Knob.Select ) ->
-                    Err (DuplicateSelectOptions name pairs)
+            else
+                Err duplicateReasons
 
 
 validateColor : String -> String -> Result Reason { name : String, color : Color }
@@ -197,41 +203,142 @@ validateTime rawName value =
             Ok { name = name, time = time }
 
 
-validateStory : Story.Path -> Story Reason Renderer -> Result (List Error) (Story Never Renderer)
-validateStory path story =
+validateStory : Story.Path -> Story Reason Renderer -> FolderCounters -> ( Result (List Error) (Story Never Renderer), FolderCounters )
+validateStory path story counters =
     case story of
         Story.Label title ->
-            Ok (Story.Label title)
+            ( Ok (Story.Label title)
+            , { counters | labels = count title counters.labels }
+            )
 
         Story.Todo title ->
-            Ok (Story.Todo title)
+            ( Ok (Story.Todo title)
+            , { counters | stories = count title counters.stories }
+            )
 
         Story.Single title payload ->
-            Ok (Story.Single title payload)
+            ( case
+                countList Tuple.first payload.knobs
+                    |> List.map (\( name, n ) -> DuplicateKnob name n)
+                    |> List.map (Error (List.reverse (title :: path)))
+              of
+                [] ->
+                    Ok (Story.Single title payload)
+
+                duplicates ->
+                    Err duplicates
+            , { counters | stories = count title counters.stories }
+            )
 
         Story.Batch title substories ->
-            Result.map (Story.Batch title) (validateStories (title :: path) substories)
+            ( Result.map (Story.Batch title) (validateStories (title :: path) substories)
+            , { counters | folders = count title counters.folders }
+            )
 
         Story.Fail reasons ->
-            Err (List.map (Error (List.reverse path)) reasons)
+            ( Err (List.map (Error (List.reverse path)) reasons)
+            , counters
+            )
+
+
+type alias Counter =
+    { counts : Dict String Int
+    , duplicates : List String
+    }
+
+
+initialCounter : Counter
+initialCounter =
+    Counter Dict.empty []
+
+
+count : String -> Counter -> Counter
+count title { counts, duplicates } =
+    case Dict.get title counts of
+        Nothing ->
+            Counter (Dict.insert title 1 counts) duplicates
+
+        Just 1 ->
+            Counter (Dict.insert title 2 counts) (title :: duplicates)
+
+        Just n ->
+            Counter (Dict.insert title (n + 1) counts) duplicates
+
+
+incount : Counter -> List ( String, Int )
+incount { counts, duplicates } =
+    List.filterMap
+        (\key -> Maybe.map (Tuple.pair key) (Dict.get key counts))
+        duplicates
+
+
+countList : (a -> String) -> List a -> List ( String, Int )
+countList toKey list =
+    incount (List.foldr (count << toKey) initialCounter list)
+
+
+type alias FolderCounters =
+    { labels : Counter
+    , stories : Counter
+    , folders : Counter
+    }
+
+
+incountFolder : Story.Path -> FolderCounters -> List Error
+incountFolder path { labels, stories, folders } =
+    List.concatMap
+        (\( reason, incounts ) -> List.map (\( title, n ) -> Error path (reason title n)) incounts)
+        [ ( DuplicateLabels, incount labels )
+        , ( DuplicateStories, incount stories )
+        , ( DuplicateFolders, incount folders )
+        ]
+
+
+initialFolderCounters : FolderCounters
+initialFolderCounters =
+    FolderCounters initialCounter initialCounter initialCounter
 
 
 validateStories : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
 validateStories path stories =
-    List.foldr
-        (\story acc ->
-            case ( validateStory path story, acc ) of
-                ( Err errors_, Err errors ) ->
-                    Err (errors_ ++ errors)
+    let
+        ( result, counters ) =
+            List.foldr
+                (\story ( acc, folderCounters ) ->
+                    let
+                        ( validateion, nextCounters ) =
+                            validateStory path story folderCounters
+                    in
+                    case ( validateion, acc ) of
+                        ( Err errors, Err errors_ ) ->
+                            ( Err (errors ++ errors_)
+                            , nextCounters
+                            )
 
-                ( Err errors, Ok _ ) ->
-                    Err errors
+                        ( Err errors, Ok _ ) ->
+                            ( Err errors
+                            , nextCounters
+                            )
 
-                ( Ok _, Err errors ) ->
-                    Err errors
+                        ( Ok _, Err errors ) ->
+                            ( Err errors
+                            , nextCounters
+                            )
 
-                ( Ok nextStory, Ok nextStories ) ->
-                    Ok (nextStory :: nextStories)
-        )
-        (Ok [])
-        stories
+                        ( Ok nextStory, Ok nextStories ) ->
+                            ( Ok (nextStory :: nextStories)
+                            , nextCounters
+                            )
+                )
+                ( Ok [], initialFolderCounters )
+                stories
+    in
+    case ( result, incountFolder (List.reverse path) counters ) of
+        ( _, [] ) ->
+            result
+
+        ( Err errors, errors_ ) ->
+            Err (errors ++ errors_)
+
+        ( _, errors ) ->
+            Err errors
