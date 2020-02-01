@@ -29,22 +29,6 @@ import Story exposing (Story(..))
 import Utils exposing (nonBlank)
 
 
-type alias File =
-    File.File
-
-
-type alias Color =
-    Color.Color
-
-
-type alias Date =
-    Date.Date
-
-
-type alias Time =
-    Date.Time
-
-
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case story of
@@ -131,19 +115,19 @@ step =
 
 
 propertyToNumberPayload : Property number -> ( Bool, Limits number ) -> ( Bool, Limits number )
-propertyToNumberPayload property ( range_, limits ) =
+propertyToNumberPayload property ( asRange, limits ) =
     case property of
         Range ->
             ( True, limits )
 
         Min num ->
-            ( range_, { limits | min = Just num } )
+            ( asRange, { limits | min = Just num } )
 
         Max num ->
-            ( range_, { limits | max = Just num } )
+            ( asRange, { limits | max = Just num } )
 
         Step num ->
-            ( range_, { limits | step = Just num } )
+            ( asRange, { limits | step = Just num } )
 
 
 propertiesToNumberPayload : List (Property number) -> ( Bool, Limits number )
@@ -164,11 +148,11 @@ int name defaultValue properties story =
 
         ( Just trimmedName, Single storyID payload ) ->
             let
-                ( range_, limits ) =
+                ( asRange, limits ) =
                     propertiesToNumberPayload properties
             in
             Single storyID
-                { knobs = ( trimmedName, Int range_ defaultValue limits ) :: payload.knobs
+                { knobs = ( trimmedName, Int asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract trimmedName knobs of
@@ -203,11 +187,11 @@ float name defaultValue properties story =
 
         ( Just trimmedName, Single storyID payload ) ->
             let
-                ( range_, limits ) =
+                ( asRange, limits ) =
                     propertiesToNumberPayload properties
             in
             Single storyID
-                { knobs = ( trimmedName, Float range_ defaultValue limits ) :: payload.knobs
+                { knobs = ( trimmedName, Float asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract trimmedName knobs of
@@ -301,6 +285,10 @@ select =
     makeChoice Select
 
 
+type alias Color =
+    Color.Color
+
+
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case ( nonBlank name, Color.fromString defaultValue, story ) of
@@ -340,6 +328,10 @@ color name defaultValue story =
 
         ( _, _, Fail errors ) ->
             Fail errors
+
+
+type alias Date =
+    Date.Date
 
 
 date : String -> String -> Story (Date -> a) -> Story a
@@ -383,6 +375,10 @@ date name defaultValue story =
             Fail errors
 
 
+type alias Time =
+    Date.Time
+
+
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case ( nonBlank name, Date.timeFromString defaultValue, story ) of
@@ -422,6 +418,10 @@ time name defaultValue story =
 
         ( _, _, Fail errors ) ->
             Fail errors
+
+
+type alias File =
+    File.File
 
 
 files : String -> Story (List File -> a) -> Story a
