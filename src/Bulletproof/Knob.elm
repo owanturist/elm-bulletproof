@@ -36,11 +36,11 @@ type alias Story view =
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case ( Error.validateBool name, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err reason, Story.Fail reasons ) ->
+            Story.Fail (reason :: reasons)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err reason, _ ) ->
+            Story.Fail [ reason ]
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -64,18 +64,18 @@ bool name defaultValue story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case ( Error.validateString name, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err reason, Story.Fail reasons ) ->
+            Story.Fail (reason :: reasons)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err reason, _ ) ->
+            Story.Fail [ reason ]
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -99,8 +99,8 @@ string name defaultValue story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 type Property num
@@ -160,11 +160,11 @@ int name defaultValue properties story =
             propertiesToNumberPayload properties
     in
     case ( Error.validateInt name defaultValue limits, story ) of
-        ( Err errors_, Story.Fail errors ) ->
-            Story.Fail (errors_ ++ errors)
+        ( Err reasons_, Story.Fail reasons ) ->
+            Story.Fail (reasons_ ++ reasons)
 
-        ( Err errors, _ ) ->
-            Story.Fail errors
+        ( Err reasons, _ ) ->
+            Story.Fail reasons
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -188,8 +188,8 @@ int name defaultValue properties story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
@@ -199,11 +199,11 @@ float name defaultValue properties story =
             propertiesToNumberPayload properties
     in
     case ( Error.validateFloat name defaultValue limits, story ) of
-        ( Err errors_, Story.Fail errors ) ->
-            Story.Fail (errors_ ++ errors)
+        ( Err reasons_, Story.Fail reasons ) ->
+            Story.Fail (reasons_ ++ reasons)
 
-        ( Err errors, _ ) ->
-            Story.Fail errors
+        ( Err reasons, _ ) ->
+            Story.Fail reasons
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -227,18 +227,18 @@ float name defaultValue properties story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice name options story =
     case ( Error.validateChoice choice name options, story ) of
-        ( Err errors, Story.Fail errors_ ) ->
-            Story.Fail (errors ++ errors_)
+        ( Err reasons, Story.Fail reasons_ ) ->
+            Story.Fail (reasons ++ reasons_)
 
-        ( Err errors, _ ) ->
-            Story.Fail errors
+        ( Err reasons, _ ) ->
+            Story.Fail reasons
 
         ( Ok config, Story.Single storyID payload ) ->
             let
@@ -270,8 +270,8 @@ makeChoice choice name options story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -291,11 +291,11 @@ type alias Color =
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case ( Error.validateColor name defaultValue, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err reason, Story.Fail reasons ) ->
+            Story.Fail (reason :: reasons)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err reason, _ ) ->
+            Story.Fail [ reason ]
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -319,8 +319,8 @@ color name defaultValue story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 type alias Date =
@@ -330,11 +330,11 @@ type alias Date =
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
     case ( Error.validateDate name defaultValue, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err reason, Story.Fail reasons ) ->
+            Story.Fail (reason :: reasons)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err reason, _ ) ->
+            Story.Fail [ reason ]
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -358,8 +358,8 @@ date name defaultValue story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 type alias Time =
@@ -369,11 +369,11 @@ type alias Time =
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case ( Error.validateTime name defaultValue, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err reason, Story.Fail reasons ) ->
+            Story.Fail (reason :: reasons)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err reason, _ ) ->
+            Story.Fail [ reason ]
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -397,8 +397,8 @@ time name defaultValue story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
 
 
 type alias File =
@@ -408,11 +408,11 @@ type alias File =
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case ( Error.validateFile name, story ) of
-        ( Err error, Story.Fail errors ) ->
-            Story.Fail (error :: errors)
+        ( Err reason, Story.Fail reasons ) ->
+            Story.Fail (reason :: reasons)
 
-        ( Err error, _ ) ->
-            Story.Fail [ error ]
+        ( Err reason, _ ) ->
+            Story.Fail [ reason ]
 
         ( Ok config, Story.Single storyID payload ) ->
             Story.Single storyID
@@ -436,5 +436,5 @@ files name story =
         ( _, Story.Batch folderID stories ) ->
             Story.Batch folderID stories
 
-        ( _, Story.Fail errors ) ->
-            Story.Fail errors
+        ( _, Story.Fail reasons ) ->
+            Story.Fail reasons
