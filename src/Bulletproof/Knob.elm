@@ -31,19 +31,19 @@ import Utils exposing (nonBlank)
 
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
-    case story of
-        Label title ->
-            Label title
+    case ( nonBlank name, story ) of
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
 
-        Todo title ->
-            Todo title
+        ( Nothing, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
 
-        Single storyID payload ->
+        ( Just trimmedName, Single storyID payload ) ->
             Single storyID
-                { knobs = ( name, Bool defaultValue ) :: payload.knobs
+                { knobs = ( trimmedName, Bool defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract name knobs of
+                        case extract trimmedName knobs of
                             Just (BoolValue value) ->
                                 payload.view knobs value
 
@@ -51,28 +51,34 @@ bool name defaultValue story =
                                 payload.view knobs defaultValue
                 }
 
-        Batch folderID stories ->
+        ( _, Label title ) ->
+            Label title
+
+        ( _, Todo title ) ->
+            Todo title
+
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( _, Fail errors ) ->
             Fail errors
 
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
-    case story of
-        Label title ->
-            Label title
+    case ( nonBlank name, story ) of
+        ( Nothing, Fail errors ) ->
+            Fail (Error.EmptyKnobTitle :: errors)
 
-        Todo title ->
-            Todo title
+        ( Nothing, _ ) ->
+            Fail [ Error.EmptyKnobTitle ]
 
-        Single storyID payload ->
+        ( Just trimmedName, Single storyID payload ) ->
             Single storyID
-                { knobs = ( name, String defaultValue ) :: payload.knobs
+                { knobs = ( trimmedName, String defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract name knobs of
+                        case extract trimmedName knobs of
                             Just (StringValue value) ->
                                 payload.view knobs value
 
@@ -80,10 +86,16 @@ string name defaultValue story =
                                 payload.view knobs defaultValue
                 }
 
-        Batch folderID stories ->
+        ( _, Label title ) ->
+            Label title
+
+        ( _, Todo title ) ->
+            Todo title
+
+        ( _, Batch folderID stories ) ->
             Batch folderID stories
 
-        Fail errors ->
+        ( _, Fail errors ) ->
             Fail errors
 
 
