@@ -1,17 +1,16 @@
 module Story exposing (Path, Payload, Store, Story(..), get, makeStore, next, prev)
 
 import AVL.Dict as Dict exposing (Dict)
-import Error
 import Knob exposing (Knob)
 import Renderer exposing (Renderer)
 
 
-type Story view
+type Story error view
     = Label String
     | Todo String
     | Single String (Payload view)
-    | Batch String (List (Story Renderer))
-    | Fail (List Error.Reason)
+    | Batch String (List (Story error Renderer))
+    | Fail (List error)
 
 
 type alias Payload view =
@@ -43,7 +42,7 @@ emptyStore =
     Store Nothing Nothing Dict.empty
 
 
-makeStore : List (Story Renderer) -> Store
+makeStore : List (Story error Renderer) -> Store
 makeStore stories =
     let
         ( _, storeL ) =
@@ -68,7 +67,7 @@ makeStore stories =
                         |> Store first last
 
 
-makeStoreL : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreL : Path -> Story error Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreL path story ( prevStory, store ) =
     case story of
         Single storyID payload ->
@@ -98,7 +97,7 @@ makeStoreL path story ( prevStory, store ) =
             ( prevStory, store )
 
 
-makeStoreR : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreR : Path -> Story error Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreR path story ( nextStory, store ) =
     case story of
         Single storyID _ ->

@@ -56,7 +56,7 @@ type Model
     = Model Settings State (Dict Story.Path Knob.State)
 
 
-init : List (Story Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init : List (Story error Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories settingsJSON url key =
     let
         initialSettings =
@@ -805,7 +805,7 @@ styledNavigation size =
         ]
 
 
-view : List (Story Renderer) -> Model -> Browser.Document Msg
+view : List (Story error Renderer) -> Model -> Browser.Document Msg
 view stories (Model settings state knobs) =
     let
         attrs =
@@ -860,7 +860,7 @@ type alias Program =
     Platform.Program (Maybe String) Model Msg
 
 
-run : (String -> Cmd msg) -> List (Story Renderer) -> Program
+run : (String -> Cmd msg) -> List (Story error Renderer) -> Program
 run onSettingsChange stories =
     Browser.application
         { init = init stories

@@ -13,6 +13,7 @@ module Bulletproof exposing
     )
 
 import Element exposing (Element)
+import Error
 import Html
 import Html.Styled
 import Main
@@ -40,10 +41,10 @@ fromElmUI options attributes element =
 
 
 type alias Story =
-    Story.Story Renderer
+    Story.Story Error.Reason Renderer
 
 
-storyOf : String -> view -> Story.Story view
+storyOf : String -> view -> Story.Story Error.Reason view
 storyOf title view =
     Story.Single title
         { knobs = []

@@ -26,20 +26,24 @@ import Date
 import Error
 import File
 import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
-import Story exposing (Story(..))
+import Story
+
+
+type alias Story view =
+    Story.Story Error.Reason view
 
 
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case ( Error.validateNameOnly name, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Bool defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -51,30 +55,30 @@ bool name defaultValue story =
                                 payload.view knobs defaultValue
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case ( Error.validateNameOnly name, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, String defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -86,17 +90,17 @@ string name defaultValue story =
                                 payload.view knobs defaultValue
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 type Property num
@@ -156,14 +160,14 @@ int name defaultValue properties story =
             propertiesToNumberPayload properties
     in
     case ( Error.validateInt name defaultValue limits, story ) of
-        ( Err errors_, Fail errors ) ->
-            Fail (errors_ ++ errors)
+        ( Err errors_, Story.Fail errors ) ->
+            Story.Fail (errors_ ++ errors)
 
         ( Err errors, _ ) ->
-            Fail errors
+            Story.Fail errors
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Int asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -175,17 +179,17 @@ int name defaultValue properties story =
                                 payload.view knobs defaultValue
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
@@ -195,14 +199,14 @@ float name defaultValue properties story =
             propertiesToNumberPayload properties
     in
     case ( Error.validateFloat name defaultValue limits, story ) of
-        ( Err errors_, Fail errors ) ->
-            Fail (errors_ ++ errors)
+        ( Err errors_, Story.Fail errors ) ->
+            Story.Fail (errors_ ++ errors)
 
         ( Err errors, _ ) ->
-            Fail errors
+            Story.Fail errors
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Float asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -214,34 +218,34 @@ float name defaultValue properties story =
                                 payload.view knobs defaultValue
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice choice name options story =
     case ( Error.validateChoice choice name options, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
+        ( Ok config, Story.Single storyID payload ) ->
             let
                 optionsDict =
                     Dict.fromList options
             in
-            Single storyID
+            Story.Single storyID
                 { knobs = ( config.name, Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -257,17 +261,17 @@ makeChoice choice name options story =
                         payload.view knobs value
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
@@ -287,14 +291,14 @@ type alias Color =
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case ( Error.validateColor name defaultValue, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Color config.color ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -306,17 +310,17 @@ color name defaultValue story =
                                 payload.view knobs config.color
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 type alias Date =
@@ -326,14 +330,14 @@ type alias Date =
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
     case ( Error.validateDate name defaultValue, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Date config.date ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -345,17 +349,17 @@ date name defaultValue story =
                                 payload.view knobs (Date.dateFromPosix config.date)
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 type alias Time =
@@ -365,14 +369,14 @@ type alias Time =
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case ( Error.validateTime name defaultValue, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Time config.time ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -384,17 +388,17 @@ time name defaultValue story =
                                 payload.view knobs config.time
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors
 
 
 type alias File =
@@ -404,14 +408,14 @@ type alias File =
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case ( Error.validateNameOnly name, story ) of
-        ( Err error, Fail errors ) ->
-            Fail (error :: errors)
+        ( Err error, Story.Fail errors ) ->
+            Story.Fail (error :: errors)
 
         ( Err error, _ ) ->
-            Fail [ error ]
+            Story.Fail [ error ]
 
-        ( Ok config, Single storyID payload ) ->
-            Single storyID
+        ( Ok config, Story.Single storyID payload ) ->
+            Story.Single storyID
                 { knobs = ( config.name, Files ) :: payload.knobs
                 , view =
                     \knobs ->
@@ -423,14 +427,14 @@ files name story =
                                 payload.view knobs []
                 }
 
-        ( _, Label title ) ->
-            Label title
+        ( _, Story.Label title ) ->
+            Story.Label title
 
-        ( _, Todo title ) ->
-            Todo title
+        ( _, Story.Todo title ) ->
+            Story.Todo title
 
-        ( _, Batch folderID stories ) ->
-            Batch folderID stories
+        ( _, Story.Batch folderID stories ) ->
+            Story.Batch folderID stories
 
-        ( _, Fail errors ) ->
-            Fail errors
+        ( _, Story.Fail errors ) ->
+            Story.Fail errors

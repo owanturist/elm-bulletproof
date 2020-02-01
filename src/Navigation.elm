@@ -205,7 +205,7 @@ styledFolder active =
     styled div (Css.cursor Css.pointer :: cssItem active)
 
 
-viewFolder : Model -> Story.Path -> Story.Path -> String -> List (Story Renderer) -> List ( String, Html Msg )
+viewFolder : Model -> Story.Path -> Story.Path -> String -> List (Story error Renderer) -> List ( String, Html Msg )
 viewFolder model current path title stories =
     let
         folderPath =
@@ -248,7 +248,7 @@ viewFolder model current path title stories =
         :: List.concatMap (viewItem model nextCurrent folderPath) (ifelse opened stories [])
 
 
-viewItem : Model -> Story.Path -> Story.Path -> Story Renderer -> List ( String, Html Msg )
+viewItem : Model -> Story.Path -> Story.Path -> Story error Renderer -> List ( String, Html Msg )
 viewItem model current path story =
     case story of
         Story.Label title ->
@@ -288,7 +288,7 @@ cssContainer =
     ]
 
 
-view : Story.Path -> List (Story Renderer) -> Model -> Html Msg
+view : Story.Path -> List (Story error Renderer) -> Model -> Html Msg
 view current stories model =
     Keyed.node "div"
         [ css cssContainer
