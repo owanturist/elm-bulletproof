@@ -863,23 +863,25 @@ type alias Program =
 
 run : (String -> Cmd msg) -> List (Story Error.Reason Renderer) -> Program
 run onSettingsChange dangerousStories =
-    case Error.validateStories [] dangerousStories of
-        Err errors ->
-            Browser.application
-                { init = init []
-                , update = update onSettingsChange
-                , view = \_ -> Browser.Document "Error" [ Html.toUnstyled (Error.view errors) ]
-                , subscriptions = subscriptions
-                , onUrlRequest = UrlRequested
-                , onUrlChange = UrlChanged
-                }
+    let
+        ( initialisator, document ) =
+            case Error.validateStories [] dangerousStories of
+                Err errors ->
+                    ( init []
+                    , Browser.Document "Error" [ Html.toUnstyled (Error.view errors) ]
+                        |> always
+                    )
 
-        Ok stories ->
-            Browser.application
-                { init = init stories
-                , update = update onSettingsChange
-                , view = view stories
-                , subscriptions = subscriptions
-                , onUrlRequest = UrlRequested
-                , onUrlChange = UrlChanged
-                }
+                Ok stories ->
+                    ( init stories
+                    , view stories
+                    )
+    in
+    Browser.application
+        { init = initialisator
+        , update = update onSettingsChange
+        , view = document
+        , subscriptions = subscriptions
+        , onUrlRequest = UrlRequested
+        , onUrlChange = UrlChanged
+        }
