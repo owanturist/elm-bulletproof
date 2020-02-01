@@ -11,11 +11,14 @@ module Error exposing
     , validateStories
     , validateString
     , validateTime
+    , view
     )
 
 import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
+import Css
 import Date exposing (Time)
+import Html.Styled exposing (Html, div, styled, text)
 import Knob
 import Renderer exposing (Renderer)
 import Story exposing (Story)
@@ -387,3 +390,100 @@ validateStories path stories =
 
         ( _, errors ) ->
             Err errors
+
+
+viewReason : Reason -> Html msg
+viewReason reason =
+    case reason of
+        EmptyLabelTitle ->
+            text "EmptyLabelTitle"
+
+        EmptyStoryTitle ->
+            text "EmptyStoryTitle"
+
+        EmptyTodoTitle ->
+            text "EmptyTodoTitle"
+
+        EmptyFolderTitle ->
+            text "EmptyFolderTitle"
+
+        EmptyKnobTitle ->
+            text "EmptyKnobTitle"
+
+        DuplicateLabels title n ->
+            text ("DuplicateLabels `" ++ title ++ "` " ++ String.fromInt n ++ " times")
+
+        DuplicateStories title n ->
+            text ("DuplicateStories `" ++ title ++ "` " ++ String.fromInt n ++ " times")
+
+        DuplicateFolders title n ->
+            text ("DuplicateFolders `" ++ title ++ "` " ++ String.fromInt n ++ " times")
+
+        DuplicateKnob name n ->
+            text ("DuplicateKnob `" ++ name ++ "` " ++ String.fromInt n ++ " times")
+
+        EmptyRadio name ->
+            text ("EmptyRadio `" ++ name ++ "`")
+
+        EmptySelect name ->
+            text ("EmptySelect `" ++ name ++ "`")
+
+        DuplicateRadioOptions name n ->
+            text ("DuplicateRadioOptions `" ++ name ++ "` " ++ String.fromInt n ++ " times")
+
+        DuplicateSelectOptions name n ->
+            text ("DuplicateSelectOptions `" ++ name ++ "` " ++ String.fromInt n ++ " times")
+
+        InvalidIntStep name step ->
+            text ("InvalidIntStep `" ++ name ++ "` " ++ String.fromInt step ++ " <= 0")
+
+        InvalidIntLeftBoundary name value min ->
+            text ("InvalidIntLeftBoundary `" ++ name ++ "` " ++ String.fromInt value ++ " < " ++ String.fromInt min)
+
+        InvalidIntRightBoundary name value max ->
+            text ("InvalidIntRightBoundary `" ++ name ++ "` " ++ String.fromInt value ++ " > " ++ String.fromInt max)
+
+        InvalidIntBoundaries name min max ->
+            text ("InvalidIntBoundaries `" ++ name ++ "` " ++ String.fromInt min ++ " > " ++ String.fromInt max)
+
+        InvalidFloatStep name step ->
+            text ("InvalidFloatStep `" ++ name ++ "` " ++ String.fromFloat step ++ " <= 0")
+
+        InvalidFloatLeftBoundary name value min ->
+            text ("InvalidFloatLeftBoundary `" ++ name ++ "` " ++ String.fromFloat value ++ " < " ++ String.fromFloat min)
+
+        InvalidFloatRightBoundary name value max ->
+            text ("InvalidFloatRightBoundary `" ++ name ++ "` " ++ String.fromFloat value ++ " > " ++ String.fromFloat max)
+
+        InvalidFloatBoundaries name min max ->
+            text ("InvalidFloatBoundaries `" ++ name ++ "` " ++ String.fromFloat min ++ " > " ++ String.fromFloat max)
+
+        InvalidColor name color ->
+            text ("InvalidColor `" ++ name ++ "`: `" ++ color ++ "`")
+
+        InvalidDate name date ->
+            text ("InvalidDate `" ++ name ++ "`: `" ++ date ++ "`")
+
+        InvalidTime name time ->
+            text ("InvalidTime `" ++ name ++ "`: `" ++ time ++ "`")
+
+
+viewError : Error -> Html msg
+viewError error =
+    styled div
+        [ Css.marginBottom (Css.px 20)
+        ]
+        []
+        [ styled div
+            [ Css.fontWeight Css.bold
+            ]
+            []
+            [ text (String.join " / " error.path)
+            ]
+        , viewReason error.reason
+        ]
+
+
+view : List Error -> Html msg
+view errors =
+    div [] (List.map viewError errors)

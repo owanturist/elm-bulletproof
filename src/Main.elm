@@ -8,6 +8,7 @@ import Browser.Navigation
 import Button exposing (button)
 import Css
 import Css.Global exposing (global)
+import Error
 import Html.Styled as Html exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
@@ -56,7 +57,7 @@ type Model
     = Model Settings State (Dict Story.Path Knob.State)
 
 
-init : List (Story error Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init : List (Story Never Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories settingsJSON url key =
     let
         initialSettings =
@@ -805,7 +806,7 @@ styledNavigation size =
         ]
 
 
-view : List (Story error Renderer) -> Model -> Browser.Document Msg
+view : List (Story Never Renderer) -> Model -> Browser.Document Msg
 view stories (Model settings state knobs) =
     let
         attrs =
@@ -860,13 +861,25 @@ type alias Program =
     Platform.Program (Maybe String) Model Msg
 
 
-run : (String -> Cmd msg) -> List (Story error Renderer) -> Program
-run onSettingsChange stories =
-    Browser.application
-        { init = init stories
-        , update = update onSettingsChange
-        , view = view stories
-        , subscriptions = subscriptions
-        , onUrlRequest = UrlRequested
-        , onUrlChange = UrlChanged
-        }
+run : (String -> Cmd msg) -> List (Story Error.Reason Renderer) -> Program
+run onSettingsChange dangerousStories =
+    case Error.validateStories [] dangerousStories of
+        Err errors ->
+            Browser.application
+                { init = init []
+                , update = update onSettingsChange
+                , view = \_ -> Browser.Document "Error" [ Html.toUnstyled (Error.view errors) ]
+                , subscriptions = subscriptions
+                , onUrlRequest = UrlRequested
+                , onUrlChange = UrlChanged
+                }
+
+        Ok stories ->
+            Browser.application
+                { init = init stories
+                , update = update onSettingsChange
+                , view = view stories
+                , subscriptions = subscriptions
+                , onUrlRequest = UrlRequested
+                , onUrlChange = UrlChanged
+                }
