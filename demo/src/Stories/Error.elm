@@ -86,9 +86,52 @@ story =
             )
 
         --
-        , Bulletproof.todo "Duplicate Labels"
-        , Bulletproof.todo "Duplicate Stories"
-        , Bulletproof.todo "Duplicate Folders"
+        , Bulletproof.storyOf "Duplicate Labels"
+            (\title n ->
+                Error.view
+                    [ Error defaultPath (Error.DuplicateLabels title n)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Label title" "Duplicated title"
+            |> Bulletproof.Knob.int "Duplicates"
+                3
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 10
+                ]
+
+        --
+        , Bulletproof.storyOf "Duplicate Stories"
+            (\title n ->
+                Error.view
+                    [ Error defaultPath (Error.DuplicateStories title n)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Story title" "Duplicated title"
+            |> Bulletproof.Knob.int "Duplicates"
+                3
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 10
+                ]
+
+        --
+        , Bulletproof.storyOf "Duplicate Folders"
+            (\title n ->
+                Error.view
+                    [ Error defaultPath (Error.DuplicateFolders title n)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Folder title" "Duplicated title"
+            |> Bulletproof.Knob.int "Duplicates"
+                3
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 10
+                ]
 
         --
         , Bulletproof.label "Knobs"

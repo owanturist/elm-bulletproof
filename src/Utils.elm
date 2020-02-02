@@ -1,4 +1,4 @@
-module Utils exposing (ifelse, nonBlank, onSpaceOrEnter)
+module Utils exposing (ifelse, nonBlank, onSpaceOrEnter, plural)
 
 import Html.Styled as Html
 import Html.Styled.Events as Events
@@ -40,3 +40,12 @@ nonBlank str =
 
         trimmed ->
             Just trimmed
+
+
+plural : String -> Int -> String
+plural word n =
+    if n == 1 then
+        word
+
+    else
+        word ++ "s"

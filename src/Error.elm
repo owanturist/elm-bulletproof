@@ -18,7 +18,7 @@ import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
-import Html.Styled as Html exposing (Html, code, div, pre, styled, text)
+import Html.Styled as Html exposing (Html, br, code, div, pre, styled, text)
 import Knob
 import Palette
 import Renderer exposing (Renderer)
@@ -403,10 +403,15 @@ validateStories path stories =
             Err errors
 
 
+reasonEmptyTitle : String
+reasonEmptyTitle =
+    "Please make sure you've defined neither empty or blank title."
+
+
 reasonEmptyLabelTitle : ( String, String, String )
 reasonEmptyLabelTitle =
     ( "Label with empty title"
-    , "Please make sure you've defined neither empty or blank title."
+    , reasonEmptyTitle
     , """
 Bulletproof.label "Label example"
     """
@@ -416,7 +421,7 @@ Bulletproof.label "Label example"
 reasonEmptyTodoTitle : ( String, String, String )
 reasonEmptyTodoTitle =
     ( "Todo with empty title"
-    , "Please make sure you've defined neither empty or blank title."
+    , reasonEmptyTitle
     , """
 Bulletproof.todo "Todo example"
     """
@@ -426,7 +431,7 @@ Bulletproof.todo "Todo example"
 reasonEmptyStoryTitle : ( String, String, String )
 reasonEmptyStoryTitle =
     ( "Story with empty title"
-    , "Please make sure you've defined neither empty or blank title."
+    , reasonEmptyTitle
     , """
 Bulletproof.storyOf "Story example"
     (button
@@ -443,13 +448,67 @@ Bulletproof.storyOf "Story example"
 reasonEmptyFolderTitle : ( String, String, String )
 reasonEmptyFolderTitle =
     ( "Folder with empty title"
-    , "Please make sure you've defined neither empty or blank title."
+    , reasonEmptyTitle
     , """
 Bulletproof.folderOf "Folder example"
     [ Bulletproof.todo "Todo #1"
     , Bulletproof.todo "Todo #2"
     , Bulletproof.todo "Todo #3"
     ]
+    """
+    )
+
+
+reasonDuplicateLabels : String -> Int -> ( String, String, String )
+reasonDuplicateLabels title n =
+    ( "Label `" ++ title ++ "` repeats " ++ String.fromInt n ++ " times"
+    , "Please make sure you've defined uniq names for lables."
+    , """
+[ Bulletproof.label "First label"
+, Bulletproof.label "Second label"
+]
+    """
+    )
+
+
+reasonDuplicateStories : String -> Int -> ( String, String, String )
+reasonDuplicateStories title n =
+    ( "Story/Todo `" ++ title ++ "` repeats " ++ String.fromInt n ++ " times"
+    , """
+Please make sure you've defined uniq names for both stories and todos.
+Each todo is a story which has not started yet...
+    """
+    , """
+[ Bulletproof.todo "First todo title"
+, Bulletproof.todo "Second todo title"
+, Bulletproof.storyOf "Story title"
+    (button
+        [ type_ "button"
+        ]
+        [ text "Funny Button"
+        ]
+        |> Bulletproof.fromHtml
+    )
+]
+    """
+    )
+
+
+reasonDuplicateFolders : String -> Int -> ( String, String, String )
+reasonDuplicateFolders title n =
+    ( "Folder `" ++ title ++ "` repeats " ++ String.fromInt n ++ " times"
+    , "Please make sure you've defined uniq names for both stories and todos."
+    , """
+[ Bulletproof.folder "Empty folder" []
+, Bulletproof.folder "First folder"
+    [ Bulletproof.todo "Todo #1"
+    , Bulletproof.todo "Todo #2"
+    ]
+, Bulletproof.folder "Second folder"
+    [ Bulletproof.todo "Todo #1"
+    , Bulletproof.todo "Todo #2"
+    ]
+]
     """
     )
 
@@ -468,6 +527,15 @@ reasonToExplanation reason =
 
         EmptyFolderTitle ->
             reasonEmptyFolderTitle
+
+        DuplicateLabels title n ->
+            reasonDuplicateLabels title n
+
+        DuplicateStories title n ->
+            reasonDuplicateStories title n
+
+        DuplicateFolders title n ->
+            reasonDuplicateFolders title n
 
         _ ->
             ( "", "", "" )
@@ -562,10 +630,20 @@ styledLabel =
 styledDescription : List (Html msg) -> Html msg
 styledDescription =
     styled div
-        [ Css.marginTop (Css.px 8)
+        [ Css.marginTop (Css.px 12)
         , Css.fontSize (Css.px 13)
         ]
         []
+
+
+viewDescription : String -> Html msg
+viewDescription description =
+    description
+        |> String.trim
+        |> String.split "\n"
+        |> List.map (text << String.trim)
+        |> List.intersperse (br [] [])
+        |> styledDescription
 
 
 styledPath : List (Html msg) -> Html msg
@@ -592,19 +670,10 @@ viewPath path =
         ]
 
 
-styledError : List (Html msg) -> Html msg
-styledError =
-    styled div
-        [ Css.padding2 (Css.px 12) (Css.px 16)
-        , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
-        ]
-        []
-
-
 styledCodeExample : List (Html msg) -> Html msg
 styledCodeExample =
     styled div
-        [ Css.margin3 (Css.px 8) (Css.px -8) Css.zero
+        [ Css.margin3 (Css.px 12) (Css.px -8) Css.zero
         , Css.padding2 Css.zero (Css.px 8)
         , Css.border3 (Css.px 1) Css.solid Palette.smoke
         , Css.borderRadius (Css.px 3)
@@ -624,6 +693,15 @@ viewCodeExample exampleCode =
         ]
 
 
+styledError : List (Html msg) -> Html msg
+styledError =
+    styled div
+        [ Css.padding3 (Css.px 12) (Css.px 16) (Css.px 8)
+        , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
+        ]
+        []
+
+
 viewError : Error -> Html msg
 viewError error =
     let
@@ -633,7 +711,7 @@ viewError error =
     styledError
         [ styledLabel [ text label ]
         , viewPath error.path
-        , styledDescription [ text description ]
+        , viewDescription description
         , viewCodeExample codeExample
         ]
 
@@ -641,7 +719,8 @@ viewError error =
 styledContainer : List (Html msg) -> Html msg
 styledContainer =
     styled div
-        [ Css.width (Css.px 600)
+        [ Css.margin2 (Css.px 8) Css.zero
+        , Css.width (Css.px 600)
         , Css.maxWidth (Css.pct 100)
         , Css.backgroundColor Palette.white
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
