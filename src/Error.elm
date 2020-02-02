@@ -18,7 +18,7 @@ import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
-import Html.Styled exposing (Html, div, styled, text)
+import Html.Styled exposing (Html, code, div, styled, text)
 import Knob
 import Palette
 import Renderer exposing (Renderer)
@@ -402,6 +402,23 @@ validateStories path stories =
             Err errors
 
 
+reasonEmptyLabelTitle : ( String, String )
+reasonEmptyLabelTitle =
+    ( "Empty label"
+    , "Please make sure you've defined neither empty or blank lablels' title."
+    )
+
+
+reasonToExplanation : Reason -> ( String, String )
+reasonToExplanation reason =
+    case reason of
+        EmptyLabelTitle ->
+            reasonEmptyLabelTitle
+
+        _ ->
+            ( "", "" )
+
+
 viewReason : Reason -> Html msg
 viewReason reason =
     case reason of
@@ -478,28 +495,75 @@ viewReason reason =
             text ("InvalidTime `" ++ name ++ "`: `" ++ time ++ "`")
 
 
-viewError : Error -> Html msg
-viewError error =
+styledLabel : List (Html msg) -> Html msg
+styledLabel =
     styled div
-        [ Css.marginBottom (Css.px 20)
+        [ Css.marginBottom (Css.px 4)
+        , Css.fontWeight Css.bold
+        , Css.fontSize (Css.px 16)
         ]
         []
-        [ styled div
-            [ Css.fontWeight Css.bold
-            ]
-            []
-            [ text (String.join " / " error.path)
-            ]
-        , viewReason error.reason
+
+
+styledDescription : List (Html msg) -> Html msg
+styledDescription =
+    styled div
+        [ Css.marginTop (Css.px 8)
+        , Css.fontSize (Css.px 13)
+        ]
+        []
+
+
+styledPath : List (Html msg) -> Html msg
+styledPath =
+    styled code
+        [ Css.padding2 (Css.px 2) (Css.px 4)
+        , Css.backgroundColor Palette.smoke
+        , Css.color Palette.gray
+        , Css.borderRadius (Css.px 3)
+        , Css.fontFamily Css.monospace
+        , Css.fontSize (Css.px 10)
+        ]
+        []
+
+
+viewPath : List String -> Html msg
+viewPath path =
+    styledPath
+        [ if List.isEmpty path then
+            text "/"
+
+          else
+            text (String.join " / " ("" :: path))
+        ]
+
+
+styledError : List (Html msg) -> Html msg
+styledError =
+    styled div
+        [ Css.padding (Css.px 16)
+        , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
+        ]
+        []
+
+
+viewError : Error -> Html msg
+viewError error =
+    let
+        ( label, description ) =
+            reasonToExplanation error.reason
+    in
+    styledError
+        [ styledLabel [ text label ]
+        , viewPath error.path
+        , styledDescription [ text description ]
         ]
 
 
 styledContainer : List (Html msg) -> Html msg
 styledContainer =
     styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.padding2 Css.zero (Css.px 16)
-        , Css.width (Css.px 600)
+        [ Css.width (Css.px 600)
         , Css.maxWidth (Css.pct 100)
         , Css.backgroundColor Palette.white
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
@@ -520,6 +584,9 @@ styledRoot =
         , Css.minHeight (Css.pct 100)
         , Css.backgroundColor Palette.cloud
         , Css.property "word-break" "break-word"
+        , Css.color Palette.dark
+        , Css.fontSize (Css.px 13)
+        , Css.fontFamilies Palette.font
         ]
         []
 
