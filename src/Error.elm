@@ -1,6 +1,6 @@
 module Error exposing
     ( Error
-    , Reason
+    , Reason(..)
     , validateBool
     , validateChoice
     , validateColor
