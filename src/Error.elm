@@ -591,7 +591,8 @@ styledRoot =
     styled div
         [ Css.boxSizing Css.borderBox
         , Css.displayFlex
-        , Css.justifyContent Css.center
+        , Css.flexDirection Css.column
+        , Css.alignItems Css.center
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.padding2 Css.zero (Css.px 8)
         , Css.width (Css.pct 100)
