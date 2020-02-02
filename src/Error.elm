@@ -18,7 +18,7 @@ import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
-import Html.Styled as Html exposing (Html, br, code, div, pre, styled, text)
+import Html.Styled as Html exposing (Html, br, code, div, pre, span, styled, text)
 import Knob
 import Palette
 import Renderer exposing (Renderer)
@@ -403,117 +403,253 @@ validateStories path stories =
             Err errors
 
 
+type alias Explanation msg =
+    { label : List (Html msg)
+    , description : String
+    , code : String
+    , diffs : List ( SyntaxHighlight.Highlight, Int, Int )
+    }
+
+
+viewMark : String -> Html msg
+viewMark =
+    styled span
+        [ Css.display Css.inlineBlock
+        , Css.padding2 (Css.px 2) (Css.px 4)
+        , Css.borderRadius (Css.px 3)
+        , Css.backgroundColor Palette.gray
+        , Css.color Palette.white
+        , Css.letterSpacing (Css.em 0.05)
+        ]
+        []
+        << List.singleton
+        << text
+
+
 reasonEmptyTitle : String
 reasonEmptyTitle =
     "Please make sure you've defined neither empty or blank title."
 
 
-reasonEmptyLabelTitle : ( String, String, String )
+reasonEmptyLabelTitle : Explanation msg
 reasonEmptyLabelTitle =
-    ( "Label with empty title"
-    , reasonEmptyTitle
-    , """
-Bulletproof.label "Label example"
-    """
-    )
+    Explanation
+        [ text "Label with empty title"
+        ]
+        reasonEmptyTitle
+        """
+[ Bulletproof.label ""
+[ Bulletproof.label "Not empty title"
+
+--
+, Bulletproof.label "   "
+, Bulletproof.label "Not blank title"
+]
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
+        ]
 
 
-reasonEmptyTodoTitle : ( String, String, String )
+reasonEmptyTodoTitle : Explanation msg
 reasonEmptyTodoTitle =
-    ( "Todo with empty title"
-    , reasonEmptyTitle
-    , """
-Bulletproof.todo "Todo example"
-    """
-    )
+    Explanation
+        [ text "Todo with empty title"
+        ]
+        reasonEmptyTitle
+        """
+[ Bulletproof.todo ""
+[ Bulletproof.todo "Not empty title"
+
+--
+, Bulletproof.todo "   "
+, Bulletproof.todo "Not blank title"
+]
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
+        ]
 
 
-reasonEmptyStoryTitle : ( String, String, String )
+reasonEmptyStoryTitle : Explanation msg
 reasonEmptyStoryTitle =
-    ( "Story with empty title"
-    , reasonEmptyTitle
-    , """
-Bulletproof.storyOf "Story example"
-    (button
-        [ type_ "button"
+    Explanation
+        [ text "Story with empty title"
         ]
-        [ text "Funny Button"
-        ]
+        reasonEmptyTitle
+        """
+[ Bulletproof.storyOf ""
+[ Bulletproof.storyOf "Not empty title"
+    (burgerIcon
         |> Bulletproof.fromHtml
     )
-    """
+
+--
+, Bulletproof.todo "   "
+, Bulletproof.todo "Not blank title"
+    (timesIcon
+        |> Bulletproof.fromHtml
     )
+]
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 7, 8 )
+        , ( SyntaxHighlight.Add, 8, 9 )
+        ]
 
 
-reasonEmptyFolderTitle : ( String, String, String )
+reasonEmptyFolderTitle : Explanation msg
 reasonEmptyFolderTitle =
-    ( "Folder with empty title"
-    , reasonEmptyTitle
-    , """
-Bulletproof.folderOf "Folder example"
-    [ Bulletproof.todo "Todo #1"
-    , Bulletproof.todo "Todo #2"
-    , Bulletproof.todo "Todo #3"
-    ]
-    """
-    )
+    Explanation
+        [ text "Folder with empty title"
+        ]
+        reasonEmptyTitle
+        """
+[ Bulletproof.folderOf "" []
+[ Bulletproof.folderOf "Not empty title" []
 
-
-reasonDuplicateLabels : String -> Int -> ( String, String, String )
-reasonDuplicateLabels title n =
-    ( "Label `" ++ title ++ "` repeats " ++ String.fromInt n ++ " times"
-    , "Please make sure you've defined uniq names for lables."
-    , """
-[ Bulletproof.label "First label"
-, Bulletproof.label "Second label"
+--
+, Bulletproof.folderOf "   " []
+, Bulletproof.folderOf "Not blank title" []
 ]
-    """
-    )
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
+        ]
 
 
-reasonDuplicateStories : String -> Int -> ( String, String, String )
+reasonDuplicateLabels : String -> Int -> Explanation msg
+reasonDuplicateLabels title n =
+    Explanation
+        [ text "Label "
+        , viewMark title
+        , text (" repeats " ++ String.fromInt n ++ " times")
+        ]
+        "Please make sure you've defined unique names for lables inside a folder."
+        """
+[ Bulletproof.label "Components"
+[ Bulletproof.label "Core components"
+
+--
+, Bulletproof.label "Components"
+, Bulletproof.label "Project Components"
+]
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
+        ]
+
+
+reasonDuplicateStories : String -> Int -> Explanation msg
 reasonDuplicateStories title n =
-    ( "Story/Todo `" ++ title ++ "` repeats " ++ String.fromInt n ++ " times"
-    , """
-Please make sure you've defined uniq names for both stories and todos.
+    Explanation
+        [ text "Story/Todo "
+        , viewMark title
+        , text (" repeats " ++ String.fromInt n ++ " times")
+        ]
+        """
+Please make sure you've defined unique names for both stories and todos inside a folder.
 Each todo is a story which has not started yet...
-    """
-    , """
-[ Bulletproof.todo "First todo title"
-, Bulletproof.todo "Second todo title"
-, Bulletproof.storyOf "Story title"
-    (button
-        [ type_ "button"
-        ]
-        [ text "Funny Button"
-        ]
+        """
+        """
+[ Bulletproof.todo "Icon"
+[ Bulletproof.todo "Icon times"
+
+--
+, Bulletproof.todo "Icon"
+, Bulletproof.todo "Icon user"
+
+--
+, Bulletproof.storyOf "Icon"
+, Bulletproof.storyOf "Icon burger"
+    (burgerIcon
         |> Bulletproof.fromHtml
     )
 ]
-    """
-    )
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
+        , ( SyntaxHighlight.Del, 8, 9 )
+        , ( SyntaxHighlight.Add, 9, 10 )
+        ]
 
 
-reasonDuplicateFolders : String -> Int -> ( String, String, String )
+reasonDuplicateFolders : String -> Int -> Explanation msg
 reasonDuplicateFolders title n =
-    ( "Folder `" ++ title ++ "` repeats " ++ String.fromInt n ++ " times"
-    , "Please make sure you've defined uniq names for both stories and todos."
-    , """
-[ Bulletproof.folder "Empty folder" []
-, Bulletproof.folder "First folder"
-    [ Bulletproof.todo "Todo #1"
-    , Bulletproof.todo "Todo #2"
+    Explanation
+        [ text "Folder "
+        , viewMark title
+        , text (" repeats " ++ String.fromInt n ++ " times")
+        ]
+        "Please make sure you've defined unique names for folders inside a folder."
+        """
+[ Bulletproof.folder "Searchbar" []
+[ Bulletproof.folder "Searchbar home page" []
+
+--
+, Bulletproof.folder "Searchbar"
+, Bulletproof.folder "Searchbar product page"
+    [ Bulletproof.todo "Disabled"
+    , Bulletproof.todo "Hover"
     ]
-, Bulletproof.folder "Second folder"
-    [ Bulletproof.todo "Todo #1"
-    , Bulletproof.todo "Todo #2"
+
+--
+, Bulletproof.folder "Searchbar"
+, Bulletproof.folder "Searchbar history page"
+    [ Bulletproof.todo "Disabled"
+    , Bulletproof.todo "Hover"
     ]
 ]
-    """
+        """
+        [ ( SyntaxHighlight.Del, 0, 1 )
+        , ( SyntaxHighlight.Add, 1, 2 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
+        , ( SyntaxHighlight.Del, 11, 12 )
+        , ( SyntaxHighlight.Add, 12, 13 )
+        ]
+
+
+reasonEmptyKnobTitle : Explanation msg
+reasonEmptyKnobTitle =
+    Explanation
+        [ text "Knob with empty title"
+        ]
+        reasonEmptyTitle
+        """
+Bulletproof.storyOf "Story example"
+    (\\buttonText buttonTabindex ->
+        button
+            [ tabindex buttonTabindex
+            ]
+            [ text buttonText
+            ]
+            |> Bulletproof.fromHtml
     )
+    |> Bulletproof.Knob.string "" "Funny Button"
+    |> Bulletproof.Knob.string "Not empty knob" "Funny Button"
+    |> Bulletproof.Knob.int "  " 0
+    |> Bulletproof.Knob.int "Not blank knob" 0
+        """
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 11 )
+        , ( SyntaxHighlight.Del, 11, 12 )
+        , ( SyntaxHighlight.Add, 12, 13 )
+        ]
 
 
-reasonToExplanation : Reason -> ( String, String, String )
+reasonToExplanation : Reason -> Explanation msg
 reasonToExplanation reason =
     case reason of
         EmptyLabelTitle ->
@@ -537,8 +673,11 @@ reasonToExplanation reason =
         DuplicateFolders title n ->
             reasonDuplicateFolders title n
 
+        EmptyKnobTitle ->
+            reasonEmptyKnobTitle
+
         _ ->
-            ( "", "", "" )
+            Explanation [] "" "" []
 
 
 viewReason : Reason -> Html msg
@@ -681,15 +820,20 @@ styledCodeExample =
         []
 
 
-viewCodeExample : String -> Html msg
-viewCodeExample exampleCode =
+viewCodeExample : String -> List ( SyntaxHighlight.Highlight, Int, Int ) -> Html msg
+viewCodeExample exampleCode diffs =
     styledCodeExample
         [ case SyntaxHighlight.elm (String.trim exampleCode) of
             Err _ ->
                 pre [] [ text (String.trim exampleCode) ]
 
             Ok elmCode ->
-                Html.fromUnstyled (SyntaxHighlight.toBlockHtml Nothing elmCode)
+                List.foldl
+                    (\( highlight, start, end ) code -> SyntaxHighlight.highlightLines (Just highlight) start end code)
+                    elmCode
+                    diffs
+                    |> SyntaxHighlight.toBlockHtml Nothing
+                    |> Html.fromUnstyled
         ]
 
 
@@ -705,14 +849,14 @@ styledError =
 viewError : Error -> Html msg
 viewError error =
     let
-        ( label, description, codeExample ) =
+        explanation =
             reasonToExplanation error.reason
     in
     styledError
-        [ styledLabel [ text label ]
+        [ styledLabel explanation.label
         , viewPath error.path
-        , viewDescription description
-        , viewCodeExample codeExample
+        , viewDescription explanation.description
+        , viewCodeExample explanation.code explanation.diffs
         ]
 
 

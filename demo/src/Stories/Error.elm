@@ -135,7 +135,16 @@ story =
 
         --
         , Bulletproof.label "Knobs"
-        , Bulletproof.todo "Empty Knob Title"
+
+        --
+        , Bulletproof.storyOf "Empty Knob Title"
+            (Error.view
+                [ Error defaultPath Error.EmptyKnobTitle
+                ]
+                |> Bulletproof.fromElmCss
+            )
+
+        --
         , Bulletproof.todo "Duplicate Knob"
         , Bulletproof.todo "Empty Radio"
         , Bulletproof.todo "Empty Select"
