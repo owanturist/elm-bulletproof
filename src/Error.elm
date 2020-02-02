@@ -495,4 +495,10 @@ viewError error =
 
 view : List Error -> Html msg
 view errors =
-    div [] (List.map viewError errors)
+    styled div
+        [ Css.width (Css.pct 100)
+        , Css.maxWidth (Css.pct 100)
+        , Css.property "word-break" "break-word"
+        ]
+        []
+        (List.map viewError errors)
