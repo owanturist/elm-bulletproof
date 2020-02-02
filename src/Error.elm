@@ -405,12 +405,27 @@ validateStories path stories =
 
 reasonEmptyLabelTitle : ( String, String, String )
 reasonEmptyLabelTitle =
-    ( "Empty label"
-    , "Please make sure you've defined neither empty or blank lablels' title."
+    ( "Label with empty title"
+    , "Please make sure you've defined neither empty or blank title."
     , """
 Bulletproof.label "Label example"
     """
     )
+
+
+reasonEmptyStoryTitle : ( String, String, String )
+reasonEmptyStoryTitle =
+    ( "Story with empty title"
+    , "Please make sure you've defined neither empty or blank title."
+    , """
+Bulletproof.storyOf "Story example"
+    (button [] [ text "Funny button" ]
+        |> Bulletproof.fromHtml
+    )
+    """
+    )
+
+
 
 
 reasonToExplanation : Reason -> ( String, String, String )
@@ -418,6 +433,9 @@ reasonToExplanation reason =
     case reason of
         EmptyLabelTitle ->
             reasonEmptyLabelTitle
+
+        EmptyStoryTitle ->
+            reasonEmptyStoryTitle
 
         _ ->
             ( "", "", "" )
