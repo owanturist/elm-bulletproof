@@ -20,6 +20,7 @@ import Css
 import Date exposing (Time)
 import Html.Styled exposing (Html, div, styled, text)
 import Knob
+import Palette
 import Renderer exposing (Renderer)
 import Story exposing (Story)
 import Time
@@ -493,12 +494,38 @@ viewError error =
         ]
 
 
-view : List Error -> Html msg
-view errors =
+styledContainer : List (Html msg) -> Html msg
+styledContainer =
     styled div
-        [ Css.width (Css.pct 100)
+        [ Css.boxSizing Css.borderBox
+        , Css.padding2 Css.zero (Css.px 16)
+        , Css.width (Css.px 600)
         , Css.maxWidth (Css.pct 100)
+        , Css.backgroundColor Palette.white
+        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
+        ]
+        []
+
+
+styledRoot : List (Html msg) -> Html msg
+styledRoot =
+    styled div
+        [ Css.boxSizing Css.borderBox
+        , Css.displayFlex
+        , Css.justifyContent Css.center
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.padding2 Css.zero (Css.px 8)
+        , Css.width (Css.pct 100)
+        , Css.maxWidth (Css.pct 100)
+        , Css.minHeight (Css.pct 100)
+        , Css.backgroundColor Palette.cloud
         , Css.property "word-break" "break-word"
         ]
         []
-        (List.map viewError errors)
+
+
+view : List Error -> Html msg
+view errors =
+    styledRoot
+        [ styledContainer (List.map viewError errors)
+        ]

@@ -471,7 +471,9 @@ styledStoryContainer settings =
     styled div
         [ Css.all Css.initial
         , Css.boxSizing Css.borderBox
-        , Css.display Css.table
+        , Css.displayFlex
+        , Css.flexDirection Css.column
+        , Css.justifyContent Css.flexStart
         , Css.position Css.relative
         , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
         , Css.minWidth (Css.pct 100)
@@ -868,8 +870,15 @@ run onSettingsChange dangerousStories =
             case Error.validateStories [] dangerousStories of
                 Err errors ->
                     ( init []
-                    , Browser.Document "Error" [ Html.toUnstyled (Error.view errors) ]
-                        |> always
+                    , \(Model settings _ _) ->
+                        Browser.Document "Error"
+                            [ viewRoot settings
+                                NoDragging
+                                []
+                                [ Error.view errors
+                                ]
+                                |> Html.toUnstyled
+                            ]
                     )
 
                 Ok stories ->
