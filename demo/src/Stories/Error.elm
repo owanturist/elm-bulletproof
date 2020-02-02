@@ -62,6 +62,14 @@ story =
             )
 
         --
+        , Bulletproof.storyOf "Empty Todo Title"
+            (Error.view
+                [ Error defaultPath Error.EmptyTodoTitle
+                ]
+                |> Bulletproof.fromElmCss
+            )
+
+        --
         , Bulletproof.storyOf "Empty Story Title"
             (Error.view
                 [ Error defaultPath Error.EmptyStoryTitle
@@ -70,8 +78,14 @@ story =
             )
 
         --
-        , Bulletproof.todo "Empty Todo Title"
-        , Bulletproof.todo "Empty Folder Title"
+        , Bulletproof.storyOf "Empty Folder Title"
+            (Error.view
+                [ Error defaultPath Error.EmptyFolderTitle
+                ]
+                |> Bulletproof.fromElmCss
+            )
+
+        --
         , Bulletproof.todo "Duplicate Labels"
         , Bulletproof.todo "Duplicate Stories"
         , Bulletproof.todo "Duplicate Folders"

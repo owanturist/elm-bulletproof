@@ -413,19 +413,45 @@ Bulletproof.label "Label example"
     )
 
 
+reasonEmptyTodoTitle : ( String, String, String )
+reasonEmptyTodoTitle =
+    ( "Todo with empty title"
+    , "Please make sure you've defined neither empty or blank title."
+    , """
+Bulletproof.todo "Todo example"
+    """
+    )
+
+
 reasonEmptyStoryTitle : ( String, String, String )
 reasonEmptyStoryTitle =
     ( "Story with empty title"
     , "Please make sure you've defined neither empty or blank title."
     , """
 Bulletproof.storyOf "Story example"
-    (button [] [ text "Funny button" ]
+    (button
+        [ type_ "button"
+        ]
+        [ text "Funny Button"
+        ]
         |> Bulletproof.fromHtml
     )
     """
     )
 
 
+reasonEmptyFolderTitle : ( String, String, String )
+reasonEmptyFolderTitle =
+    ( "Folder with empty title"
+    , "Please make sure you've defined neither empty or blank title."
+    , """
+Bulletproof.folderOf "Folder example"
+    [ Bulletproof.todo "Todo #1"
+    , Bulletproof.todo "Todo #2"
+    , Bulletproof.todo "Todo #3"
+    ]
+    """
+    )
 
 
 reasonToExplanation : Reason -> ( String, String, String )
@@ -434,8 +460,14 @@ reasonToExplanation reason =
         EmptyLabelTitle ->
             reasonEmptyLabelTitle
 
+        EmptyTodoTitle ->
+            reasonEmptyTodoTitle
+
         EmptyStoryTitle ->
             reasonEmptyStoryTitle
+
+        EmptyFolderTitle ->
+            reasonEmptyFolderTitle
 
         _ ->
             ( "", "", "" )
@@ -563,20 +595,33 @@ viewPath path =
 styledError : List (Html msg) -> Html msg
 styledError =
     styled div
-        [ Css.padding (Css.px 16)
+        [ Css.padding2 (Css.px 12) (Css.px 16)
         , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
+        ]
+        []
+
+
+styledCodeExample : List (Html msg) -> Html msg
+styledCodeExample =
+    styled div
+        [ Css.margin3 (Css.px 8) (Css.px -8) Css.zero
+        , Css.padding2 Css.zero (Css.px 8)
+        , Css.border3 (Css.px 1) Css.solid Palette.smoke
+        , Css.borderRadius (Css.px 3)
         ]
         []
 
 
 viewCodeExample : String -> Html msg
 viewCodeExample exampleCode =
-    case SyntaxHighlight.elm (String.trim exampleCode) of
-        Err _ ->
-            pre [] [ text (String.trim exampleCode) ]
+    styledCodeExample
+        [ case SyntaxHighlight.elm (String.trim exampleCode) of
+            Err _ ->
+                pre [] [ text (String.trim exampleCode) ]
 
-        Ok elmCode ->
-            Html.fromUnstyled (SyntaxHighlight.toBlockHtml Nothing elmCode)
+            Ok elmCode ->
+                Html.fromUnstyled (SyntaxHighlight.toBlockHtml Nothing elmCode)
+        ]
 
 
 viewError : Error -> Html msg
