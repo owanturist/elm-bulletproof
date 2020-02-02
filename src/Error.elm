@@ -18,11 +18,12 @@ import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
-import Html.Styled exposing (Html, code, div, styled, text)
+import Html.Styled as Html exposing (Html, code, div, pre, styled, text)
 import Knob
 import Palette
 import Renderer exposing (Renderer)
 import Story exposing (Story)
+import SyntaxHighlight
 import Time
 import Utils exposing (ifelse, nonBlank)
 
@@ -402,21 +403,24 @@ validateStories path stories =
             Err errors
 
 
-reasonEmptyLabelTitle : ( String, String )
+reasonEmptyLabelTitle : ( String, String, String )
 reasonEmptyLabelTitle =
     ( "Empty label"
     , "Please make sure you've defined neither empty or blank lablels' title."
+    , """
+Bulletproof.label "Label example"
+    """
     )
 
 
-reasonToExplanation : Reason -> ( String, String )
+reasonToExplanation : Reason -> ( String, String, String )
 reasonToExplanation reason =
     case reason of
         EmptyLabelTitle ->
             reasonEmptyLabelTitle
 
         _ ->
-            ( "", "" )
+            ( "", "", "" )
 
 
 viewReason : Reason -> Html msg
@@ -547,16 +551,27 @@ styledError =
         []
 
 
+viewCodeExample : String -> Html msg
+viewCodeExample exampleCode =
+    case SyntaxHighlight.elm (String.trim exampleCode) of
+        Err _ ->
+            pre [] [ text (String.trim exampleCode) ]
+
+        Ok elmCode ->
+            Html.fromUnstyled (SyntaxHighlight.toBlockHtml Nothing elmCode)
+
+
 viewError : Error -> Html msg
 viewError error =
     let
-        ( label, description ) =
+        ( label, description, codeExample ) =
             reasonToExplanation error.reason
     in
     styledError
         [ styledLabel [ text label ]
         , viewPath error.path
         , styledDescription [ text description ]
+        , viewCodeExample codeExample
         ]
 
 
@@ -594,5 +609,6 @@ styledRoot =
 view : List Error -> Html msg
 view errors =
     styledRoot
-        [ styledContainer (List.map viewError errors)
+        [ Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
+        , styledContainer (List.map viewError errors)
         ]

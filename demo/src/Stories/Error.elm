@@ -54,14 +54,12 @@ story =
         , Bulletproof.label "Stories"
 
         --
-        , Bulletproof.folderOf "Empty Label Title"
-            [ Bulletproof.storyOf "Single"
-                (Error.view
-                    [ Error defaultPath Error.EmptyLabelTitle
-                    ]
-                    |> Bulletproof.fromElmCss
-                )
-            ]
+        , Bulletproof.storyOf "Empty Label Title"
+            (Error.view
+                [ Error defaultPath Error.EmptyLabelTitle
+                ]
+                |> Bulletproof.fromElmCss
+            )
 
         --
         , Bulletproof.todo "Empty Story Title"
