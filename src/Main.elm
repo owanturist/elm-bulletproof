@@ -566,26 +566,40 @@ viewDragger orientation attributes =
         []
 
 
-styledDock : Settings -> List (Html msg) -> Html msg
-styledDock settings =
+styledDock : Settings -> Dragging -> List (Html msg) -> Html msg
+styledDock settings dragging =
     let
-        ( ruleBorder, flexBasis ) =
+        visible =
+            not settings.fullscreen && settings.dockVisible
+
+        ( ruleBorder, transitionRule, sizeStyle ) =
             case settings.dockOrientation of
                 Horizontal ->
-                    ( Css.borderTop3, settings.dockHeight )
+                    ( Css.borderTop3
+                    , Css.Transitions.height 150
+                    , Attributes.style "height" (String.fromInt (ifelse visible settings.dockHeight 0) ++ "px")
+                    )
 
                 Vertical ->
-                    ( Css.borderLeft3, settings.dockWidth )
+                    ( Css.borderLeft3
+                    , Css.Transitions.width 150
+                    , Attributes.style "width" (String.fromInt (ifelse visible settings.dockWidth 0) ++ "px")
+                    )
     in
     styled div
         [ Css.boxSizing Css.borderBox
         , Css.displayFlex
         , Css.flexDirection Css.column
         , Css.position Css.relative
-        , Css.flex2 Css.zero Css.zero
         , ruleBorder (Css.px 2) Css.solid Palette.smoke
+        , case dragging of
+            DockResizing _ _ ->
+                transition []
+
+            _ ->
+                transition [ transitionRule ]
         ]
-        [ Attributes.style "flex-basis" (String.fromInt flexBasis ++ "px")
+        [ sizeStyle
         ]
 
 
@@ -677,9 +691,11 @@ viewToggleDockOrientation dockOrientation =
         ]
 
 
-viewDock : Settings -> Html Msg -> Html Msg
-viewDock settings knobs =
-    styledDock settings
+viewDock : Settings -> Dragging -> Html Msg -> Html Msg
+viewDock settings dragging knobs =
+    styledDock
+        settings
+        dragging
         [ viewDragger settings.dockOrientation
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
@@ -733,13 +749,9 @@ viewWorkspace payload settings state knobs =
             ]
 
         --
-        , if settings.dockVisible && not settings.fullscreen then
-            Knob.view payload.knobs knobs
-                |> Html.map (KnobMsg state.current)
-                |> viewDock settings
-
-          else
-            text ""
+        , Knob.view payload.knobs knobs
+            |> Html.map (KnobMsg state.current)
+            |> viewDock settings state.dragging
         ]
 
 
@@ -800,10 +812,23 @@ viewRoot settings dragging attributes children =
         (styledGlobal settings dragging :: children)
 
 
-styledNavigation : Int -> List (Html msg) -> Html msg
-styledNavigation size =
-    nav
-        [ Attributes.style "width" (String.fromInt size ++ "px")
+styledNavigation : Settings -> Dragging -> List (Html msg) -> Html msg
+styledNavigation settings dragging =
+    let
+        visible =
+            not settings.fullscreen && settings.navigationVisible
+    in
+    styled nav
+        [ case dragging of
+            NavigationResizing _ _ ->
+                transition []
+
+            _ ->
+                transition
+                    [ Css.Transitions.width 150
+                    ]
+        ]
+        [ Attributes.style "width" (String.fromInt (ifelse visible settings.navigationWidth 0) ++ "px")
         ]
 
 
@@ -891,13 +916,11 @@ view stories (Model settings state knobs) =
             state.dragging
             attrs
             [ viewMenuTrigger settings
-            , if settings.navigationVisible && not settings.fullscreen then
-                styledNavigation settings.navigationWidth
-                    [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
-                    ]
-
-              else
-                text ""
+            , styledNavigation
+                settings
+                state.dragging
+                [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
+                ]
             , case Story.get state.current state.store of
                 Nothing ->
                     viewEmpty
