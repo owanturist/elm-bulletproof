@@ -42,6 +42,8 @@ type Reason
     | DuplicateKnobs String Int
     | EmptyRadio String
     | EmptySelect String
+    | EmptyRadioOption String
+    | EmptySelectOption String
     | DuplicateRadioOptions String String Int
     | DuplicateSelectOptions String String Int
     | InvalidIntStep String Int
@@ -160,34 +162,38 @@ validateFloat rawName float limits =
 validateChoice : Knob.Choice -> String -> List ( String, option ) -> Result (List Reason) { name : String, selected : String, option : option }
 validateChoice choice rawName options =
     let
-        ( emptyReason, duplicateReason ) =
+        ( emptyReason, emptyOptionReason, duplicateOptionsReason ) =
             case choice of
                 Knob.Radio ->
-                    ( EmptyRadio, DuplicateRadioOptions )
+                    ( EmptyRadio, EmptyRadioOption, DuplicateRadioOptions )
 
                 Knob.Select ->
-                    ( EmptySelect, DuplicateSelectOptions )
+                    ( EmptySelect, EmptySelectOption, DuplicateSelectOptions )
     in
     case nonBlank rawName of
         Nothing ->
             Err [ EmptyKnobTitle ]
 
         Just name ->
-            case List.head options of
-                Nothing ->
+            case List.map (Tuple.mapFirst String.trim) options of
+                [] ->
                     Err [ emptyReason name ]
 
-                Just ( selected, option ) ->
-                    case
-                        List.map
-                            (\( value, n ) -> duplicateReason name value n)
-                            (countList Tuple.first options)
-                    of
-                        [] ->
-                            Ok { name = name, selected = selected, option = option }
+                (( selected, option ) :: _) as trimmedOptions ->
+                    if List.member "" (List.map Tuple.first trimmedOptions) then
+                        Err [ emptyOptionReason name ]
 
-                        duplicateReasons ->
-                            Err duplicateReasons
+                    else
+                        case
+                            List.map
+                                (\( value, n ) -> duplicateOptionsReason name value n)
+                                (countList Tuple.first options)
+                        of
+                            [] ->
+                                Ok { name = name, selected = selected, option = option }
+
+                            duplicateReasons ->
+                                Err duplicateReasons
 
 
 validateColor : String -> String -> Result Reason { name : String, color : Color }
@@ -685,7 +691,7 @@ reasonEmptyChoice choiceName name =
         [ textCode ("Bulletproof.Knob." ++ choiceName ++ " \"" ++ name ++ "\" ")
         , text " has no options"
         ]
-        "Please make sure you've defined at least single option"
+        "Please make sure you've defined neither empty or blank options."
         ("""
 Bulletproof.story "Button"
     (\\buttonType ->
@@ -710,8 +716,39 @@ Bulletproof.story "Button"
         ]
 
 
-reasonDuplicateChoice : String -> String -> String -> Int -> Explanation msg
-reasonDuplicateChoice choiceName name option n =
+reasonEmptyChoiceOption : String -> String -> Explanation msg
+reasonEmptyChoiceOption choiceName name =
+    Explanation
+        [ textCode ("Bulletproof.Knob." ++ choiceName ++ " \"" ++ name ++ "\" ")
+        , text " has either empty or blank options"
+        ]
+        "Please make sure you've defined neither empty or blank options."
+        ("""
+Bulletproof.story "Input"
+    (\\inputValue ->
+        input
+            [ type_ "text"
+            , value inputValue
+            ]
+            []
+            |> Bulletproof.fromHtml
+    )
+    |> Bulletproof.Knob.{{ knob }} "Input value"
+        [ ( "", "" )
+        [ ( "empty string", "" )
+        , ( "short string", "Hello World!" )
+        , ( "long string", "Lorem ipsum dolor..." )
+        ]
+        """
+            |> String.Format.namedValue "knob" choiceName
+        )
+        [ ( SyntaxHighlight.Del, 10, 11 )
+        , ( SyntaxHighlight.Add, 11, 12 )
+        ]
+
+
+reasonDuplicateChoiceOptions : String -> String -> String -> Int -> Explanation msg
+reasonDuplicateChoiceOptions choiceName name option n =
     Explanation
         [ textCode ("Bulletproof.Knob." ++ choiceName ++ " \"" ++ name ++ "\" ")
         , text (" has " ++ String.fromInt n ++ "\u{00A0}times repeated option ")
@@ -1103,11 +1140,17 @@ reasonToExplanation reason =
         EmptySelect name ->
             reasonEmptyChoice "select" name
 
+        EmptyRadioOption name ->
+            reasonEmptyChoiceOption "radio" name
+
+        EmptySelectOption name ->
+            reasonEmptyChoiceOption "select" name
+
         DuplicateRadioOptions name option n ->
-            reasonDuplicateChoice "radio" name option n
+            reasonDuplicateChoiceOptions "radio" name option n
 
         DuplicateSelectOptions name option n ->
-            reasonDuplicateChoice "select" name option n
+            reasonDuplicateChoiceOptions "select" name option n
 
         InvalidIntStep name step ->
             reasonInvalidIntStep name step

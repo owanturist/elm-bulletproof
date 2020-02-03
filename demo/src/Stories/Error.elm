@@ -181,6 +181,26 @@ story =
             |> Bulletproof.Knob.string "Knob name" "Select name"
 
         --
+        , Bulletproof.story "Empty Radio Option"
+            (\name ->
+                Error.view
+                    [ Error defaultPath (Error.EmptyRadioOption name)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Radio name"
+
+        --
+        , Bulletproof.story "Empty Select Option"
+            (\name ->
+                Error.view
+                    [ Error defaultPath (Error.EmptySelectOption name)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Select name"
+
+        --
         , Bulletproof.story "Duplicate Radio Options"
             (\name option n ->
                 Error.view
