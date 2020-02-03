@@ -42,7 +42,7 @@ viewBlock ( name, child ) =
 
 story : Bulletproof.Story
 story =
-    Bulletproof.storyOf "Icon"
+    Bulletproof.story "Icon"
         (\color ->
             [ ( "folder", Icon.folder )
             , ( "folderOpen", Icon.folderOpen )

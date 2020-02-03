@@ -12,8 +12,8 @@ import Time
 
 storyString : Bulletproof.Story
 storyString =
-    Bulletproof.folderOf "String"
-        [ Bulletproof.storyOf "Empty"
+    Bulletproof.folder "String"
+        [ Bulletproof.story "Empty"
             (Knob.view
                 [ ( "String", Knob.String "" )
                 ]
@@ -22,7 +22,7 @@ storyString =
             )
 
         --
-        , Bulletproof.storyOf "Single line"
+        , Bulletproof.story "Single line"
             (Knob.view
                 [ ( "String", Knob.String "A single line" )
                 ]
@@ -31,7 +31,7 @@ storyString =
             )
 
         --
-        , Bulletproof.storyOf "Single long line"
+        , Bulletproof.story "Single long line"
             (\n ->
                 Knob.view
                     [ ( "String", Knob.String (String.repeat n "ASingleLongLine") )
@@ -47,7 +47,7 @@ storyString =
                 ]
 
         --
-        , Bulletproof.storyOf "Multiline"
+        , Bulletproof.story "Multiline"
             (\n ->
                 Knob.view
                     [ ( "String"
@@ -71,8 +71,8 @@ storyString =
 
 storyBool : Bulletproof.Story
 storyBool =
-    Bulletproof.folderOf "Bool"
-        [ Bulletproof.storyOf "Unchecked"
+    Bulletproof.folder "Bool"
+        [ Bulletproof.story "Unchecked"
             (Knob.view
                 [ ( "Bool", Knob.Bool False )
                 ]
@@ -81,7 +81,7 @@ storyBool =
             )
 
         --
-        , Bulletproof.storyOf "Checked"
+        , Bulletproof.story "Checked"
             (Knob.view
                 [ ( "Bool", Knob.Bool True )
                 ]
@@ -93,8 +93,8 @@ storyBool =
 
 storyInt : Bulletproof.Story
 storyInt =
-    Bulletproof.folderOf "Int"
-        [ Bulletproof.storyOf "Input"
+    Bulletproof.folder "Int"
+        [ Bulletproof.story "Input"
             (Knob.view
                 [ ( "Int", Knob.Int False 0 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
@@ -103,7 +103,7 @@ storyInt =
             )
 
         --
-        , Bulletproof.storyOf "Range"
+        , Bulletproof.story "Range"
             (Knob.view
                 [ ( "Int", Knob.Int True 0 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
@@ -115,8 +115,8 @@ storyInt =
 
 storyFloat : Bulletproof.Story
 storyFloat =
-    Bulletproof.folderOf "Float"
-        [ Bulletproof.storyOf "Input"
+    Bulletproof.folder "Float"
+        [ Bulletproof.story "Input"
             (Knob.view
                 [ ( "Float", Knob.Float False 0.21 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
@@ -125,7 +125,7 @@ storyFloat =
             )
 
         --
-        , Bulletproof.storyOf "Range"
+        , Bulletproof.story "Range"
             (Knob.view
                 [ ( "Float", Knob.Float True 0.21 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
@@ -137,8 +137,8 @@ storyFloat =
 
 storyRadio : Bulletproof.Story
 storyRadio =
-    Bulletproof.folderOf "Radio"
-        [ Bulletproof.storyOf "Duplicates"
+    Bulletproof.folder "Radio"
+        [ Bulletproof.story "Duplicates"
             (Knob.view
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
@@ -153,7 +153,7 @@ storyRadio =
             )
 
         --
-        , Bulletproof.storyOf "Single"
+        , Bulletproof.story "Single"
             (Knob.view
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
@@ -167,7 +167,7 @@ storyRadio =
             )
 
         --
-        , Bulletproof.storyOf "Long options"
+        , Bulletproof.story "Long options"
             (\width n ->
                 styled div
                     [ Css.width (Css.px (toFloat width))
@@ -200,7 +200,7 @@ storyRadio =
                 ]
 
         --
-        , Bulletproof.storyOf "Multiple"
+        , Bulletproof.story "Multiple"
             (\n ->
                 Knob.view
                     [ ( "Radio"
@@ -223,8 +223,8 @@ storyRadio =
 
 storySelect : Bulletproof.Story
 storySelect =
-    Bulletproof.folderOf "Select"
-        [ Bulletproof.storyOf "Duplicates"
+    Bulletproof.folder "Select"
+        [ Bulletproof.story "Duplicates"
             (Knob.view
                 [ ( "Select"
                   , Knob.Choice Knob.Select
@@ -239,7 +239,7 @@ storySelect =
             )
 
         --
-        , Bulletproof.storyOf "Single"
+        , Bulletproof.story "Single"
             (Knob.view
                 [ ( "Select"
                   , Knob.Choice Knob.Select
@@ -253,7 +253,7 @@ storySelect =
             )
 
         --
-        , Bulletproof.storyOf "Long options"
+        , Bulletproof.story "Long options"
             (\width n ->
                 styled div
                     [ Css.width (Css.px (toFloat width))
@@ -286,7 +286,7 @@ storySelect =
                 ]
 
         --
-        , Bulletproof.storyOf "Multiple"
+        , Bulletproof.story "Multiple"
             (\n ->
                 Knob.view
                     [ ( "Select"
@@ -309,14 +309,14 @@ storySelect =
 
 story : Bulletproof.Story
 story =
-    Bulletproof.folderOf "Knob"
-        [ Bulletproof.storyOf "Empty"
+    Bulletproof.folder "Knob"
+        [ Bulletproof.story "Empty"
             (Knob.view [] Knob.initial
                 |> Bulletproof.fromElmCss
             )
 
         --
-        , Bulletproof.storyOf "Duplicates"
+        , Bulletproof.story "Duplicates"
             (Knob.view
                 [ ( "Knob #2", Knob.Bool True )
                 , ( "Knob #1", Knob.String "Text" )
@@ -326,7 +326,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Single"
+        , Bulletproof.story "Single"
             (\name ->
                 Knob.view
                     [ ( name, Knob.Bool True )
@@ -337,7 +337,7 @@ story =
             |> Bulletproof.Knob.string "Knob Name" "Something"
 
         --
-        , Bulletproof.storyOf "Multiple"
+        , Bulletproof.story "Multiple"
             (\n ->
                 Knob.view
                     (List.map
@@ -375,7 +375,7 @@ story =
         , storySelect
 
         --
-        , Bulletproof.storyOf "All Together"
+        , Bulletproof.story "All Together"
             (Knob.view
                 (List.reverse
                     [ ( "String", Knob.String "String Value" )

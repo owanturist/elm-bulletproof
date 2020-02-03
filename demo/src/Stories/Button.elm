@@ -8,7 +8,7 @@ import Icon
 
 story : Bulletproof.Story
 story =
-    Bulletproof.storyOf "Button"
+    Bulletproof.story "Button"
         (\dark icon ->
             button
                 { onPress = ()

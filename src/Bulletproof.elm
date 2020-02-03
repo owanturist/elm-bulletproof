@@ -2,13 +2,13 @@ module Bulletproof exposing
     ( Program
     , Renderer
     , Story
-    , folderOf
+    , folder
     , fromElmCss
     , fromElmUI
     , fromHtml
     , label
     , program
-    , storyOf
+    , story
     , todo
     )
 
@@ -44,16 +44,16 @@ type alias Story =
     Story.Story Error.Reason Renderer
 
 
-storyOf : String -> view -> Story.Story Error.Reason view
-storyOf title view =
+story : String -> view -> Story.Story Error.Reason view
+story title view =
     Story.Single title
         { knobs = []
         , view = always view
         }
 
 
-folderOf : String -> List Story -> Story
-folderOf title stories =
+folder : String -> List Story -> Story
+folder title stories =
     Story.Batch title stories
 
 

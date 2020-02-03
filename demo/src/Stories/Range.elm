@@ -7,8 +7,8 @@ import Range exposing (range)
 
 story : Bulletproof.Story
 story =
-    Bulletproof.folderOf "Range"
-        [ Bulletproof.storyOf "Int"
+    Bulletproof.folder "Range"
+        [ Bulletproof.story "Int"
             (\min max step value ->
                 range (always ())
                     "int-range"
@@ -26,7 +26,7 @@ story =
             |> Bulletproof.Knob.int "Value" 15 []
 
         --
-        , Bulletproof.storyOf "Float"
+        , Bulletproof.story "Float"
             (\min max step value ->
                 range (always ())
                     "float-range"

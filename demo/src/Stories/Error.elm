@@ -17,13 +17,13 @@ defaultPath =
 
 story : Bulletproof.Story
 story =
-    Bulletproof.folderOf "Error"
+    Bulletproof.folder "Error"
         [ Bulletproof.label "Layout"
-        , Bulletproof.storyOf "Empty"
+        , Bulletproof.story "Empty"
             (Error.view []
                 |> Bulletproof.fromElmCss
             )
-        , Bulletproof.storyOf "Single Error"
+        , Bulletproof.story "Single Error"
             (Error.view
                 [ Error defaultPath Error.EmptyLabelTitle
                 ]
@@ -31,7 +31,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Paths"
+        , Bulletproof.story "Paths"
             (\title path n ->
                 Error.view
                     [ Error [] Error.EmptyLabelTitle
@@ -54,7 +54,7 @@ story =
         , Bulletproof.label "Stories"
 
         --
-        , Bulletproof.storyOf "Empty Label Title"
+        , Bulletproof.story "Empty Label Title"
             (Error.view
                 [ Error defaultPath Error.EmptyLabelTitle
                 ]
@@ -62,7 +62,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Empty Todo Title"
+        , Bulletproof.story "Empty Todo Title"
             (Error.view
                 [ Error defaultPath Error.EmptyTodoTitle
                 ]
@@ -70,7 +70,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Empty Story Title"
+        , Bulletproof.story "Empty Story Title"
             (Error.view
                 [ Error defaultPath Error.EmptyStoryTitle
                 ]
@@ -78,7 +78,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Empty Folder Title"
+        , Bulletproof.story "Empty Folder Title"
             (Error.view
                 [ Error defaultPath Error.EmptyFolderTitle
                 ]
@@ -86,7 +86,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Duplicate Labels"
+        , Bulletproof.story "Duplicate Labels"
             (\title n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateLabels title n)
@@ -102,7 +102,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Duplicate Stories"
+        , Bulletproof.story "Duplicate Stories"
             (\title n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateStories title n)
@@ -118,7 +118,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Duplicate Folders"
+        , Bulletproof.story "Duplicate Folders"
             (\title n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateFolders title n)
@@ -137,7 +137,7 @@ story =
         , Bulletproof.label "Knobs"
 
         --
-        , Bulletproof.storyOf "Empty Knob Title"
+        , Bulletproof.story "Empty Knob Title"
             (Error.view
                 [ Error defaultPath Error.EmptyKnobTitle
                 ]
@@ -145,7 +145,7 @@ story =
             )
 
         --
-        , Bulletproof.storyOf "Duplicate Knob"
+        , Bulletproof.story "Duplicate Knob"
             (\name n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateKnobs name n)
@@ -161,7 +161,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Empty Radio"
+        , Bulletproof.story "Empty Radio"
             (\name ->
                 Error.view
                     [ Error defaultPath (Error.EmptyRadio name)
@@ -171,7 +171,7 @@ story =
             |> Bulletproof.Knob.string "Knob name" "Radio name"
 
         --
-        , Bulletproof.storyOf "Empty Select"
+        , Bulletproof.story "Empty Select"
             (\name ->
                 Error.view
                     [ Error defaultPath (Error.EmptySelect name)
@@ -181,7 +181,7 @@ story =
             |> Bulletproof.Knob.string "Knob name" "Select name"
 
         --
-        , Bulletproof.storyOf "Duplicate Radio Options"
+        , Bulletproof.story "Duplicate Radio Options"
             (\name option n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateRadioOptions name option n)
@@ -198,7 +198,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Duplicate Select Options"
+        , Bulletproof.story "Duplicate Select Options"
             (\name option n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateSelectOptions name option n)
@@ -215,7 +215,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Int Step"
+        , Bulletproof.story "Invalid Int Step"
             (\name step ->
                 Error.view
                     [ Error defaultPath (Error.InvalidIntStep name step)
@@ -232,7 +232,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Float Step"
+        , Bulletproof.story "Invalid Float Step"
             (\name step ->
                 Error.view
                     [ Error defaultPath (Error.InvalidFloatStep name step)
@@ -249,7 +249,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Int Min"
+        , Bulletproof.story "Invalid Int Min"
             (\name value min ->
                 Error.view
                     [ Error defaultPath (Error.InvalidIntMin name value min)
@@ -273,7 +273,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Float Min"
+        , Bulletproof.story "Invalid Float Min"
             (\name value min ->
                 Error.view
                     [ Error defaultPath (Error.InvalidFloatMin name value min)
@@ -297,7 +297,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Int Max"
+        , Bulletproof.story "Invalid Int Max"
             (\name value max ->
                 Error.view
                     [ Error defaultPath (Error.InvalidIntMax name value max)
@@ -321,7 +321,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Float Max"
+        , Bulletproof.story "Invalid Float Max"
             (\name value max ->
                 Error.view
                     [ Error defaultPath (Error.InvalidFloatMax name value max)
@@ -345,7 +345,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Int Min and Max"
+        , Bulletproof.story "Invalid Int Min and Max"
             (\name min max ->
                 Error.view
                     [ Error defaultPath (Error.InvalidIntMinMax name min max)
@@ -369,7 +369,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Float Min and Max"
+        , Bulletproof.story "Invalid Float Min and Max"
             (\name min max ->
                 Error.view
                     [ Error defaultPath (Error.InvalidFloatMinMax name min max)
@@ -393,7 +393,7 @@ story =
                 ]
 
         --
-        , Bulletproof.storyOf "Invalid Color"
+        , Bulletproof.story "Invalid Color"
             (\name color ->
                 Error.view
                     [ Error defaultPath (Error.InvalidColor name color)
@@ -404,7 +404,7 @@ story =
             |> Bulletproof.Knob.string "Color" "#asd"
 
         --
-        , Bulletproof.storyOf "Invalid Date"
+        , Bulletproof.story "Invalid Date"
             (\name date ->
                 Error.view
                     [ Error defaultPath (Error.InvalidDate name date)
@@ -415,7 +415,7 @@ story =
             |> Bulletproof.Knob.string "Date" "32-13-2020"
 
         --
-        , Bulletproof.storyOf "Invalid Time"
+        , Bulletproof.story "Invalid Time"
             (\name time ->
                 Error.view
                     [ Error defaultPath (Error.InvalidTime name time)

@@ -18,7 +18,7 @@ import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
-import Html.Styled as Html exposing (Html, br, code, div, pre, span, styled, text)
+import Html.Styled as Html exposing (Html, br, code, div, pre, styled, text)
 import Html.Styled.Attributes as Attributes
 import Knob
 import Palette
@@ -477,13 +477,13 @@ reasonEmptyTodoTitle =
 reasonEmptyStoryTitle : Explanation msg
 reasonEmptyStoryTitle =
     Explanation
-        [ textCode "Bulletproof.storyOf"
+        [ textCode "Bulletproof.story"
         , text " has either empty or blank title"
         ]
         "Please make sure you've defined neither empty or blank title."
         """
-[ Bulletproof.storyOf ""
-[ Bulletproof.storyOf "Not empty title"
+[ Bulletproof.story ""
+[ Bulletproof.story "Not empty title"
     (burgerIcon
         |> Bulletproof.fromHtml
     )
@@ -506,17 +506,17 @@ reasonEmptyStoryTitle =
 reasonEmptyFolderTitle : Explanation msg
 reasonEmptyFolderTitle =
     Explanation
-        [ textCode "Bulletproof.folderOf"
+        [ textCode "Bulletproof.folder"
         , text " has either empty or blank title"
         ]
         "Please make sure you've defined neither empty or blank title."
         """
-[ Bulletproof.folderOf "" []
-[ Bulletproof.folderOf "Not empty title" []
+[ Bulletproof.folder "" []
+[ Bulletproof.folder "Not empty title" []
 
 --
-, Bulletproof.folderOf "   " []
-, Bulletproof.folderOf "Not blank title" []
+, Bulletproof.folder "   " []
+, Bulletproof.folder "Not blank title" []
 ]
         """
         [ ( SyntaxHighlight.Del, 0, 1 )
@@ -552,7 +552,7 @@ reasonDuplicateLabels title n =
 reasonDuplicateStories : String -> Int -> Explanation msg
 reasonDuplicateStories title n =
     Explanation
-        [ textCode ("Bulletproof.storyOf \"" ++ title ++ "\"")
+        [ textCode ("Bulletproof.story \"" ++ title ++ "\"")
         , text " or "
         , textCode ("Bulletproof.todo \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
@@ -570,8 +570,8 @@ Each todo is a story which has not started yet...
 , Bulletproof.todo "Icon user"
 
 --
-, Bulletproof.storyOf "Icon"
-, Bulletproof.storyOf "Icon burger"
+, Bulletproof.story "Icon"
+, Bulletproof.story "Icon burger"
     (burgerIcon
         |> Bulletproof.fromHtml
     )
@@ -589,7 +589,7 @@ Each todo is a story which has not started yet...
 reasonDuplicateFolders : String -> Int -> Explanation msg
 reasonDuplicateFolders title n =
     Explanation
-        [ textCode ("Bulletproof.folderOf \"" ++ title ++ "\"")
+        [ textCode ("Bulletproof.folder \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
         "Please make sure you've defined unique titles for folders inside a folder."
@@ -629,7 +629,7 @@ reasonEmptyKnobTitle =
         ]
         "Please make sure you've defined neither empty or blank name."
         """
-Bulletproof.storyOf "Button"
+Bulletproof.story "Button"
     (\\buttonText buttonTabindex ->
         button
             [ tabindex buttonTabindex
@@ -658,7 +658,7 @@ reasonDuplicateKnobs name n =
         ]
         "Please make sure you've defined unique names for knobs inside a story."
         """
-Bulletproof.storyOf "Button"
+Bulletproof.story "Button"
     (\\buttonText buttonTabindex ->
         button
             [ tabindex buttonTabindex
@@ -687,7 +687,7 @@ reasonEmptyChoice choiceName name =
         ]
         "Please make sure you've defined at least single option"
         ("""
-Bulletproof.storyOf "Button"
+Bulletproof.story "Button"
     (\\buttonType ->
         button
             [ type_ buttonType
@@ -719,7 +719,7 @@ reasonDuplicateChoice choiceName name option n =
         ]
         "Please make sure you've defined unique names of options."
         ("""
-Bulletproof.storyOf "Input"
+Bulletproof.story "Input"
     (\\inputType ->
         input
             [ type_ inputType
@@ -752,7 +752,7 @@ reasonInvalidIntStep name step =
         ]
         "Please make sure you've defined a positive step."
         """
-Bulletproof.storyOf "Input"
+Bulletproof.story "Input"
     (\\inputSize ->
         input
             [ size inputSize
@@ -782,7 +782,7 @@ reasonInvalidFloatStep name step =
         ]
         "Please make sure you've defined a positive step."
         """
-Bulletproof.storyOf "Progressbar"
+Bulletproof.story "Progressbar"
     (\\percent ->
         progressbar
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
@@ -813,7 +813,7 @@ reasonInvalidIntMin name value min =
         ]
         "Please make sure the min boundary is less or equal to the value."
         """
-Bulletproof.storyOf "Input"
+Bulletproof.story "Input"
     (\\inputSize ->
         input
             [ size inputSize
@@ -844,7 +844,7 @@ reasonInvalidFloatMin name value min =
         ]
         "Please make sure the min boundary is less or equal to the value."
         """
-Bulletproof.storyOf "Progressbar"
+Bulletproof.story "Progressbar"
     (\\percent ->
         progressbar
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
@@ -875,7 +875,7 @@ reasonInvalidIntMax name value max =
         ]
         "Please make sure the max boundary is more or equal to the value."
         """
-Bulletproof.storyOf "Input"
+Bulletproof.story "Input"
     (\\inputSize ->
         input
             [ size inputSize
@@ -906,7 +906,7 @@ reasonInvalidFloatMax name value max =
         ]
         "Please make sure the max boundary is more or equal to the value."
         """
-Bulletproof.storyOf "Progressbar"
+Bulletproof.story "Progressbar"
     (\\percent ->
         progressbar
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
@@ -938,7 +938,7 @@ reasonInvalidIntMinMax name min max =
         ]
         "Please make sure the min boundary less or equal to the max boundary."
         """
-Bulletproof.storyOf "Input"
+Bulletproof.story "Input"
     (\\inputSize ->
         input
             [ size inputSize
@@ -970,7 +970,7 @@ reasonInvalidFloatMinMax name min max =
         ]
         "Please make sure the min boundary less or equal to the max boundary."
         """
-Bulletproof.storyOf "Progressbar"
+Bulletproof.story "Progressbar"
     (\\percent ->
         progressbar
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
@@ -999,7 +999,7 @@ reasonInvalidColor name color =
         ]
         "Please make sure provided value is following hex color pattern \"#rgb\" or \"#rrggbb\"."
         """
-Bulletproof.storyOf "Colored Button"
+Bulletproof.story "Colored Button"
     (\\color ->
         button
             [ property "background-color" color.hex
@@ -1024,7 +1024,7 @@ reasonInvalidDate name date =
         ]
         "Please make sure provided value is following one of the \"dd-mm-yyyy\" or \"dd/mm/yyyy\" date patterns."
         """
-Bulletproof.storyOf "Date show"
+Bulletproof.story "Date show"
     (\\date ->
         div
             []
@@ -1050,7 +1050,7 @@ reasonInvalidTime name time =
         ]
         "Please make sure provided value is following the \"mm:hh\" time pattern."
         """
-Bulletproof.storyOf "Time show"
+Bulletproof.story "Time show"
     (\\time ->
         div
             []

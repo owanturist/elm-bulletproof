@@ -16,18 +16,18 @@ dummy =
 
 story : Bulletproof.Story
 story =
-    Bulletproof.folderOf "Navigation"
-        [ Bulletproof.storyOf "Empty"
+    Bulletproof.folder "Navigation"
+        [ Bulletproof.story "Empty"
             (Navigation.view [] [] Navigation.initial
                 |> Bulletproof.fromElmCss
             )
-        , Bulletproof.storyOf "Overflow"
+        , Bulletproof.story "Overflow"
             (\title count ->
                 Navigation.view []
                     (List.range 1 count
                         |> List.map
                             (\i ->
-                                Bulletproof.storyOf (title ++ " #" ++ String.fromInt i) dummy
+                                Bulletproof.story (title ++ " #" ++ String.fromInt i) dummy
                             )
                     )
                     Navigation.initial
@@ -57,12 +57,12 @@ story =
 
 storyStories : Bulletproof.Story
 storyStories =
-    Bulletproof.folderOf "Stories"
-        [ Bulletproof.storyOf "Single"
+    Bulletproof.folder "Stories"
+        [ Bulletproof.story "Single"
             (\str ->
                 Navigation.view
                     []
-                    [ Bulletproof.storyOf str dummy
+                    [ Bulletproof.story str dummy
                     ]
                     Navigation.initial
                     |> Bulletproof.fromElmCss
@@ -70,13 +70,13 @@ storyStories =
             |> Bulletproof.Knob.string "Story Tilte" "single story title"
 
         --
-        , Bulletproof.storyOf "Multiple"
+        , Bulletproof.story "Multiple"
             (\n ->
                 Navigation.view
                     []
                     (List.map
                         (\i ->
-                            Bulletproof.storyOf ("Story #" ++ String.fromInt i) dummy
+                            Bulletproof.story ("Story #" ++ String.fromInt i) dummy
                         )
                         (List.range 1 n)
                     )
@@ -94,12 +94,12 @@ storyStories =
 
 storyFolders : Bulletproof.Story
 storyFolders =
-    Bulletproof.folderOf "Folders"
-        [ Bulletproof.storyOf "Empty"
+    Bulletproof.folder "Folders"
+        [ Bulletproof.story "Empty"
             (\opened title ->
                 Navigation.view
                     []
-                    [ Bulletproof.folderOf title []
+                    [ Bulletproof.folder title []
                     ]
                     (if opened then
                         Set.insert [ title ] Navigation.initial
@@ -113,14 +113,14 @@ storyFolders =
             |> Bulletproof.Knob.string "Folder Title" "Folder"
 
         --
-        , Bulletproof.storyOf "Single"
+        , Bulletproof.story "Single"
             (\opened current ->
                 Navigation.view
                     [ "Folder", "Story #" ++ String.fromInt current ]
-                    [ Bulletproof.folderOf "Folder"
-                        [ Bulletproof.storyOf "Story #1" dummy
-                        , Bulletproof.storyOf "Story #2" dummy
-                        , Bulletproof.storyOf "Story #3" dummy
+                    [ Bulletproof.folder "Folder"
+                        [ Bulletproof.story "Story #1" dummy
+                        , Bulletproof.story "Story #2" dummy
+                        , Bulletproof.story "Story #3" dummy
                         ]
                     ]
                     (if opened then
@@ -140,14 +140,14 @@ storyFolders =
                 ]
 
         --
-        , Bulletproof.storyOf "Multiple"
+        , Bulletproof.story "Multiple"
             (\n ->
                 Navigation.view
                     []
                     (List.map
                         (\i ->
-                            Bulletproof.folderOf ("Folder #" ++ String.fromInt i)
-                                [ Bulletproof.storyOf "Story" dummy
+                            Bulletproof.folder ("Folder #" ++ String.fromInt i)
+                                [ Bulletproof.story "Story" dummy
                                 ]
                         )
                         (List.range 1 n)
@@ -163,7 +163,7 @@ storyFolders =
                 ]
 
         --
-        , Bulletproof.storyOf "Nested"
+        , Bulletproof.story "Nested"
             (\openFirst openSecond openThird active ->
                 [ ( openFirst, [ "First" ] )
                 , ( openSecond, [ "First", "Second" ] )
@@ -179,12 +179,12 @@ storyFolders =
                         )
                         Navigation.initial
                     |> Navigation.view [ "First", "Second", "Third", "Story #" ++ String.fromInt active ]
-                        [ Bulletproof.folderOf "First"
-                            [ Bulletproof.folderOf "Second"
-                                [ Bulletproof.folderOf "Third"
-                                    [ Bulletproof.storyOf "Story #1" dummy
-                                    , Bulletproof.storyOf "Story #2" dummy
-                                    , Bulletproof.storyOf "Story #3" dummy
+                        [ Bulletproof.folder "First"
+                            [ Bulletproof.folder "Second"
+                                [ Bulletproof.folder "Third"
+                                    [ Bulletproof.story "Story #1" dummy
+                                    , Bulletproof.story "Story #2" dummy
+                                    , Bulletproof.story "Story #3" dummy
                                     ]
                                 ]
                             ]
@@ -205,8 +205,8 @@ storyFolders =
 
 storyTodo : Bulletproof.Story
 storyTodo =
-    Bulletproof.folderOf "Todos"
-        [ Bulletproof.storyOf "Alone"
+    Bulletproof.folder "Todos"
+        [ Bulletproof.story "Alone"
             (\title ->
                 Navigation.view []
                     [ Bulletproof.todo title
@@ -217,15 +217,15 @@ storyTodo =
             |> Bulletproof.Knob.string "Todo Title" "Standalone"
 
         --
-        , Bulletproof.storyOf "Stories around"
+        , Bulletproof.story "Stories around"
             (Navigation.view []
                 [ Bulletproof.todo "Todo #1"
-                , Bulletproof.storyOf "Some story" dummy
+                , Bulletproof.story "Some story" dummy
                 , Bulletproof.todo "Todo #2"
-                , Bulletproof.folderOf "Empty Folder" []
+                , Bulletproof.folder "Empty Folder" []
                 , Bulletproof.todo "Todo #3"
-                , Bulletproof.folderOf "Folder"
-                    [ Bulletproof.storyOf "Another story" dummy
+                , Bulletproof.folder "Folder"
+                    [ Bulletproof.story "Another story" dummy
                     ]
                 ]
                 Navigation.initial
@@ -233,26 +233,26 @@ storyTodo =
             )
 
         --
-        , Bulletproof.storyOf "Nested"
+        , Bulletproof.story "Nested"
             (\open5 ->
                 Navigation.view []
                     [ Bulletproof.todo "Todo #0"
-                    , Bulletproof.storyOf "Story #1" dummy
-                    , Bulletproof.storyOf "Story #2" dummy
+                    , Bulletproof.story "Story #1" dummy
+                    , Bulletproof.story "Story #2" dummy
                     , Bulletproof.todo "Todo #1"
-                    , Bulletproof.folderOf "Folder #1"
-                        [ Bulletproof.storyOf "Story #3" dummy
+                    , Bulletproof.folder "Folder #1"
+                        [ Bulletproof.story "Story #3" dummy
                         , Bulletproof.todo "Todo #2"
-                        , Bulletproof.folderOf "Folder #2" []
-                        , Bulletproof.folderOf "Folder #3"
+                        , Bulletproof.folder "Folder #2" []
+                        , Bulletproof.folder "Folder #3"
                             [ Bulletproof.todo "Todo #3"
-                            , Bulletproof.storyOf "Story #4" dummy
-                            , Bulletproof.folderOf "Folder #4" []
+                            , Bulletproof.story "Story #4" dummy
+                            , Bulletproof.folder "Folder #4" []
                             ]
                         ]
-                    , Bulletproof.folderOf "Folder #5"
+                    , Bulletproof.folder "Folder #5"
                         [ Bulletproof.todo "Todo #4"
-                        , Bulletproof.storyOf "Story #5" dummy
+                        , Bulletproof.story "Story #5" dummy
                         ]
                     ]
                     (List.foldl Navigation.open
@@ -273,8 +273,8 @@ storyTodo =
 
 storyLabels : Bulletproof.Story
 storyLabels =
-    Bulletproof.folderOf "Labels"
-        [ Bulletproof.storyOf "Alone"
+    Bulletproof.folder "Labels"
+        [ Bulletproof.story "Alone"
             (\title ->
                 Navigation.view []
                     [ Bulletproof.label title
@@ -285,15 +285,15 @@ storyLabels =
             |> Bulletproof.Knob.string "Label Title" "Standalone"
 
         --
-        , Bulletproof.storyOf "Stories around"
+        , Bulletproof.story "Stories around"
             (Navigation.view []
                 [ Bulletproof.label "Label #1"
-                , Bulletproof.storyOf "Some story" dummy
+                , Bulletproof.story "Some story" dummy
                 , Bulletproof.label "Label #2"
-                , Bulletproof.folderOf "Empty Folder" []
+                , Bulletproof.folder "Empty Folder" []
                 , Bulletproof.label "Label #3"
-                , Bulletproof.folderOf "Folder"
-                    [ Bulletproof.storyOf "Another story" dummy
+                , Bulletproof.folder "Folder"
+                    [ Bulletproof.story "Another story" dummy
                     ]
                 ]
                 Navigation.initial
@@ -301,26 +301,26 @@ storyLabels =
             )
 
         --
-        , Bulletproof.storyOf "Nested"
+        , Bulletproof.story "Nested"
             (\open5 ->
                 Navigation.view []
                     [ Bulletproof.label "Label #0"
-                    , Bulletproof.storyOf "Story #1" dummy
-                    , Bulletproof.storyOf "Story #2" dummy
+                    , Bulletproof.story "Story #1" dummy
+                    , Bulletproof.story "Story #2" dummy
                     , Bulletproof.label "Label #1"
-                    , Bulletproof.folderOf "Folder #1"
-                        [ Bulletproof.storyOf "Story #3" dummy
+                    , Bulletproof.folder "Folder #1"
+                        [ Bulletproof.story "Story #3" dummy
                         , Bulletproof.label "Label #2"
-                        , Bulletproof.folderOf "Folder #2" []
-                        , Bulletproof.folderOf "Folder #3"
+                        , Bulletproof.folder "Folder #2" []
+                        , Bulletproof.folder "Folder #3"
                             [ Bulletproof.label "Label #3"
-                            , Bulletproof.storyOf "Story #4" dummy
-                            , Bulletproof.folderOf "Folder #4" []
+                            , Bulletproof.story "Story #4" dummy
+                            , Bulletproof.folder "Folder #4" []
                             ]
                         ]
-                    , Bulletproof.folderOf "Folder #5"
+                    , Bulletproof.folder "Folder #5"
                         [ Bulletproof.label "Label #4"
-                        , Bulletproof.storyOf "Story #5" dummy
+                        , Bulletproof.story "Story #5" dummy
                         ]
                     ]
                     (List.foldl Navigation.open
