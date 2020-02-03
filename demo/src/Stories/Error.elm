@@ -3,6 +3,7 @@ module Stories.Error exposing (story)
 import Bulletproof
 import Bulletproof.Knob
 import Error exposing (Error)
+import Knob
 
 
 stringToPath : String -> List String
@@ -164,7 +165,7 @@ story =
         , Bulletproof.story "Empty Radio"
             (\name ->
                 Error.view
-                    [ Error defaultPath (Error.EmptyRadio name)
+                    [ Error defaultPath (Error.EmptyChoice Knob.Radio name)
                     ]
                     |> Bulletproof.fromElmCss
             )
@@ -174,7 +175,7 @@ story =
         , Bulletproof.story "Empty Select"
             (\name ->
                 Error.view
-                    [ Error defaultPath (Error.EmptySelect name)
+                    [ Error defaultPath (Error.EmptyChoice Knob.Select name)
                     ]
                     |> Bulletproof.fromElmCss
             )
@@ -184,7 +185,7 @@ story =
         , Bulletproof.story "Empty Radio Option"
             (\name ->
                 Error.view
-                    [ Error defaultPath (Error.EmptyRadioOption name)
+                    [ Error defaultPath (Error.EmptyChoiceOption Knob.Radio name)
                     ]
                     |> Bulletproof.fromElmCss
             )
@@ -194,7 +195,7 @@ story =
         , Bulletproof.story "Empty Select Option"
             (\name ->
                 Error.view
-                    [ Error defaultPath (Error.EmptySelectOption name)
+                    [ Error defaultPath (Error.EmptyChoiceOption Knob.Select name)
                     ]
                     |> Bulletproof.fromElmCss
             )
@@ -204,7 +205,7 @@ story =
         , Bulletproof.story "Duplicate Radio Options"
             (\name option n ->
                 Error.view
-                    [ Error defaultPath (Error.DuplicateRadioOptions name option n)
+                    [ Error defaultPath (Error.DuplicateChoiceOptions Knob.Radio name option n)
                     ]
                     |> Bulletproof.fromElmCss
             )
@@ -221,7 +222,7 @@ story =
         , Bulletproof.story "Duplicate Select Options"
             (\name option n ->
                 Error.view
-                    [ Error defaultPath (Error.DuplicateSelectOptions name option n)
+                    [ Error defaultPath (Error.DuplicateChoiceOptions Knob.Select name option n)
                     ]
                     |> Bulletproof.fromElmCss
             )
