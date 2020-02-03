@@ -146,7 +146,7 @@ story =
             )
 
         --
-        , Bulletproof.story "Duplicate Knob"
+        , Bulletproof.story "Duplicate Knobs"
             (\name n ->
                 Error.view
                     [ Error defaultPath (Error.DuplicateKnobs name n)
@@ -162,6 +162,9 @@ story =
                 ]
 
         --
+        , Bulletproof.label "Radio"
+
+        --
         , Bulletproof.story "Empty Radio"
             (\name ->
                 Error.view
@@ -172,16 +175,6 @@ story =
             |> Bulletproof.Knob.string "Knob name" "Radio name"
 
         --
-        , Bulletproof.story "Empty Select"
-            (\name ->
-                Error.view
-                    [ Error defaultPath (Error.EmptyChoice Knob.Select name)
-                    ]
-                    |> Bulletproof.fromElmCss
-            )
-            |> Bulletproof.Knob.string "Knob name" "Select name"
-
-        --
         , Bulletproof.story "Empty Radio Option"
             (\name ->
                 Error.view
@@ -190,16 +183,6 @@ story =
                     |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Knob name" "Radio name"
-
-        --
-        , Bulletproof.story "Empty Select Option"
-            (\name ->
-                Error.view
-                    [ Error defaultPath (Error.EmptyChoiceOption Knob.Select name)
-                    ]
-                    |> Bulletproof.fromElmCss
-            )
-            |> Bulletproof.Knob.string "Knob name" "Select name"
 
         --
         , Bulletproof.story "Duplicate Radio Options"
@@ -219,6 +202,29 @@ story =
                 ]
 
         --
+        , Bulletproof.label "Select"
+
+        --
+        , Bulletproof.story "Empty Select"
+            (\name ->
+                Error.view
+                    [ Error defaultPath (Error.EmptyChoice Knob.Select name)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Select name"
+
+        --
+        , Bulletproof.story "Empty Select Option"
+            (\name ->
+                Error.view
+                    [ Error defaultPath (Error.EmptyChoiceOption Knob.Select name)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Select name"
+
+        --
         , Bulletproof.story "Duplicate Select Options"
             (\name option n ->
                 Error.view
@@ -236,6 +242,9 @@ story =
                 ]
 
         --
+        , Bulletproof.label "Int"
+
+        --
         , Bulletproof.story "Invalid Int Step"
             (\name step ->
                 Error.view
@@ -250,23 +259,6 @@ story =
                 , Bulletproof.Knob.min -100
                 , Bulletproof.Knob.max 0
                 , Bulletproof.Knob.step 1
-                ]
-
-        --
-        , Bulletproof.story "Invalid Float Step"
-            (\name step ->
-                Error.view
-                    [ Error defaultPath (Error.InvalidFloatStep name step)
-                    ]
-                    |> Bulletproof.fromElmCss
-            )
-            |> Bulletproof.Knob.string "Knob name" "Float name"
-            |> Bulletproof.Knob.float "Step"
-                -0.1
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min -1
-                , Bulletproof.Knob.max 0
-                , Bulletproof.Knob.step 0.1
                 ]
 
         --
@@ -294,30 +286,6 @@ story =
                 ]
 
         --
-        , Bulletproof.story "Invalid Float Min"
-            (\name value min ->
-                Error.view
-                    [ Error defaultPath (Error.InvalidFloatMin name value min)
-                    ]
-                    |> Bulletproof.fromElmCss
-            )
-            |> Bulletproof.Knob.string "Knob name" "Float name"
-            |> Bulletproof.Knob.float "Value"
-                0.2
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 0
-                , Bulletproof.Knob.max 0.5
-                , Bulletproof.Knob.step 0.1
-                ]
-            |> Bulletproof.Knob.float "Min"
-                0.6
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 0.51
-                , Bulletproof.Knob.max 1
-                , Bulletproof.Knob.step 0.1
-                ]
-
-        --
         , Bulletproof.story "Invalid Int Max"
             (\name value max ->
                 Error.view
@@ -339,30 +307,6 @@ story =
                 , Bulletproof.Knob.min 0
                 , Bulletproof.Knob.max 50
                 , Bulletproof.Knob.step 1
-                ]
-
-        --
-        , Bulletproof.story "Invalid Float Max"
-            (\name value max ->
-                Error.view
-                    [ Error defaultPath (Error.InvalidFloatMax name value max)
-                    ]
-                    |> Bulletproof.fromElmCss
-            )
-            |> Bulletproof.Knob.string "Knob name" "Float name"
-            |> Bulletproof.Knob.float "Value"
-                0.6
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 0.51
-                , Bulletproof.Knob.max 1
-                , Bulletproof.Knob.step 0.1
-                ]
-            |> Bulletproof.Knob.float "Max"
-                0.2
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 0
-                , Bulletproof.Knob.max 0.5
-                , Bulletproof.Knob.step 0.1
                 ]
 
         --
@@ -390,6 +334,74 @@ story =
                 ]
 
         --
+        , Bulletproof.label "Float"
+
+        --
+        , Bulletproof.story "Invalid Float Step"
+            (\name step ->
+                Error.view
+                    [ Error defaultPath (Error.InvalidFloatStep name step)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Float name"
+            |> Bulletproof.Knob.float "Step"
+                -0.1
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min -1
+                , Bulletproof.Knob.max 0
+                , Bulletproof.Knob.step 0.1
+                ]
+
+        --
+        , Bulletproof.story "Invalid Float Min"
+            (\name value min ->
+                Error.view
+                    [ Error defaultPath (Error.InvalidFloatMin name value min)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Float name"
+            |> Bulletproof.Knob.float "Value"
+                0.2
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 0
+                , Bulletproof.Knob.max 0.5
+                , Bulletproof.Knob.step 0.1
+                ]
+            |> Bulletproof.Knob.float "Min"
+                0.6
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 0.51
+                , Bulletproof.Knob.max 1
+                , Bulletproof.Knob.step 0.1
+                ]
+
+        --
+        , Bulletproof.story "Invalid Float Max"
+            (\name value max ->
+                Error.view
+                    [ Error defaultPath (Error.InvalidFloatMax name value max)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.string "Knob name" "Float name"
+            |> Bulletproof.Knob.float "Value"
+                0.6
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 0.51
+                , Bulletproof.Knob.max 1
+                , Bulletproof.Knob.step 0.1
+                ]
+            |> Bulletproof.Knob.float "Max"
+                0.2
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 0
+                , Bulletproof.Knob.max 0.5
+                , Bulletproof.Knob.step 0.1
+                ]
+
+        --
         , Bulletproof.story "Invalid Float Min and Max"
             (\name min max ->
                 Error.view
@@ -414,6 +426,9 @@ story =
                 ]
 
         --
+        , Bulletproof.label "Color"
+
+        --
         , Bulletproof.story "Invalid Color"
             (\name color ->
                 Error.view
@@ -425,6 +440,9 @@ story =
             |> Bulletproof.Knob.string "Color" "#asd"
 
         --
+        , Bulletproof.label "Date"
+
+        --
         , Bulletproof.story "Invalid Date"
             (\name date ->
                 Error.view
@@ -434,6 +452,9 @@ story =
             )
             |> Bulletproof.Knob.string "Knob name" "Date name"
             |> Bulletproof.Knob.string "Date" "32-13-2020"
+
+        --
+        , Bulletproof.label "Time"
 
         --
         , Bulletproof.story "Invalid Time"

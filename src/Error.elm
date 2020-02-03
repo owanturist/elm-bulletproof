@@ -483,8 +483,8 @@ reasonEmptyStoryTitle =
     )
 
 --
-, Bulletproof.todo "   "
-, Bulletproof.todo "Not blank title"
+, Bulletproof.story "   "
+, Bulletproof.story "Not blank title"
     (timesIcon
         |> Bulletproof.fromHtml
     )
