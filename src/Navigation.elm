@@ -2,7 +2,7 @@ module Navigation exposing (Model, Msg, initial, open, update, view)
 
 import AVL.Set as Set exposing (Set)
 import Css
-import Html.Styled as Html exposing (Html, a, div, span, styled, text)
+import Html.Styled as Html exposing (Html, a, div, header, span, styled, text)
 import Html.Styled.Attributes as Attributes exposing (css)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -276,21 +276,72 @@ viewItem model current path story =
             []
 
 
-cssContainer : List Css.Style
-cssContainer =
-    [ Css.display Css.table
+styledHeader : List (Html msg) -> Html msg
+styledHeader =
+    styled header
+        [ Css.position Css.absolute
+        , Css.top Css.zero
+        , Css.right Css.zero
+        , Css.left Css.zero
+        , Css.padding4 (Css.px 16) (Css.px 12) (Css.px 16) (Css.px 48)
+        , Css.backgroundColor Palette.white
+        , Css.fontWeight Css.bold
+        , Css.fontSize (Css.px 16)
+        , Css.lineHeight (Css.int 1)
+        , Css.letterSpacing (Css.em 0.05)
+        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
+        ]
+        []
+
+
+cssItems : List Css.Style
+cssItems =
+    [ Css.boxSizing Css.borderBox
+    , Css.display Css.table
     , Css.width (Css.pct 100)
-    , Css.whiteSpace Css.noWrap
-    , Css.property "user-select" "none"
-    , Css.fontFamilies Palette.font
-    , Css.fontSize (Css.px 13)
-    , Css.color Palette.dark
+    , Css.height (Css.pct 100)
+    , Css.padding3 (Css.px 8) Css.zero (Css.px 20)
     ]
+
+
+styledScroller : List (Html msg) -> Html msg
+styledScroller =
+    styled div
+        [ Css.width (Css.pct 100)
+        , Css.height (Css.pct 100)
+        , Css.overflow Css.auto
+        ]
+        []
+
+
+styledContainer : List (Html msg) -> Html msg
+styledContainer =
+    styled div
+        [ Css.boxSizing Css.borderBox
+        , Css.position Css.relative
+        , Css.paddingTop (Css.px 48)
+        , Css.width (Css.pct 100)
+        , Css.height (Css.pct 100)
+        , Css.whiteSpace Css.noWrap
+        , Css.property "user-select" "none"
+        , Css.backgroundColor Palette.cloud
+        , Css.color Palette.dark
+        , Css.fontFamilies Palette.font
+        , Css.fontSize (Css.px 13)
+        ]
+        []
 
 
 view : Story.Path -> List (Story error Renderer) -> Model -> Html Msg
 view current stories model =
-    Keyed.node "div"
-        [ css cssContainer
+    styledContainer
+        [ styledHeader
+            [ text "BULLETPROOF"
+            ]
+        , styledScroller
+            [ Keyed.node "div"
+                [ css cssItems
+                ]
+                (List.concatMap (viewItem model current []) stories)
+            ]
         ]
-        (List.concatMap (viewItem model current []) stories)

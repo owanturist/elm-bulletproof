@@ -800,11 +800,8 @@ viewRoot settings dragging attributes children =
 
 styledNavigation : Int -> List (Html msg) -> Html msg
 styledNavigation size =
-    styled nav
-        [ Css.flex2 Css.zero Css.zero
-        , Css.overflow Css.auto
-        ]
-        [ Attributes.style "flex-basis" (String.fromInt size ++ "px")
+    nav
+        [ Attributes.style "width" (String.fromInt size ++ "px")
         ]
 
 
