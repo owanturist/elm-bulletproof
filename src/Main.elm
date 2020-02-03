@@ -9,6 +9,7 @@ import Button exposing (button)
 import Css
 import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
+import Dropdown exposing (dropdown)
 import Error
 import Html.Styled as Html exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
@@ -47,6 +48,7 @@ type alias Viewport =
 type alias State =
     { key : Browser.Navigation.Key
     , viewport : Viewport
+    , menuVisible : Bool
     , store : Story.Store
     , current : Story.Path
     , dragging : Dragging
@@ -89,6 +91,7 @@ init stories settingsJSON url key =
         initialSettings
         { key = key
         , viewport = Viewport 0 0
+        , menuVisible = False
         , store = store
         , current = initialStoryPath
         , dragging = NoDragging
@@ -124,6 +127,7 @@ type Msg
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
+    | ShowMenu Bool
     | GoToPrevStory
     | GoToNextStory
     | NavigationMsg Navigation.Msg
@@ -333,6 +337,11 @@ update onSettingsChange msg (Model settings state knobs) =
         DragEnd ->
             ( Model settings { state | dragging = NoDragging } knobs
             , saveSettings onSettingsChange settings
+            )
+
+        ShowMenu visible ->
+            ( Model settings { state | menuVisible = visible } knobs
+            , Cmd.none
             )
 
         GoToPrevStory ->
@@ -844,44 +853,52 @@ styledMenuTrigger =
         []
 
 
-viewMenuTrigger : Settings -> Html Msg
-viewMenuTrigger settings =
+viewMenuTrigger : Settings -> Bool -> Html Msg
+viewMenuTrigger settings menuVisible =
     let
         vivid =
             not settings.fullscreen && settings.navigationVisible
     in
     styledMenuTrigger
-        [ button
-            { dark = False
-            , onPress = ToggleFullscreen
-            }
-            [ Attributes.css
-                [ Css.opacity (ifelse vivid (Css.num 1) (Css.num 0.2))
+        [ dropdown
+            [ button
+                { dark = False
+                , onPress = ShowMenu (not menuVisible)
+                }
+                [ Attributes.css
+                    [ Css.opacity (ifelse vivid (Css.num 1) (Css.num 0.2))
 
-                --
-                , transition
-                    [ Css.Transitions.opacity (ifelse vivid 200 1000)
-                    ]
-
-                --
-                , Css.hover
-                    [ Css.opacity (Css.num 1)
+                    --
                     , transition
-                        [ Css.Transitions.opacity 200
+                        [ Css.Transitions.opacity (ifelse vivid 200 1000)
                         ]
-                    ]
 
-                --
-                , Css.focus
-                    [ Css.opacity (Css.num 1)
-                    , transition
-                        [ Css.Transitions.opacity 200
+                    --
+                    , Css.hover
+                        [ Css.opacity (Css.num 1)
+                        , transition
+                            [ Css.Transitions.opacity 200
+                            ]
+                        ]
+
+                    --
+                    , Css.focus
+                        [ Css.opacity (Css.num 1)
+                        , transition
+                            [ Css.Transitions.opacity 200
+                            ]
                         ]
                     ]
                 ]
+                [ Icon.bars
+                ]
             ]
-            [ Icon.bars
-            ]
+            (if menuVisible then
+                Just (text "hi")
+
+             else
+                Nothing
+            )
         ]
 
 
@@ -915,7 +932,7 @@ view stories (Model settings state knobs) =
             settings
             state.dragging
             attrs
-            [ viewMenuTrigger settings
+            [ viewMenuTrigger settings state.menuVisible
             , styledNavigation
                 settings
                 state.dragging

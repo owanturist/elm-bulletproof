@@ -1,5 +1,6 @@
-module Utils exposing (ifelse, nonBlank, onSpaceOrEnter, plural)
+module Utils exposing (ifelse, nonBlank, notClosest, onSpaceOrEnter, plural)
 
+import DOM
 import Html.Styled as Html
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder)
@@ -49,3 +50,38 @@ plural word n =
 
     else
         word ++ "s"
+
+
+containsClass : String -> String -> Bool
+containsClass classList className =
+    List.member className (String.split " " classList)
+
+
+closest : String -> Decoder node -> Decoder node
+closest className decoder =
+    Decode.andThen
+        (\classList ->
+            if containsClass className classList then
+                decoder
+
+            else
+                DOM.parentElement (closest className decoder)
+        )
+        DOM.className
+
+
+notClosest : String -> msg -> Decoder msg
+notClosest className msg =
+    Decode.andThen
+        (\withClassName ->
+            if withClassName then
+                Decode.fail ("Class `" ++ className ++ "` exists in closest nodes.")
+
+            else
+                Decode.succeed msg
+        )
+        (Decode.oneOf
+            [ closest className (Decode.succeed True)
+            , Decode.succeed False
+            ]
+        )
