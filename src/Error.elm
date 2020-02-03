@@ -19,6 +19,7 @@ import Color exposing (Color)
 import Css
 import Date exposing (Time)
 import Html.Styled as Html exposing (Html, br, code, div, pre, span, styled, text)
+import Html.Styled.Attributes as Attributes
 import Knob
 import Palette
 import Renderer exposing (Renderer)
@@ -412,46 +413,28 @@ type alias Explanation msg =
     }
 
 
-viewMark : String -> Html msg
-viewMark =
-    styled span
-        [ Css.display Css.inlineBlock
-        , Css.padding2 (Css.px 2) (Css.px 4)
-        , Css.borderRadius (Css.px 3)
-        , Css.backgroundColor Palette.gray
-        , Css.color Palette.white
-        , Css.letterSpacing (Css.em 0.05)
-        ]
-        []
-        << List.singleton
-        << text
-
-
-viewCodeMark : String -> Html msg
-viewCodeMark =
+textCode : String -> Html msg
+textCode =
     styled code
         [ Css.display Css.inlineBlock
         , Css.padding2 (Css.px 2) (Css.px 4)
         , Css.backgroundColor Palette.cloud
         , Css.letterSpacing (Css.em 0.05)
         , Css.fontFamily Css.monospace
+        , Css.lineHeight (Css.px 18)
         ]
         []
         << List.singleton
         << text
 
 
-reasonEmptyTitle : String
-reasonEmptyTitle =
-    "Please make sure you've defined neither empty or blank title."
-
-
 reasonEmptyLabelTitle : Explanation msg
 reasonEmptyLabelTitle =
     Explanation
-        [ text "Label with empty title"
+        [ textCode "Bulletproof.label"
+        , text " has either empty or blank title"
         ]
-        reasonEmptyTitle
+        "Please make sure you've defined neither empty or blank title."
         """
 [ Bulletproof.label ""
 [ Bulletproof.label "Not empty title"
@@ -471,9 +454,10 @@ reasonEmptyLabelTitle =
 reasonEmptyTodoTitle : Explanation msg
 reasonEmptyTodoTitle =
     Explanation
-        [ text "Todo with empty title"
+        [ textCode "Bulletproof.todo"
+        , text " has either empty or blank title"
         ]
-        reasonEmptyTitle
+        "Please make sure you've defined neither empty or blank title."
         """
 [ Bulletproof.todo ""
 [ Bulletproof.todo "Not empty title"
@@ -493,9 +477,10 @@ reasonEmptyTodoTitle =
 reasonEmptyStoryTitle : Explanation msg
 reasonEmptyStoryTitle =
     Explanation
-        [ text "Story with empty title"
+        [ textCode "Bulletproof.storyOf"
+        , text " has either empty or blank title"
         ]
-        reasonEmptyTitle
+        "Please make sure you've defined neither empty or blank title."
         """
 [ Bulletproof.storyOf ""
 [ Bulletproof.storyOf "Not empty title"
@@ -521,9 +506,10 @@ reasonEmptyStoryTitle =
 reasonEmptyFolderTitle : Explanation msg
 reasonEmptyFolderTitle =
     Explanation
-        [ text "Folder with empty title"
+        [ textCode "Bulletproof.folderOf"
+        , text " has either empty or blank title"
         ]
-        reasonEmptyTitle
+        "Please make sure you've defined neither empty or blank title."
         """
 [ Bulletproof.folderOf "" []
 [ Bulletproof.folderOf "Not empty title" []
@@ -543,8 +529,7 @@ reasonEmptyFolderTitle =
 reasonDuplicateLabels : String -> Int -> Explanation msg
 reasonDuplicateLabels title n =
     Explanation
-        [ text "Label "
-        , viewMark title
+        [ textCode ("Bulletproof.label \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
         "Please make sure you've defined unique titles for lables inside a folder."
@@ -567,8 +552,9 @@ reasonDuplicateLabels title n =
 reasonDuplicateStories : String -> Int -> Explanation msg
 reasonDuplicateStories title n =
     Explanation
-        [ text "Story/Todo "
-        , viewMark title
+        [ textCode ("Bulletproof.storyOf \"" ++ title ++ "\"")
+        , text " or "
+        , textCode ("Bulletproof.todo \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
         """
@@ -603,8 +589,7 @@ Each todo is a story which has not started yet...
 reasonDuplicateFolders : String -> Int -> Explanation msg
 reasonDuplicateFolders title n =
     Explanation
-        [ text "Folder "
-        , viewMark title
+        [ textCode ("Bulletproof.folderOf \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
         "Please make sure you've defined unique titles for folders inside a folder."
@@ -639,9 +624,10 @@ reasonDuplicateFolders title n =
 reasonEmptyKnobTitle : Explanation msg
 reasonEmptyKnobTitle =
     Explanation
-        [ text "Knob with empty title"
+        [ textCode "Bulletproof.Knob.*"
+        , text " has either empty or blank name"
         ]
-        reasonEmptyTitle
+        "Please make sure you've defined neither empty or blank name."
         """
 Bulletproof.storyOf "Button"
     (\\buttonText buttonTabindex ->
@@ -667,8 +653,7 @@ Bulletproof.storyOf "Button"
 reasonDuplicateKnobs : String -> Int -> Explanation msg
 reasonDuplicateKnobs name n =
     Explanation
-        [ text "Knob "
-        , viewMark name
+        [ textCode ("Bulletproof.Knob.* \"" ++ name ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
         "Please make sure you've defined unique names for knobs inside a story."
@@ -695,10 +680,10 @@ Bulletproof.storyOf "Button"
 
 
 reasonEmptyChoice : String -> String -> Explanation msg
-reasonEmptyChoice knobName name =
+reasonEmptyChoice choiceName name =
     Explanation
-        [ viewCodeMark ("Knob." ++ knobName ++ " \"" ++ name ++ "\" ")
-        , text " has no options to chooce"
+        [ textCode ("Bulletproof.Knob." ++ choiceName ++ " \"" ++ name ++ "\" ")
+        , text " has no options"
         ]
         "Please make sure you've defined at least single option"
         ("""
@@ -718,7 +703,7 @@ Bulletproof.storyOf "Button"
         , ( "submit", "submit" )
         ]
         """
-            |> String.Format.namedValue "knob" knobName
+            |> String.Format.namedValue "knob" choiceName
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 15 )
@@ -726,12 +711,11 @@ Bulletproof.storyOf "Button"
 
 
 reasonDuplicateChoice : String -> String -> String -> Int -> Explanation msg
-reasonDuplicateChoice knobName name option n =
+reasonDuplicateChoice choiceName name option n =
     Explanation
-        [ viewCodeMark ("Knob." ++ knobName ++ " \"" ++ name ++ "\" ")
-        , text " option "
-        , viewMark option
-        , text (" repeats " ++ String.fromInt n ++ " times")
+        [ textCode ("Bulletproof.Knob." ++ choiceName ++ " \"" ++ name ++ "\" ")
+        , text (" has " ++ String.fromInt n ++ "\u{00A0}times repeated option ")
+        , textCode ("\"" ++ option ++ "\"")
         ]
         "Please make sure you've defined unique names of options."
         ("""
@@ -745,30 +729,26 @@ Bulletproof.storyOf "Input"
     )
     |> Bulletproof.Knob.{{ knob }} "Input type"
         [ ( "string", "text" )
-        [ ( "plain text", "text" )
         , ( "string", "email" )
-        , ( "user email", "email" )
         , ( "string", "password" )
+        [ ( "plain text", "text" )
+        , ( "user email", "email" )
         , ( "user password", "password" )
         ]
         """
-            |> String.Format.namedValue "knob" knobName
+            |> String.Format.namedValue "knob" choiceName
         )
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
-        , ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
-        , ( SyntaxHighlight.Del, 13, 14 )
-        , ( SyntaxHighlight.Add, 14, 15 )
+        [ ( SyntaxHighlight.Del, 9, 12 )
+        , ( SyntaxHighlight.Add, 12, 15 )
         ]
 
 
 reasonInvalidIntStep : String -> Int -> Explanation msg
 reasonInvalidIntStep name step =
     Explanation
-        [ viewCodeMark ("Knob.int" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" ")
         , text " has not positive "
-        , viewCodeMark ("Knob.step " ++ String.fromInt step)
+        , textCode ("Bulletproof.Knob.step " ++ String.fromInt step)
         ]
         "Please make sure you've defined a positive step."
         """
@@ -796,9 +776,9 @@ Bulletproof.storyOf "Input"
 reasonInvalidFloatStep : String -> Float -> Explanation msg
 reasonInvalidFloatStep name step =
     Explanation
-        [ viewCodeMark ("Knob.float" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" ")
         , text " has not positive "
-        , viewCodeMark ("Knob.step " ++ String.fromFloat step)
+        , textCode ("Bulletproof.Knob.step " ++ String.fromFloat step)
         ]
         "Please make sure you've defined a positive step."
         """
@@ -826,13 +806,12 @@ Bulletproof.storyOf "Progressbar"
 reasonInvalidIntMin : String -> Int -> Int -> Explanation msg
 reasonInvalidIntMin name value min =
     Explanation
-        [ viewCodeMark ("Knob.int" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
         , text " has "
-        , viewCodeMark ("Knob.min " ++ String.fromInt min)
-        , text " more than actual value "
-        , viewCodeMark (String.fromInt value)
+        , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
+        , text " more than actual value"
         ]
-        "Please make sure you've defined min boundary less or equal to value."
+        "Please make sure the min boundary is less or equal to the value."
         """
 Bulletproof.storyOf "Input"
     (\\inputSize ->
@@ -843,9 +822,9 @@ Bulletproof.storyOf "Input"
             |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.int "Input size"
-        50
+        200
+        [ Bulletproof.Knob.min 300
         [ Bulletproof.Knob.min 100
-        [ Bulletproof.Knob.min 25
         , Bulletproof.Knob.max 1000
         , Bulletproof.Knob.step 10
         ]
@@ -858,13 +837,12 @@ Bulletproof.storyOf "Input"
 reasonInvalidFloatMin : String -> Float -> Float -> Explanation msg
 reasonInvalidFloatMin name value min =
     Explanation
-        [ viewCodeMark ("Knob.float" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" " ++ String.fromFloat value)
         , text " has "
-        , viewCodeMark ("Knob.min " ++ String.fromFloat min)
-        , text " more than actual value "
-        , viewCodeMark (String.fromFloat value)
+        , textCode ("Bulletproof.Knob.min " ++ String.fromFloat min)
+        , text " more than actual value"
         ]
-        "Please make sure you've defined min boundary less or equal to value."
+        "Please make sure the min boundary is less or equal to the value."
         """
 Bulletproof.storyOf "Progressbar"
     (\\percent ->
@@ -890,13 +868,12 @@ Bulletproof.storyOf "Progressbar"
 reasonInvalidIntMax : String -> Int -> Int -> Explanation msg
 reasonInvalidIntMax name value max =
     Explanation
-        [ viewCodeMark ("Knob.int" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
         , text " has "
-        , viewCodeMark ("Knob.max " ++ String.fromInt max)
-        , text " less than actual value "
-        , viewCodeMark (String.fromInt value)
+        , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
+        , text " less than actual value"
         ]
-        "Please make sure you've defined max boundary more or equal to value."
+        "Please make sure the max boundary is more or equal to the value."
         """
 Bulletproof.storyOf "Input"
     (\\inputSize ->
@@ -908,7 +885,7 @@ Bulletproof.storyOf "Input"
     )
     |> Bulletproof.Knob.int "Input size"
         500
-        [ Bulletproof.Knob.min 25
+        [ Bulletproof.Knob.min 100
         , Bulletproof.Knob.max 200
         , Bulletproof.Knob.max 1000
         , Bulletproof.Knob.step 10
@@ -922,13 +899,12 @@ Bulletproof.storyOf "Input"
 reasonInvalidFloatMax : String -> Float -> Float -> Explanation msg
 reasonInvalidFloatMax name value max =
     Explanation
-        [ viewCodeMark ("Knob.float" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" " ++ String.fromFloat value)
         , text " has "
-        , viewCodeMark ("Knob.max " ++ String.fromFloat max)
-        , text " less than actual value "
-        , viewCodeMark (String.fromFloat value)
+        , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
+        , text " less than actual value"
         ]
-        "Please make sure you've defined min boundary less or equal to value."
+        "Please make sure the max boundary is more or equal to the value."
         """
 Bulletproof.storyOf "Progressbar"
     (\\percent ->
@@ -952,15 +928,15 @@ Bulletproof.storyOf "Progressbar"
 
 
 reasonInvalidIntMinMax : String -> Int -> Int -> Explanation msg
-reasonInvalidIntMinMax name value max =
+reasonInvalidIntMinMax name min max =
     Explanation
-        [ viewCodeMark ("Knob.int" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" ")
         , text " has "
-        , viewCodeMark ("Knob.min " ++ String.fromInt max)
-        , text " less than "
-        , viewCodeMark ("Knob.max" ++ String.fromInt value)
+        , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
+        , text " more than "
+        , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
         ]
-        "Please make sure you've defined min boundary less or equal to max boundary."
+        "Please make sure the min boundary less or equal to the max boundary."
         """
 Bulletproof.storyOf "Input"
     (\\inputSize ->
@@ -984,15 +960,15 @@ Bulletproof.storyOf "Input"
 
 
 reasonInvalidFloatMinMax : String -> Float -> Float -> Explanation msg
-reasonInvalidFloatMinMax name value max =
+reasonInvalidFloatMinMax name min max =
     Explanation
-        [ viewCodeMark ("Knob.float" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" ")
         , text " has "
-        , viewCodeMark ("Knob.min " ++ String.fromFloat max)
-        , text " less than "
-        , viewCodeMark ("Knob.max" ++ String.fromFloat value)
+        , textCode ("Bulletproof.Knob.min " ++ String.fromFloat min)
+        , text " more than "
+        , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
         ]
-        "Please make sure you've defined min boundary less or equal to max boundary."
+        "Please make sure the min boundary less or equal to the max boundary."
         """
 Bulletproof.storyOf "Progressbar"
     (\\percent ->
@@ -1018,11 +994,10 @@ Bulletproof.storyOf "Progressbar"
 reasonInvalidColor : String -> String -> Explanation msg
 reasonInvalidColor name color =
     Explanation
-        [ viewCodeMark ("Knob.color" ++ " \"" ++ name ++ "\" ")
-        , text " has invalid color "
-        , viewCodeMark color
+        [ textCode ("Bulletproof.Knob.color" ++ " \"" ++ name ++ "\" \"" ++ color ++ "\"")
+        , text " has invalid color"
         ]
-        "Please make sure provided value is following regular hex color pattern \"#rgb\" or \"#rrggbb\"."
+        "Please make sure provided value is following hex color pattern \"#rgb\" or \"#rrggbb\"."
         """
 Bulletproof.storyOf "Colored Button"
     (\\color ->
@@ -1044,9 +1019,8 @@ Bulletproof.storyOf "Colored Button"
 reasonInvalidDate : String -> String -> Explanation msg
 reasonInvalidDate name date =
     Explanation
-        [ viewCodeMark ("Knob.date" ++ " \"" ++ name ++ "\" ")
-        , text " has invalid date "
-        , viewCodeMark date
+        [ textCode ("Bulletproof.Knob.date" ++ " \"" ++ name ++ "\" \"" ++ date ++ "\"")
+        , text " has invalid date"
         ]
         "Please make sure provided value is following one of the \"dd-mm-yyyy\" or \"dd/mm/yyyy\" date patterns."
         """
@@ -1071,9 +1045,8 @@ Bulletproof.storyOf "Date show"
 reasonInvalidTime : String -> String -> Explanation msg
 reasonInvalidTime name time =
     Explanation
-        [ viewCodeMark ("Knob.time" ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob.time" ++ " \"" ++ name ++ "\" \"" ++ time ++ "\"")
         , text " has invalid time "
-        , viewCodeMark time
         ]
         "Please make sure provided value is following the \"mm:hh\" time pattern."
         """
@@ -1175,7 +1148,8 @@ styledLabel =
     styled div
         [ Css.marginBottom (Css.px 4)
         , Css.fontWeight Css.bold
-        , Css.fontSize (Css.px 16)
+        , Css.fontSize (Css.px 14)
+        , Css.lineHeight (Css.px 24)
         ]
         []
 
@@ -1199,7 +1173,7 @@ viewDescription description =
         |> styledDescription
 
 
-styledPath : List (Html msg) -> Html msg
+styledPath : List (Html.Attribute msg) -> List (Html msg) -> Html msg
 styledPath =
     styled code
         [ Css.padding2 (Css.px 2) (Css.px 4)
@@ -1209,12 +1183,13 @@ styledPath =
         , Css.fontFamily Css.monospace
         , Css.fontSize (Css.px 10)
         ]
-        []
 
 
 viewPath : List String -> Html msg
 viewPath path =
     styledPath
+        [ Attributes.title "Location"
+        ]
         [ if List.isEmpty path then
             text "/"
 
@@ -1279,7 +1254,7 @@ styledContainer : List (Html msg) -> Html msg
 styledContainer =
     styled div
         [ Css.margin2 (Css.px 8) Css.zero
-        , Css.width (Css.px 680)
+        , Css.width (Css.px 600)
         , Css.maxWidth (Css.pct 100)
         , Css.backgroundColor Palette.white
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
