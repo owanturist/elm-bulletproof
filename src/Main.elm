@@ -8,6 +8,7 @@ import Browser.Navigation
 import Button exposing (button)
 import Css
 import Css.Global exposing (global)
+import Css.Transitions exposing (transition)
 import Error
 import Html.Styled as Html exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
@@ -788,7 +789,8 @@ styledGlobal settings dragging =
 viewRoot : Settings -> Dragging -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 viewRoot settings dragging attributes children =
     styled div
-        [ Css.displayFlex
+        [ Css.position Css.relative
+        , Css.displayFlex
         , Css.flexDirection Css.row
         , Css.flexWrap Css.noWrap
         , Css.width (Css.pct 100)
@@ -802,6 +804,59 @@ styledNavigation : Int -> List (Html msg) -> Html msg
 styledNavigation size =
     nav
         [ Attributes.style "width" (String.fromInt size ++ "px")
+        ]
+
+
+styledMenuTrigger : List (Html msg) -> Html msg
+styledMenuTrigger =
+    styled div
+        [ Css.position Css.absolute
+        , Css.top Css.zero
+        , Css.left Css.zero
+        , Css.zIndex (Css.int 2)
+        , Css.margin (Css.px 12)
+        ]
+        []
+
+
+viewMenuTrigger : Settings -> Html Msg
+viewMenuTrigger settings =
+    let
+        vivid =
+            not settings.fullscreen && settings.navigationVisible
+    in
+    styledMenuTrigger
+        [ button
+            { dark = False
+            , onPress = ToggleFullscreen
+            }
+            [ Attributes.css
+                [ Css.opacity (ifelse vivid (Css.num 1) (Css.num 0.2))
+
+                --
+                , transition
+                    [ Css.Transitions.opacity (ifelse vivid 200 1000)
+                    ]
+
+                --
+                , Css.hover
+                    [ Css.opacity (Css.num 1)
+                    , transition
+                        [ Css.Transitions.opacity 200
+                        ]
+                    ]
+
+                --
+                , Css.focus
+                    [ Css.opacity (Css.num 1)
+                    , transition
+                        [ Css.Transitions.opacity 200
+                        ]
+                    ]
+                ]
+            ]
+            [ Icon.bars
+            ]
         ]
 
 
@@ -835,7 +890,8 @@ view stories (Model settings state knobs) =
             settings
             state.dragging
             attrs
-            [ if settings.navigationVisible && not settings.fullscreen then
+            [ viewMenuTrigger settings
+            , if settings.navigationVisible && not settings.fullscreen then
                 styledNavigation settings.navigationWidth
                     [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
                     ]
