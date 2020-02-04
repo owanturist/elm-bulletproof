@@ -294,12 +294,9 @@ styledHeader =
         []
 
 
-cssItems : List Css.Style
-cssItems =
-    [ Css.boxSizing Css.borderBox
-    , Css.display Css.table
-    , Css.width (Css.pct 100)
-    , Css.height (Css.pct 100)
+cssContainer : List Css.Style
+cssContainer =
+    [ Css.flex3 (Css.int 1) Css.zero Css.zero
     , Css.padding3 (Css.px 8) Css.zero (Css.px 20)
     ]
 
@@ -307,15 +304,16 @@ cssItems =
 styledScroller : List (Html msg) -> Html msg
 styledScroller =
     styled div
-        [ Css.width (Css.pct 100)
+        [ Css.displayFlex
+        , Css.width (Css.pct 100)
         , Css.height (Css.pct 100)
         , Css.overflow Css.auto
         ]
         []
 
 
-styledContainer : List (Html msg) -> Html msg
-styledContainer =
+styledRoot : List (Html msg) -> Html msg
+styledRoot =
     styled div
         [ Css.boxSizing Css.borderBox
         , Css.position Css.relative
@@ -334,13 +332,13 @@ styledContainer =
 
 view : Story.Path -> List (Story error Renderer) -> Model -> Html Msg
 view current stories model =
-    styledContainer
+    styledRoot
         [ styledHeader
             [ text "BULLETPROOF"
             ]
         , styledScroller
             [ Keyed.node "div"
-                [ css cssItems
+                [ css cssContainer
                 ]
                 (List.concatMap (viewItem model current []) stories)
             ]

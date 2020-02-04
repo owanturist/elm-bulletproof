@@ -176,13 +176,11 @@ update onSettingsChange msg (Model settings state knobs) =
         ToggleFullscreen ->
             let
                 nextSettings =
-                    if not settings.navigationVisible && not settings.dockVisible then
-                        -- it seems like fullscreen
-                        { settings | fullscreen = False, navigationVisible = True, dockVisible = True }
+                    if settings.navigationVisible || settings.dockVisible then
+                        { settings | navigationVisible = False, dockVisible = False }
 
                     else
-                        -- just toggle it
-                        { settings | fullscreen = not settings.fullscreen }
+                        { settings | navigationVisible = True, dockVisible = True }
             in
             ( Model nextSettings state knobs
             , saveSettings onSettingsChange nextSettings
@@ -191,17 +189,7 @@ update onSettingsChange msg (Model settings state knobs) =
         ToggleNavigationVisibility ->
             let
                 nextSettings =
-                    if settings.fullscreen then
-                        -- if it's fullscreen user expects turn visibility on
-                        { settings | fullscreen = False, navigationVisible = True, dockVisible = False }
-
-                    else if not settings.dockVisible && settings.navigationVisible then
-                        -- hidden both navigation and dock treats as fullscreen
-                        { settings | fullscreen = True, navigationVisible = False, dockVisible = False }
-
-                    else
-                        -- just toggle it
-                        { settings | navigationVisible = not settings.navigationVisible }
+                    { settings | navigationVisible = not settings.navigationVisible }
             in
             ( Model nextSettings state knobs
             , saveSettings onSettingsChange nextSettings
@@ -210,17 +198,7 @@ update onSettingsChange msg (Model settings state knobs) =
         ToggleDockVisibility ->
             let
                 nextSettings =
-                    if settings.fullscreen then
-                        -- if it's fullscreen user expects turn visibility on
-                        { settings | fullscreen = False, navigationVisible = False, dockVisible = True }
-
-                    else if settings.dockVisible && not settings.navigationVisible then
-                        -- hidden both navigation and dock treats as fullscreen
-                        { settings | fullscreen = True, navigationVisible = False, dockVisible = False }
-
-                    else
-                        -- just toggle it
-                        { settings | dockVisible = not settings.dockVisible }
+                    { settings | dockVisible = not settings.dockVisible }
             in
             ( Model nextSettings state knobs
             , saveSettings onSettingsChange nextSettings
@@ -480,13 +458,39 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStoryScroller : List (Html msg) -> Html msg
-styledStoryScroller =
+styledStoryScroller : Settings -> State -> List (Html msg) -> Html msg
+styledStoryScroller settings { viewport, dragging } =
+    let
+        ( width, height ) =
+            case settings.dockOrientation of
+                Horizontal ->
+                    ( viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
+                    , viewport.height - ifelse settings.dockVisible settings.dockHeight 0
+                    )
+
+                Vertical ->
+                    ( viewport.width
+                        - ifelse settings.navigationVisible settings.navigationWidth 0
+                        - ifelse settings.dockVisible settings.dockWidth 0
+                    , viewport.height
+                    )
+    in
     styled div
-        [ Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.overflow Css.auto
+        [ Css.overflow Css.auto
+
+        --
+        , if dragging == NoDragging then
+            transition
+                [ Css.Transitions.width 150
+                , Css.Transitions.height 150
+                ]
+
+          else
+            Css.batch []
         ]
-        []
+        [ Attributes.style "width" (String.fromInt width ++ "px")
+        , Attributes.style "height" (String.fromInt height ++ "px")
+        ]
 
 
 styledStoryContainer : Settings -> List (Html msg) -> Html msg
@@ -588,69 +592,31 @@ viewDragger orientation attributes =
         []
 
 
-styledDock : Settings -> Dragging -> List (Html msg) -> Html msg
-styledDock settings dragging =
-    let
-        visible =
-            not settings.fullscreen && settings.dockVisible
-
-        ( ruleBorder, transitionRule, sizeStyle ) =
-            case settings.dockOrientation of
-                Horizontal ->
-                    ( Css.borderTop3
-                    , Css.Transitions.height 150
-                    , Attributes.style "height" (String.fromInt (ifelse visible settings.dockHeight 0) ++ "px")
-                    )
-
-                Vertical ->
-                    ( Css.borderLeft3
-                    , Css.Transitions.width 150
-                    , Attributes.style "width" (String.fromInt (ifelse visible settings.dockWidth 0) ++ "px")
-                    )
-    in
+styledDock : Settings -> List (Html msg) -> Html msg
+styledDock settings =
     styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.displayFlex
-        , Css.flexDirection Css.column
-        , Css.position Css.relative
-        , if visible then
-            Css.overflow Css.visible
-
-          else
-            Css.overflow Css.hidden
-        , ruleBorder (Css.px 2) Css.solid Palette.smoke
-        , case dragging of
-            DockResizing _ _ ->
-                transition []
-
-            _ ->
-                transition [ transitionRule ]
-        ]
-        [ sizeStyle
-        ]
-
-
-styledDockBody : List (Html msg) -> Html msg
-styledDockBody =
-    styled div
-        [ Css.overflow Css.auto
+        [ Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.padding2 Css.zero (Css.px 12)
+        , Css.backgroundColor Palette.white
+        , Css.overflow Css.auto
+        , case settings.dockOrientation of
+            Horizontal ->
+                Css.borderTop3 (Css.px 2) Css.solid Palette.smoke
+
+            Vertical ->
+                Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
         ]
         []
 
 
-viewDock : Settings -> Dragging -> Html Msg -> Html Msg
-viewDock settings dragging knobs =
-    styledDock
-        settings
-        dragging
+viewDock : Settings -> Html Msg -> Html Msg
+viewDock settings knobs =
+    styledDock settings
         [ viewDragger settings.dockOrientation
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
-        , styledDockBody
-            [ knobs
-            ]
+        , knobs
         ]
 
 
@@ -659,9 +625,6 @@ styledWorkspace dockOrientation =
     styled div
         [ Css.position Css.relative
         , Css.displayFlex
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.minWidth Css.zero
-        , Css.backgroundColor Palette.white
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
         , case dockOrientation of
             Horizontal ->
@@ -676,7 +639,7 @@ styledWorkspace dockOrientation =
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace payload settings state knobs =
     styledWorkspace settings.dockOrientation
-        [ if settings.navigationVisible && not settings.fullscreen then
+        [ if settings.navigationVisible then
             viewDragger Vertical
                 [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
                 ]
@@ -686,6 +649,8 @@ viewWorkspace payload settings state knobs =
 
         --
         , styledStoryScroller
+            settings
+            state
             [ styledStoryContainer settings
                 [ Html.map (always NoOp) (Renderer.unwrap (payload.view knobs))
                 ]
@@ -694,7 +659,7 @@ viewWorkspace payload settings state knobs =
         --
         , Knob.view payload.knobs knobs
             |> Html.map (KnobMsg state.current)
-            |> viewDock settings state.dragging
+            |> viewDock settings
         ]
 
 
@@ -757,24 +722,13 @@ viewRoot settings dragging attributes children =
         (styledGlobal settings dragging :: children)
 
 
-styledNavigation : Settings -> Dragging -> List (Html msg) -> Html msg
-styledNavigation settings dragging =
-    let
-        visible =
-            not settings.fullscreen && settings.navigationVisible
-    in
+styledNavigation : List (Html msg) -> Html msg
+styledNavigation =
     styled nav
-        [ case dragging of
-            NavigationResizing _ _ ->
-                transition []
-
-            _ ->
-                transition
-                    [ Css.Transitions.width 150
-                    ]
+        [ Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.overflow Css.auto
         ]
-        [ Attributes.style "width" (String.fromInt (ifelse visible settings.navigationWidth 0) ++ "px")
-        ]
+        []
 
 
 styledMenuTrigger : List (Html msg) -> Html msg
@@ -879,7 +833,7 @@ viewMenuDropdownItem msg key enabled onEnabled onDisabled =
         ]
         [ text (ifelse enabled onEnabled onDisabled)
         , styledMenuKey
-            [ text (String.fromChar key)
+            [ text (String.fromChar (Char.toUpper key))
             ]
         ]
 
@@ -889,21 +843,21 @@ viewMenuDropdown settings =
     styledMenuList
         [ viewMenuDropdownItem ToggleNavigationVisibility
             's'
-            (not settings.fullscreen && settings.navigationVisible)
+            settings.navigationVisible
             "Hide sidebar"
             "Show sidebar"
 
         --
         , viewMenuDropdownItem ToggleDockVisibility
             'd'
-            (not settings.fullscreen && settings.dockVisible)
+            settings.dockVisible
             "Hide dock"
             "Show dock"
 
         --
         , viewMenuDropdownItem ToggleFullscreen
             'f'
-            (not settings.fullscreen)
+            (settings.navigationVisible || settings.dockVisible)
             "Go to full screen"
             "Exit full screen"
 
@@ -942,7 +896,7 @@ viewMenuTrigger settings menuOpen =
     styledMenuTrigger
         [ dropdown
             (viewMenuButton
-                (not settings.fullscreen && settings.navigationVisible || menuOpen)
+                (settings.navigationVisible || menuOpen)
                 menuOpen
             )
             (if menuOpen then
@@ -986,8 +940,6 @@ view stories (Model settings state knobs) =
             attrs
             [ viewMenuTrigger settings state.menuOpen
             , styledNavigation
-                settings
-                state.dragging
                 [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
                 ]
             , case Story.get state.current state.store of

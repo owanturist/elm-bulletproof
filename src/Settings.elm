@@ -48,8 +48,7 @@ orientationDecoder =
 
 
 type alias Settings =
-    { fullscreen : Bool
-    , navigationVisible : Bool
+    { navigationVisible : Bool
     , navigationWidth : Int
     , dockVisible : Bool
     , dockWidth : Int
@@ -63,8 +62,7 @@ type alias Settings =
 
 default : Settings
 default =
-    { fullscreen = False
-    , navigationVisible = True
+    { navigationVisible = True
     , navigationWidth = 200
     , dockVisible = True
     , dockWidth = 400
@@ -79,8 +77,7 @@ default =
 encoder : Settings -> Value
 encoder settings =
     Encode.list identity
-        [ Encode.bool settings.fullscreen
-        , Encode.bool settings.navigationVisible
+        [ Encode.bool settings.navigationVisible
         , Encode.int settings.navigationWidth
         , Encode.bool settings.dockVisible
         , Encode.int settings.dockWidth
@@ -101,15 +98,14 @@ decoder : Decoder Settings
 decoder =
     Decode.succeed Settings
         |> andMap (Decode.index 0 Decode.bool)
-        |> andMap (Decode.index 1 Decode.bool)
-        |> andMap (Decode.index 2 Decode.int)
-        |> andMap (Decode.index 3 Decode.bool)
+        |> andMap (Decode.index 1 Decode.int)
+        |> andMap (Decode.index 2 Decode.bool)
+        |> andMap (Decode.index 3 Decode.int)
         |> andMap (Decode.index 4 Decode.int)
-        |> andMap (Decode.index 5 Decode.int)
-        |> andMap (Decode.index 6 orientationDecoder)
+        |> andMap (Decode.index 5 orientationDecoder)
+        |> andMap (Decode.index 6 Decode.bool)
         |> andMap (Decode.index 7 Decode.bool)
         |> andMap (Decode.index 8 Decode.bool)
-        |> andMap (Decode.index 9 Decode.bool)
 
 
 minNavigationWidth : Int

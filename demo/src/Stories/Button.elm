@@ -9,13 +9,12 @@ import Icon
 story : Bulletproof.Story
 story =
     Bulletproof.story "Button"
-        (\dark icon ->
+        (\icon ->
             button ()
                 []
                 [ icon ]
                 |> Bulletproof.fromElmCss
         )
-        |> Bulletproof.Knob.bool "Dark" False
         |> Bulletproof.Knob.select "Icon"
             [ ( "Dock Horizontal", Icon.dockHorizontal )
             , ( "Dock Vertical", Icon.dockVertical )
