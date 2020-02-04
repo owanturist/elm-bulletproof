@@ -38,16 +38,19 @@ styledDropdown =
         ]
 
 
-dropdown : List (Html msg) -> Maybe (Html msg) -> Html msg
-dropdown children menu =
+dropdown : Html msg -> Maybe (Html msg) -> Html msg
+dropdown child menu =
     case menu of
         Nothing ->
-            styledDropdown children
+            styledDropdown [ child ]
 
         Just menuNode ->
-            styledDropdown (styledMenu [ menuNode ] :: children)
+            styledDropdown
+                [ child
+                , styledMenu [ menuNode ]
+                ]
 
 
 onMissClick : msg -> Sub msg
 onMissClick msg =
-    Browser.Events.onClick (notClosest className msg)
+    Browser.Events.onMouseUp (notClosest className msg)

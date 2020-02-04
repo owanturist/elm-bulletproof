@@ -4,6 +4,7 @@ import DOM
 import Html.Styled as Html
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder)
+import Regex
 
 
 ifelse : Bool -> x -> x -> x
@@ -53,8 +54,19 @@ plural word n =
 
 
 containsClass : String -> String -> Bool
-containsClass classList className =
-    List.member className (String.split " " classList)
+containsClass className classList =
+    case
+        Regex.fromStringWith
+            { caseInsensitive = False
+            , multiline = False
+            }
+            ("(^|\\s+)" ++ className ++ "($|\\s+)")
+    of
+        Nothing ->
+            False
+
+        Just regex ->
+            Regex.contains regex classList
 
 
 closest : String -> Decoder node -> Decoder node
@@ -85,3 +97,4 @@ notClosest className msg =
             , Decode.succeed False
             ]
         )
+        |> DOM.target
