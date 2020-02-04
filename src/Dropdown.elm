@@ -20,7 +20,6 @@ styledMenu =
         , Css.top (Css.pct 100)
         , Css.left Css.zero
         , Css.marginTop (Css.px 8)
-        , Css.padding2 (Css.px 4) (Css.px 8)
         , Css.border3 (Css.px 1) Css.solid Palette.gray
         , Css.borderRadius (Css.px 3)
         , Css.backgroundColor Palette.white
@@ -33,6 +32,7 @@ styledDropdown : List (Html msg) -> Html msg
 styledDropdown =
     styled div
         [ Css.position Css.relative
+        , Css.property "user-select" "none"
         ]
         [ Attributes.class className
         ]

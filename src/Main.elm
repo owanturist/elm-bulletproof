@@ -11,7 +11,7 @@ import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
 import Dropdown exposing (dropdown)
 import Error
-import Html.Styled as Html exposing (Html, div, nav, styled, text)
+import Html.Styled as Html exposing (Html, div, nav, span, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Icon
@@ -26,7 +26,7 @@ import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Task
 import Url exposing (Url)
-import Utils exposing (ifelse)
+import Utils exposing (ifelse, onSpaceOrEnter)
 
 
 
@@ -195,6 +195,10 @@ update onSettingsChange msg (Model settings state knobs) =
                         -- if it's fullscreen user expects turn visibility on
                         { settings | fullscreen = False, navigationVisible = True, dockVisible = False }
 
+                    else if not settings.dockVisible && settings.navigationVisible then
+                        -- hidden both navigation and dock treats as fullscreen
+                        { settings | fullscreen = True, navigationVisible = False, dockVisible = False }
+
                     else
                         -- just toggle it
                         { settings | navigationVisible = not settings.navigationVisible }
@@ -209,6 +213,10 @@ update onSettingsChange msg (Model settings state knobs) =
                     if settings.fullscreen then
                         -- if it's fullscreen user expects turn visibility on
                         { settings | fullscreen = False, navigationVisible = False, dockVisible = True }
+
+                    else if settings.dockVisible && not settings.navigationVisible then
+                        -- hidden both navigation and dock treats as fullscreen
+                        { settings | fullscreen = True, navigationVisible = False, dockVisible = False }
 
                     else
                         -- just toggle it
@@ -414,7 +422,7 @@ keyCodeToMsg keyCode =
         'b' ->
             Just ToggleBackground
 
-        'n' ->
+        's' ->
             Just ToggleNavigationVisibility
 
         'd' ->
@@ -821,6 +829,8 @@ viewRoot settings dragging attributes children =
         , Css.flexWrap Css.noWrap
         , Css.width (Css.pct 100)
         , Css.height (Css.pct 100)
+        , Css.fontFamilies Palette.font
+        , Css.fontSize (Css.px 13)
         ]
         attributes
         (styledGlobal settings dragging :: children)
@@ -893,16 +903,132 @@ viewMenuButton vivid opend =
         ]
 
 
+styledMenuList : List (Html msg) -> Html msg
+styledMenuList =
+    styled div
+        [ Css.minWidth (Css.px 200)
+        , Css.padding2 (Css.px 4) Css.zero
+        ]
+        []
+
+
+styledMenuItem : List (Html.Attribute msg) -> List (Html msg) -> Html msg
+styledMenuItem attributes =
+    styled div
+        [ Css.displayFlex
+        , Css.justifyContent Css.spaceBetween
+        , Css.padding2 (Css.px 4) (Css.px 12)
+        , Css.cursor Css.pointer
+        , Css.outline Css.none
+
+        --
+        , Css.hover
+            [ Css.backgroundColor Palette.smoke
+            ]
+
+        --
+        , Css.focus
+            [ Css.backgroundColor Palette.smoke
+            ]
+        ]
+        (Attributes.attribute "role" "button"
+            :: Attributes.tabindex 0
+            :: attributes
+        )
+
+
+styledMenuKey : List (Html msg) -> Html msg
+styledMenuKey =
+    styled span
+        [ Css.display Css.inlineBlock
+        , Css.marginLeft (Css.px 4)
+        , Css.padding2 (Css.px 2) (Css.px 4)
+        , Css.borderRadius (Css.px 3)
+        , Css.color Palette.gray
+        , Css.backgroundColor Palette.smoke
+        , Css.fontFamily Css.monospace
+        , Css.fontSize (Css.px 14)
+        , Css.lineHeight (Css.int 1)
+        ]
+        []
+
+
+viewMenuDropdownItem : msg -> Char -> Bool -> String -> String -> Html msg
+viewMenuDropdownItem msg key enabled onEnabled onDisabled =
+    styledMenuItem
+        [ Events.onClick msg
+        , onSpaceOrEnter msg
+        ]
+        [ text (ifelse enabled onEnabled onDisabled)
+        , styledMenuKey
+            [ text (String.fromChar key)
+            ]
+        ]
+
+
+viewMenuDropdown : Settings -> Html Msg
+viewMenuDropdown settings =
+    styledMenuList
+        [ viewMenuDropdownItem ToggleNavigationVisibility
+            's'
+            (not settings.fullscreen && settings.navigationVisible)
+            "Hide sidebar"
+            "Show sidebar"
+
+        --
+        , viewMenuDropdownItem ToggleDockVisibility
+            'd'
+            (not settings.fullscreen && settings.dockVisible)
+            "Hide dock"
+            "Show dock"
+
+        --
+        , viewMenuDropdownItem ToggleFullscreen
+            'f'
+            (not settings.fullscreen)
+            "Go to fullscreen"
+            "Back from fullscreen"
+
+        --
+        , viewMenuDropdownItem ToggleGrid
+            'g'
+            (not settings.showGrid)
+            "Show grid"
+            "Hide grid"
+
+        --
+        , viewMenuDropdownItem TogglePaddings
+            'p'
+            (not settings.addPaddings)
+            "Add paddings"
+            "Remove paddings"
+
+        --
+        , viewMenuDropdownItem ToggleBackground
+            'b'
+            (not settings.darkBackground)
+            "Use dark background"
+            "Use white background"
+
+        --
+        , viewMenuDropdownItem ToggleDockOrientation
+            'o'
+            (settings.dockOrientation == Horizontal)
+            "Move dock to right"
+            "Move dock to bottom"
+        ]
+
+
 viewMenuTrigger : Settings -> Bool -> Html Msg
 viewMenuTrigger settings menuOpen =
     styledMenuTrigger
         [ dropdown
             (viewMenuButton
-                (not settings.fullscreen && settings.navigationVisible)
+                (not settings.fullscreen && settings.navigationVisible || menuOpen)
                 menuOpen
             )
             (if menuOpen then
-                Just (text "hi")
+                Just (viewMenuDropdown settings)
 
              else
                 Nothing
