@@ -625,18 +625,6 @@ styledDock settings dragging =
         ]
 
 
-styledDockHeader : List (Html msg) -> Html msg
-styledDockHeader =
-    styled div
-        [ Css.displayFlex
-        , Css.flexDirection Css.row
-        , Css.flexWrap Css.noWrap
-        , Css.padding2 (Css.px 8) (Css.px 12)
-        , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
-        ]
-        []
-
-
 styledDockBody : List (Html msg) -> Html msg
 styledDockBody =
     styled div
@@ -647,72 +635,6 @@ styledDockBody =
         []
 
 
-cssNextButton : List Css.Style
-cssNextButton =
-    [ Css.marginLeft (Css.px 4)
-    ]
-
-
-viewToggleGrid : Bool -> Html Msg
-viewToggleGrid showGrid =
-    button
-        { onPress = ToggleGrid
-        , dark = showGrid
-        }
-        [ Attributes.title (ifelse showGrid "(g) Hide background grid" "(g) Show background grid")
-        ]
-        [ Icon.grid
-        ]
-
-
-viewToggleBackground : Bool -> Html Msg
-viewToggleBackground darkBackground =
-    button
-        { onPress = ToggleBackground
-        , dark = darkBackground
-        }
-        [ Attributes.title (ifelse darkBackground "(b) Set light background" "(b) Set dark background")
-        , Attributes.css cssNextButton
-        ]
-        [ Icon.fillDrop
-        ]
-
-
-viewTogglePaddings : Bool -> Html Msg
-viewTogglePaddings addPaddings =
-    button
-        { onPress = TogglePaddings
-        , dark = addPaddings
-        }
-        [ Attributes.title (ifelse addPaddings "(p) Remove paddings" "(p) Add paddings")
-        , Attributes.css cssNextButton
-        ]
-        [ Icon.bordersBold
-        ]
-
-
-viewToggleDockOrientation : Orientation -> Html Msg
-viewToggleDockOrientation dockOrientation =
-    let
-        ( title, icon ) =
-            case dockOrientation of
-                Horizontal ->
-                    ( "(o) Dock to right", Icon.dockHorizontal )
-
-                Vertical ->
-                    ( "(o) Dock to bottom", Icon.dockVertical )
-    in
-    button
-        { onPress = ToggleDockOrientation
-        , dark = False
-        }
-        [ Attributes.title title
-        , Attributes.css cssNextButton
-        ]
-        [ icon
-        ]
-
-
 viewDock : Settings -> Dragging -> Html Msg -> Html Msg
 viewDock settings dragging knobs =
     styledDock
@@ -720,12 +642,6 @@ viewDock settings dragging knobs =
         dragging
         [ viewDragger settings.dockOrientation
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
-            ]
-        , styledDockHeader
-            [ viewToggleGrid settings.showGrid
-            , viewToggleBackground settings.darkBackground
-            , viewTogglePaddings settings.addPaddings
-            , viewToggleDockOrientation settings.dockOrientation
             ]
         , styledDockBody
             [ knobs
@@ -986,8 +902,8 @@ viewMenuDropdown settings =
         , viewMenuDropdownItem ToggleFullscreen
             'f'
             (not settings.fullscreen)
-            "Go to fullscreen"
-            "Back from fullscreen"
+            "Go to full screen"
+            "Exit full screen"
 
         --
         , viewMenuDropdownItem ToggleGrid
