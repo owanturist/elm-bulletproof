@@ -10,10 +10,7 @@ story : Bulletproof.Story
 story =
     Bulletproof.story "Button"
         (\dark icon ->
-            button
-                { onPress = ()
-                , dark = dark
-                }
+            button ()
                 []
                 [ icon ]
                 |> Bulletproof.fromElmCss

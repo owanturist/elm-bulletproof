@@ -613,6 +613,11 @@ styledDock settings dragging =
         , Css.displayFlex
         , Css.flexDirection Css.column
         , Css.position Css.relative
+        , if visible then
+            Css.overflow Css.visible
+
+          else
+            Css.overflow Css.hidden
         , ruleBorder (Css.px 2) Css.solid Palette.smoke
         , case dragging of
             DockResizing _ _ ->
@@ -786,10 +791,7 @@ styledMenuTrigger =
 
 viewMenuButton : Bool -> Bool -> Html Msg
 viewMenuButton vivid opend =
-    button
-        { dark = False
-        , onPress = ShowMenu (not opend)
-        }
+    button (ShowMenu (not opend))
         [ Attributes.css
             [ Css.opacity (ifelse vivid (Css.num 1) (Css.num 0.2))
 
