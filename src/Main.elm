@@ -497,10 +497,8 @@ styledStoryContainer : Settings -> List (Html msg) -> Html msg
 styledStoryContainer settings =
     styled div
         [ Css.all Css.initial
+        , Css.display Css.block
         , Css.boxSizing Css.borderBox
-        , Css.displayFlex
-        , Css.flexDirection Css.column
-        , Css.justifyContent Css.flexStart
         , Css.position Css.relative
         , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
         , Css.minWidth (Css.pct 100)
@@ -565,8 +563,8 @@ cssGrid settings =
     ]
 
 
-viewDragger : Orientation -> List (Html.Attribute msg) -> Html msg
-viewDragger orientation attributes =
+viewDragger : Orientation -> List Css.Style -> List (Html.Attribute msg) -> Html msg
+viewDragger orientation styles attributes =
     styled div
         [ Css.position Css.absolute
         , case orientation of
@@ -587,6 +585,7 @@ viewDragger orientation attributes =
                     , Css.width (Css.px 4)
                     , Css.cursor Css.ewResize
                     ]
+        , Css.batch styles
         ]
         attributes
         []
@@ -614,6 +613,7 @@ viewDock : Settings -> Html Msg -> Html Msg
 viewDock settings knobs =
     styledDock settings
         [ viewDragger settings.dockOrientation
+            []
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
         , knobs
@@ -639,16 +639,7 @@ styledWorkspace dockOrientation =
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace payload settings state knobs =
     styledWorkspace settings.dockOrientation
-        [ if settings.navigationVisible then
-            viewDragger Vertical
-                [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
-                ]
-
-          else
-            text ""
-
-        --
-        , styledStoryScroller
+        [ styledStoryScroller
             settings
             state
             [ styledStoryContainer settings
@@ -725,7 +716,8 @@ viewRoot settings dragging attributes children =
 styledNavigation : List (Html msg) -> Html msg
 styledNavigation =
     styled nav
-        [ Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        [ Css.position Css.relative
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.overflow Css.auto
         ]
         []
@@ -940,7 +932,14 @@ view stories (Model settings state knobs) =
             attrs
             [ viewMenuTrigger settings state.menuOpen
             , styledNavigation
-                [ Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
+                [ viewDragger Vertical
+                    [ Css.zIndex (Css.int 2)
+                    , Css.left Css.auto
+                    , Css.right Css.zero
+                    ]
+                    [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
+                    ]
+                , Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
                 ]
             , case Story.get state.current state.store of
                 Nothing ->

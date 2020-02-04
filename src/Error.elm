@@ -1305,7 +1305,6 @@ styledRoot =
         , Css.displayFlex
         , Css.flexDirection Css.column
         , Css.alignItems Css.center
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.padding2 Css.zero (Css.px 8)
         , Css.width (Css.pct 100)
         , Css.maxWidth (Css.pct 100)
