@@ -4,6 +4,8 @@ module Settings exposing
     , decoder
     , default
     , encoder
+    , isHorizontal
+    , isVertical
     , minDockHeight
     , minDockWidth
     , minNavigationWidth
@@ -18,6 +20,16 @@ import Json.Encode as Encode exposing (Value)
 type Orientation
     = Horizontal
     | Vertical
+
+
+isHorizontal : Orientation -> Bool
+isHorizontal =
+    (==) Horizontal
+
+
+isVertical : Orientation -> Bool
+isVertical =
+    (==) Vertical
 
 
 orientationEncoder : Orientation -> Value

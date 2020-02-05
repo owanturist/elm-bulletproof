@@ -503,12 +503,7 @@ styledWorkspace settings { viewport, dragging } =
         [ Css.position Css.relative
         , Css.displayFlex
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        , case settings.dockOrientation of
-            Horizontal ->
-                Css.flexDirection Css.column
-
-            Vertical ->
-                Css.flexDirection Css.row
+        , Css.flexDirection (ifelse (Settings.isHorizontal settings.dockOrientation) Css.column Css.row)
 
         --
         , if dragging == NoDragging then
@@ -576,12 +571,9 @@ styledGlobal settings dragging =
             DockResizing _ _ ->
                 Css.Global.everything
                     [ Css.property "user-select" "none !important"
-                    , case settings.dockOrientation of
-                        Horizontal ->
-                            Css.cursor Css.nsResize |> Css.important
-
-                        Vertical ->
-                            Css.cursor Css.ewResize |> Css.important
+                    , ifelse (Settings.isHorizontal settings.dockOrientation) Css.nsResize Css.ewResize
+                        |> Css.cursor
+                        |> Css.important
                     ]
         ]
 
@@ -639,12 +631,9 @@ view stories (Model settings state knobs) =
                     ]
 
                 DockResizing _ _ ->
-                    [ case settings.dockOrientation of
-                        Horizontal ->
-                            Events.on "mousemove" (Decode.map Drag screenY)
-
-                        Vertical ->
-                            Events.on "mousemove" (Decode.map Drag screenX)
+                    [ ifelse (Settings.isHorizontal settings.dockOrientation) screenY screenX
+                        |> Decode.map Drag
+                        |> Events.on "mousemove"
                     , Events.on "mouseup" (Decode.succeed DragEnd)
                     , Events.on "mouseleave" (Decode.succeed DragEnd)
                     ]
