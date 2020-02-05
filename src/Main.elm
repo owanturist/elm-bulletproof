@@ -620,25 +620,32 @@ viewDock settings knobs =
         ]
 
 
-styledWorkspace : Orientation -> List (Html msg) -> Html msg
-styledWorkspace dockOrientation =
+styledWorkspace : Settings -> State -> List (Html msg) -> Html msg
+styledWorkspace settings { viewport } =
+    let
+        width =
+            viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
+    in
     styled div
         [ Css.position Css.relative
         , Css.displayFlex
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        , case dockOrientation of
+        , case settings.dockOrientation of
             Horizontal ->
                 Css.flexDirection Css.column
 
             Vertical ->
                 Css.flexDirection Css.row
         ]
-        []
+        [ Attributes.style "width" (String.fromInt width ++ "px")
+        ]
 
 
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace payload settings state knobs =
-    styledWorkspace settings.dockOrientation
+    styledWorkspace
+        settings
+        state
         [ styledStoryScroller
             settings
             state
