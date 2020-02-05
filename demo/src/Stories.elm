@@ -5,6 +5,7 @@ import Stories.Button
 import Stories.Error
 import Stories.Icon
 import Stories.Knob
+import Stories.Menu
 import Stories.Navigation
 import Stories.Range
 
@@ -17,6 +18,7 @@ main =
     Bulletproof.program save_settings
         [ Stories.Icon.story
         , Stories.Button.story
+        , Stories.Menu.story
         , Stories.Range.story
         , Stories.Navigation.story
         , Stories.Knob.story

@@ -357,24 +357,6 @@ story =
                 ]
 
         --
-        , storyString
-
-        --
-        , storyBool
-
-        --
-        , storyInt
-
-        --
-        , storyFloat
-
-        --
-        , storyRadio
-
-        --
-        , storySelect
-
-        --
         , Bulletproof.story "All Together"
             (Knob.view
                 (List.reverse
@@ -395,4 +377,22 @@ story =
                 Knob.initial
                 |> Bulletproof.fromElmCss
             )
+
+        --
+        , storyString
+
+        --
+        , storyBool
+
+        --
+        , storyInt
+
+        --
+        , storyFloat
+
+        --
+        , storyRadio
+
+        --
+        , storySelect
         ]

@@ -81,9 +81,6 @@ init stories settingsJSON url key =
                         |> Router.ToStory
                         |> Router.replace key
                     )
-
-        initialFolderPath =
-            List.take (List.length initialStoryPath - 1) initialStoryPath
     in
     ( Model
         initialSettings
@@ -93,7 +90,7 @@ init stories settingsJSON url key =
         , store = store
         , current = initialStoryPath
         , dragging = NoDragging
-        , navigation = Navigation.open initialFolderPath Navigation.initial
+        , navigation = Navigation.open initialStoryPath Navigation.initial
         }
         Dict.empty
     , Cmd.batch
@@ -658,7 +655,7 @@ view stories (Model settings state knobs) =
             state.dragging
             attrs
             [ styledMenu
-                [ Html.map MenuMsg (Menu.view settings state.menuOpened)
+                [ Html.map MenuMsg (Menu.view state.menuOpened settings)
                 ]
 
             --

@@ -273,6 +273,14 @@ viewDropdown settings =
             |> viewItem ToggleDockVisibility 'd'
 
         --
+        , case settings.dockOrientation of
+            Horizontal ->
+                viewItem ToggleDockOrientation 'o' "Move dock to right"
+
+            Vertical ->
+                viewItem ToggleDockOrientation 'o' "Move dock to bottom"
+
+        --
         , ifelse (settings.navigationVisible || settings.dockVisible) "Go to full screen" "Exit full screen"
             |> viewItem ToggleFullscreen 'f'
 
@@ -289,14 +297,6 @@ viewDropdown settings =
             |> viewItem ToggleBackground 'b'
 
         --
-        , case settings.dockOrientation of
-            Horizontal ->
-                viewItem ToggleDockOrientation 'o' "Move dock to right"
-
-            Vertical ->
-                viewItem ToggleDockOrientation 'o' "Move dock to bottom"
-
-        --
         , viewItem GoToPrevStory 'k' "Previous story"
 
         --
@@ -309,12 +309,14 @@ styledRoot =
     styled div
         [ Css.position Css.relative
         , Css.property "user-select" "none"
+        , Css.fontFamilies Palette.font
+        , Css.fontSize (Css.px 13)
         ]
         []
 
 
-view : Settings -> Bool -> Html Msg
-view settings opened =
+view : Bool -> Settings -> Html Msg
+view opened settings  =
     styledRoot
         [ viewTrigger settings opened
         , if opened then
