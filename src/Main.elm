@@ -461,25 +461,23 @@ screenY =
 styledStoryScroller : Settings -> State -> List (Html msg) -> Html msg
 styledStoryScroller settings { viewport, dragging } =
     let
-        ( display, width, height ) =
+        ( width, height ) =
             case settings.dockOrientation of
                 Horizontal ->
-                    ( Css.display Css.block
-                    , viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
+                    ( viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
                     , viewport.height - ifelse settings.dockVisible settings.dockHeight 0
                     )
 
                 Vertical ->
-                    ( Css.displayFlex
-                    , viewport.width
+                    ( viewport.width
                         - ifelse settings.navigationVisible settings.navigationWidth 0
                         - ifelse settings.dockVisible settings.dockWidth 0
                     , viewport.height
                     )
     in
     styled div
-        [ display
-        , Css.overflow Css.auto
+        [ Css.overflow Css.auto
+        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
 
         --
         , if dragging == NoDragging then
@@ -500,14 +498,12 @@ styledStoryContainer : Settings -> List (Html msg) -> Html msg
 styledStoryContainer settings =
     styled div
         [ Css.all Css.initial
-        , Css.property "flex" "1 0 auto"
         , Css.display Css.block
         , Css.boxSizing Css.borderBox
         , Css.position Css.relative
         , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
         , Css.minWidth (Css.pct 100)
         , Css.minHeight (Css.pct 100)
-        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , if settings.showGrid then
             Css.batch (cssGrid settings)
 
