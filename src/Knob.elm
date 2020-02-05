@@ -410,7 +410,7 @@ styledKnobName =
         , Css.minWidth (Css.px 100)
         , Css.height (Css.px 40)
         , Css.whiteSpace Css.noWrap
-        , Css.padding4 (Css.px 8) (Css.px 12) (Css.px 8) Css.zero
+        , Css.padding4 (Css.px 8) (Css.px 4) (Css.px 8) (Css.px 12)
         , Css.fontWeight Css.bold
         ]
         []
@@ -422,7 +422,7 @@ styledKnobCell =
         [ Css.boxSizing Css.borderBox
         , Css.width (Css.pct 100)
         , Css.height (Css.px 40)
-        , Css.padding2 (Css.px 8) Css.zero
+        , Css.padding4 (Css.px 8) (Css.px 12) (Css.px 8) (Css.px 4)
         ]
         []
 

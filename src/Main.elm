@@ -461,22 +461,25 @@ screenY =
 styledStoryScroller : Settings -> State -> List (Html msg) -> Html msg
 styledStoryScroller settings { viewport, dragging } =
     let
-        ( width, height ) =
+        ( display, width, height ) =
             case settings.dockOrientation of
                 Horizontal ->
-                    ( viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
+                    ( Css.display Css.block
+                    , viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
                     , viewport.height - ifelse settings.dockVisible settings.dockHeight 0
                     )
 
                 Vertical ->
-                    ( viewport.width
+                    ( Css.displayFlex
+                    , viewport.width
                         - ifelse settings.navigationVisible settings.navigationWidth 0
                         - ifelse settings.dockVisible settings.dockWidth 0
                     , viewport.height
                     )
     in
     styled div
-        [ Css.overflow Css.auto
+        [ display
+        , Css.overflow Css.auto
 
         --
         , if dragging == NoDragging then
@@ -497,6 +500,7 @@ styledStoryContainer : Settings -> List (Html msg) -> Html msg
 styledStoryContainer settings =
     styled div
         [ Css.all Css.initial
+        , Css.property "flex" "1 0 auto"
         , Css.display Css.block
         , Css.boxSizing Css.borderBox
         , Css.position Css.relative
@@ -596,15 +600,25 @@ styledDock settings =
     styled div
         [ Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.padding2 Css.zero (Css.px 12)
         , Css.backgroundColor Palette.white
-        , Css.overflow Css.auto
+        , Css.overflow Css.hidden
         , case settings.dockOrientation of
             Horizontal ->
                 Css.borderTop3 (Css.px 2) Css.solid Palette.smoke
 
             Vertical ->
                 Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
+        ]
+        []
+
+
+styledDockScroller : List (Html msg) -> Html msg
+styledDockScroller =
+    styled div
+        [ Css.displayFlex
+        , Css.width (Css.pct 100)
+        , Css.height (Css.pct 100)
+        , Css.overflow Css.auto
         ]
         []
 
@@ -616,12 +630,12 @@ viewDock settings knobs =
             []
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
-        , knobs
+        , styledDockScroller [ knobs ]
         ]
 
 
 styledWorkspace : Settings -> State -> List (Html msg) -> Html msg
-styledWorkspace settings { viewport } =
+styledWorkspace settings { viewport, dragging } =
     let
         width =
             viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
@@ -636,6 +650,15 @@ styledWorkspace settings { viewport } =
 
             Vertical ->
                 Css.flexDirection Css.row
+
+        --
+        , if dragging == NoDragging then
+            transition
+                [ Css.Transitions.width 150
+                ]
+
+          else
+            Css.batch []
         ]
         [ Attributes.style "width" (String.fromInt width ++ "px")
         ]
@@ -725,7 +748,7 @@ styledNavigation =
     styled nav
         [ Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.overflow Css.auto
+        , Css.overflow Css.hidden
         ]
         []
 
