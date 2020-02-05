@@ -5,19 +5,17 @@ import Browser
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation
-import Button exposing (button)
 import Css
 import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
-import Dropdown exposing (dropdown)
 import Error
-import Html.Styled as Html exposing (Html, div, nav, span, styled, text)
+import Html.Styled as Html exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
-import Icon
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
 import Knob
+import Menu
 import Navigation
 import Palette
 import Renderer exposing (Renderer(..))
@@ -26,7 +24,7 @@ import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Task
 import Url exposing (Url)
-import Utils exposing (ifelse, onSpaceOrEnter)
+import Utils exposing (ifelse)
 
 
 
@@ -48,7 +46,7 @@ type alias Viewport =
 type alias State =
     { key : Browser.Navigation.Key
     , viewport : Viewport
-    , menuOpen : Bool
+    , menuOpened : Bool
     , store : Story.Store
     , current : Story.Path
     , dragging : Dragging
@@ -91,7 +89,7 @@ init stories settingsJSON url key =
         initialSettings
         { key = key
         , viewport = Viewport 0 0
-        , menuOpen = False
+        , menuOpened = False
         , store = store
         , current = initialStoryPath
         , dragging = NoDragging
@@ -116,20 +114,11 @@ type Msg
     | UrlRequested Browser.UrlRequest
     | UrlChanged Url
     | ViewportChanged Int Int
-    | ToggleFullscreen
-    | ToggleNavigationVisibility
-    | ToggleDockVisibility
-    | ToggleDockOrientation
-    | ToggleGrid
-    | TogglePaddings
-    | ToggleBackground
     | StartNavigationResizing Int
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
-    | ShowMenu Bool
-    | GoToPrevStory
-    | GoToNextStory
+    | MenuMsg Menu.Msg
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
 
@@ -171,84 +160,6 @@ update onSettingsChange msg (Model settings state knobs) =
         ViewportChanged width height ->
             ( Model settings { state | viewport = Viewport width height } knobs
             , Cmd.none
-            )
-
-        ToggleFullscreen ->
-            let
-                nextSettings =
-                    if settings.navigationVisible || settings.dockVisible then
-                        { settings | navigationVisible = False, dockVisible = False }
-
-                    else
-                        { settings | navigationVisible = True, dockVisible = True }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
-            )
-
-        ToggleNavigationVisibility ->
-            let
-                nextSettings =
-                    { settings | navigationVisible = not settings.navigationVisible }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
-            )
-
-        ToggleDockVisibility ->
-            let
-                nextSettings =
-                    { settings | dockVisible = not settings.dockVisible }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
-            )
-
-        ToggleDockOrientation ->
-            let
-                nextSettings =
-                    case settings.dockOrientation of
-                        Horizontal ->
-                            let
-                                nextDockWidth =
-                                    min
-                                        settings.dockWidth
-                                        (state.viewport.width - Settings.minStoryWidth - settings.navigationWidth)
-                            in
-                            { settings | dockOrientation = Vertical, dockWidth = nextDockWidth }
-
-                        Vertical ->
-                            { settings | dockOrientation = Horizontal }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
-            )
-
-        ToggleGrid ->
-            let
-                nextSettings =
-                    { settings | showGrid = not settings.showGrid }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
-            )
-
-        TogglePaddings ->
-            let
-                nextSettings =
-                    { settings | addPaddings = not settings.addPaddings }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
-            )
-
-        ToggleBackground ->
-            let
-                nextSettings =
-                    { settings | darkBackground = not settings.darkBackground }
-            in
-            ( Model nextSettings state knobs
-            , saveSettings onSettingsChange nextSettings
             )
 
         StartNavigationResizing start ->
@@ -325,33 +236,45 @@ update onSettingsChange msg (Model settings state knobs) =
             , saveSettings onSettingsChange settings
             )
 
-        ShowMenu visible ->
-            ( Model settings { state | menuOpen = visible } knobs
-            , Cmd.none
-            )
-
-        GoToPrevStory ->
-            case Story.prev state.current state.store of
-                Nothing ->
-                    ( Model settings state knobs
+        MenuMsg msgOfMenu ->
+            case Menu.update msgOfMenu settings of
+                Menu.Opened ->
+                    ( Model settings { state | menuOpened = True } knobs
                     , Cmd.none
                     )
 
-                Just prevStoryPath ->
-                    ( Model settings { state | navigation = Navigation.open prevStoryPath state.navigation } knobs
-                    , Router.push state.key (Router.ToStory prevStoryPath)
-                    )
-
-        GoToNextStory ->
-            case Story.next state.current state.store of
-                Nothing ->
-                    ( Model settings state knobs
+                Menu.Closed ->
+                    ( Model settings { state | menuOpened = False } knobs
                     , Cmd.none
                     )
 
-                Just nextStoryPath ->
-                    ( Model settings { state | navigation = Navigation.open nextStoryPath state.navigation } knobs
-                    , Router.push state.key (Router.ToStory nextStoryPath)
+                Menu.PrevStory ->
+                    case Story.prev state.current state.store of
+                        Nothing ->
+                            ( Model settings state knobs
+                            , Cmd.none
+                            )
+
+                        Just prevStoryPath ->
+                            ( Model settings { state | navigation = Navigation.open prevStoryPath state.navigation } knobs
+                            , Router.push state.key (Router.ToStory prevStoryPath)
+                            )
+
+                Menu.NextStory ->
+                    case Story.next state.current state.store of
+                        Nothing ->
+                            ( Model settings state knobs
+                            , Cmd.none
+                            )
+
+                        Just nextStoryPath ->
+                            ( Model settings { state | navigation = Navigation.open nextStoryPath state.navigation } knobs
+                            , Router.push state.key (Router.ToStory nextStoryPath)
+                            )
+
+                Menu.SettingsChanged nextSettings ->
+                    ( Model nextSettings state knobs
+                    , saveSettings onSettingsChange nextSettings
                     )
 
         NavigationMsg msgOfNavigation ->
@@ -379,68 +302,11 @@ update onSettingsChange msg (Model settings state knobs) =
 -- S U B S C R I P T I O N S
 
 
-keyCodeToMsg : Int -> Maybe Msg
-keyCodeToMsg keyCode =
-    case Char.fromCode keyCode of
-        'k' ->
-            Just GoToPrevStory
-
-        'j' ->
-            Just GoToNextStory
-
-        'o' ->
-            Just ToggleDockOrientation
-
-        'p' ->
-            Just TogglePaddings
-
-        'g' ->
-            Just ToggleGrid
-
-        'b' ->
-            Just ToggleBackground
-
-        's' ->
-            Just ToggleNavigationVisibility
-
-        'd' ->
-            Just ToggleDockVisibility
-
-        'f' ->
-            Just ToggleFullscreen
-
-        _ ->
-            Nothing
-
-
-keyNavigationDecoder : Decoder Msg
-keyNavigationDecoder =
-    Decode.at [ "target", "tagName" ] Decode.string
-        |> Decode.andThen
-            (\tagName ->
-                if List.member tagName [ "INPUT", "TEXTAREA" ] then
-                    Decode.fail "Unhandled"
-
-                else
-                    Decode.field "keyCode" Decode.int
-            )
-        |> Decode.andThen
-            (keyCodeToMsg
-                >> Maybe.map Decode.succeed
-                >> Maybe.withDefault (Decode.fail "Unhandled")
-            )
-
-
 subscriptions : Model -> Sub Msg
 subscriptions (Model _ state _) =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
-        , Browser.Events.onKeyPress keyNavigationDecoder
-        , if state.menuOpen then
-            Dropdown.onMissClick (ShowMenu False)
-
-          else
-            Sub.none
+        , Sub.map MenuMsg (Menu.subscriptions state.menuOpened)
         ]
 
 
@@ -570,7 +436,7 @@ viewDragger orientation styles attributes =
         , case orientation of
             Horizontal ->
                 Css.batch
-                    [ Css.top (Css.px -3)
+                    [ Css.top Css.zero
                     , Css.right Css.zero
                     , Css.left Css.zero
                     , Css.height (Css.px 4)
@@ -581,7 +447,7 @@ viewDragger orientation styles attributes =
                 Css.batch
                     [ Css.top Css.zero
                     , Css.bottom Css.zero
-                    , Css.left (Css.px -3)
+                    , Css.left Css.zero
                     , Css.width (Css.px 4)
                     , Css.cursor Css.ewResize
                     ]
@@ -749,8 +615,8 @@ styledNavigation =
         []
 
 
-styledMenuTrigger : List (Html msg) -> Html msg
-styledMenuTrigger =
+styledMenu : List (Html msg) -> Html msg
+styledMenu =
     styled div
         [ Css.position Css.absolute
         , Css.top Css.zero
@@ -759,160 +625,6 @@ styledMenuTrigger =
         , Css.margin (Css.px 12)
         ]
         []
-
-
-viewMenuButton : Bool -> Bool -> Html Msg
-viewMenuButton vivid opend =
-    button (ShowMenu (not opend))
-        [ Attributes.css
-            [ Css.opacity (ifelse vivid (Css.num 1) (Css.num 0.2))
-
-            --
-            , transition
-                [ Css.Transitions.opacity (ifelse vivid 200 1000)
-                ]
-
-            --
-            , Css.hover
-                [ Css.opacity (Css.num 1)
-                , transition
-                    [ Css.Transitions.opacity 200
-                    ]
-                ]
-
-            --
-            , Css.focus
-                [ Css.opacity (Css.num 1)
-                , transition
-                    [ Css.Transitions.opacity 200
-                    ]
-                ]
-            ]
-        ]
-        [ Icon.bars
-        ]
-
-
-styledMenuList : List (Html msg) -> Html msg
-styledMenuList =
-    styled div
-        [ Css.minWidth (Css.px 200)
-        , Css.padding2 (Css.px 4) Css.zero
-        ]
-        []
-
-
-styledMenuItem : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledMenuItem attributes =
-    styled div
-        [ Css.displayFlex
-        , Css.justifyContent Css.spaceBetween
-        , Css.padding2 (Css.px 4) (Css.px 12)
-        , Css.cursor Css.pointer
-        , Css.outline Css.none
-
-        --
-        , Css.hover
-            [ Css.backgroundColor Palette.smoke
-            ]
-
-        --
-        , Css.focus
-            [ Css.backgroundColor Palette.smoke
-            ]
-        ]
-        (Attributes.attribute "role" "button"
-            :: Attributes.tabindex 0
-            :: attributes
-        )
-
-
-styledMenuKey : List (Html msg) -> Html msg
-styledMenuKey =
-    styled span
-        [ Css.display Css.inlineBlock
-        , Css.marginLeft (Css.px 4)
-        , Css.padding2 (Css.px 2) (Css.px 4)
-        , Css.borderRadius (Css.px 3)
-        , Css.color Palette.gray
-        , Css.backgroundColor Palette.smoke
-        , Css.fontFamily Css.monospace
-        , Css.fontSize (Css.px 14)
-        , Css.lineHeight (Css.int 1)
-        ]
-        []
-
-
-viewMenuDropdownItem : msg -> Char -> String -> Html msg
-viewMenuDropdownItem msg key title =
-    styledMenuItem
-        [ Events.onClick msg
-        , onSpaceOrEnter msg
-        ]
-        [ text title
-        , styledMenuKey
-            [ text (String.fromChar (Char.toUpper key))
-            ]
-        ]
-
-
-viewMenuDropdown : Settings -> Html Msg
-viewMenuDropdown settings =
-    styledMenuList
-        [ ifelse settings.navigationVisible "Hide sidebar" "Show sidebar"
-            |> viewMenuDropdownItem ToggleNavigationVisibility 's'
-
-        --
-        , ifelse settings.dockVisible "Hide dock" "Show dock"
-            |> viewMenuDropdownItem ToggleDockVisibility 'd'
-
-        --
-        , ifelse (settings.navigationVisible || settings.dockVisible) "Go to full screen" "Exit full screen"
-            |> viewMenuDropdownItem ToggleFullscreen 'f'
-
-        --
-        , ifelse settings.showGrid "Hide grid" "Show grid"
-            |> viewMenuDropdownItem ToggleGrid 'g'
-
-        --
-        , ifelse settings.addPaddings "Remove paddings" "Add paddings"
-            |> viewMenuDropdownItem TogglePaddings 'p'
-
-        --
-        , ifelse settings.darkBackground "Use white background" "Use dark background"
-            |> viewMenuDropdownItem ToggleBackground 'b'
-
-        --
-        , case settings.dockOrientation of
-            Horizontal ->
-                viewMenuDropdownItem ToggleDockOrientation 'o' "Move dock to right"
-
-            Vertical ->
-                viewMenuDropdownItem ToggleDockOrientation 'o' "Move dock to bottom"
-
-        --
-        , viewMenuDropdownItem GoToPrevStory 'k' "Previous story"
-
-        --
-        , viewMenuDropdownItem GoToNextStory 'j' "Next story"
-        ]
-
-
-viewMenuTrigger : Settings -> Bool -> Html Msg
-viewMenuTrigger settings menuOpen =
-    styledMenuTrigger
-        [ dropdown
-            (viewMenuButton
-                (settings.navigationVisible || menuOpen)
-                menuOpen
-            )
-            (if menuOpen then
-                Just (viewMenuDropdown settings)
-
-             else
-                Nothing
-            )
-        ]
 
 
 view : List (Story Never Renderer) -> Model -> Browser.Document Msg
@@ -945,7 +657,11 @@ view stories (Model settings state knobs) =
             settings
             state.dragging
             attrs
-            [ viewMenuTrigger settings state.menuOpen
+            [ styledMenu
+                [ Html.map MenuMsg (Menu.view settings state.menuOpened)
+                ]
+
+            --
             , styledNavigation
                 [ viewDragger Vertical
                     [ Css.zIndex (Css.int 2)
@@ -956,6 +672,8 @@ view stories (Model settings state knobs) =
                     ]
                 , Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
                 ]
+
+            --
             , case Story.get state.current state.store of
                 Nothing ->
                     viewEmpty
