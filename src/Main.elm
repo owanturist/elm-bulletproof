@@ -843,13 +843,13 @@ styledMenuKey =
         []
 
 
-viewMenuDropdownItem : msg -> Char -> Bool -> String -> String -> Html msg
-viewMenuDropdownItem msg key enabled onEnabled onDisabled =
+viewMenuDropdownItem : msg -> Char -> String -> Html msg
+viewMenuDropdownItem msg key title =
     styledMenuItem
         [ Events.onClick msg
         , onSpaceOrEnter msg
         ]
-        [ text (ifelse enabled onEnabled onDisabled)
+        [ text title
         , styledMenuKey
             [ text (String.fromChar (Char.toUpper key))
             ]
@@ -859,53 +859,42 @@ viewMenuDropdownItem msg key enabled onEnabled onDisabled =
 viewMenuDropdown : Settings -> Html Msg
 viewMenuDropdown settings =
     styledMenuList
-        [ viewMenuDropdownItem ToggleNavigationVisibility
-            's'
-            settings.navigationVisible
-            "Hide sidebar"
-            "Show sidebar"
+        [ ifelse settings.navigationVisible "Hide sidebar" "Show sidebar"
+            |> viewMenuDropdownItem ToggleNavigationVisibility 's'
 
         --
-        , viewMenuDropdownItem ToggleDockVisibility
-            'd'
-            settings.dockVisible
-            "Hide dock"
-            "Show dock"
+        , ifelse settings.dockVisible "Hide dock" "Show dock"
+            |> viewMenuDropdownItem ToggleDockVisibility 'd'
 
         --
-        , viewMenuDropdownItem ToggleFullscreen
-            'f'
-            (settings.navigationVisible || settings.dockVisible)
-            "Go to full screen"
-            "Exit full screen"
+        , ifelse (settings.navigationVisible || settings.dockVisible) "Go to full screen" "Exit full screen"
+            |> viewMenuDropdownItem ToggleFullscreen 'f'
 
         --
-        , viewMenuDropdownItem ToggleGrid
-            'g'
-            (not settings.showGrid)
-            "Show grid"
-            "Hide grid"
+        , ifelse settings.showGrid "Hide grid" "Show grid"
+            |> viewMenuDropdownItem ToggleGrid 'g'
 
         --
-        , viewMenuDropdownItem TogglePaddings
-            'p'
-            (not settings.addPaddings)
-            "Add paddings"
-            "Remove paddings"
+        , ifelse settings.addPaddings "Remove paddings" "Add paddings"
+            |> viewMenuDropdownItem TogglePaddings 'p'
 
         --
-        , viewMenuDropdownItem ToggleBackground
-            'b'
-            (not settings.darkBackground)
-            "Use dark background"
-            "Use white background"
+        , ifelse settings.darkBackground "Use white background" "Use dark background"
+            |> viewMenuDropdownItem ToggleBackground 'b'
 
         --
-        , viewMenuDropdownItem ToggleDockOrientation
-            'o'
-            (settings.dockOrientation == Horizontal)
-            "Move dock to right"
-            "Move dock to bottom"
+        , case settings.dockOrientation of
+            Horizontal ->
+                viewMenuDropdownItem ToggleDockOrientation 'o' "Move dock to right"
+
+            Vertical ->
+                viewMenuDropdownItem ToggleDockOrientation 'o' "Move dock to bottom"
+
+        --
+        , viewMenuDropdownItem GoToPrevStory 'k' "Previous story"
+
+        --
+        , viewMenuDropdownItem GoToNextStory 'j' "Next story"
         ]
 
 
