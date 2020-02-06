@@ -18,6 +18,9 @@ type Route
 parse : Url -> Route
 parse url =
     case String.split "/" (String.dropLeft 1 url.path) of
+        "story" :: [] ->
+            ToNotFound
+
         "story" :: path ->
             ToStory (List.filterMap Url.percentDecode path)
 

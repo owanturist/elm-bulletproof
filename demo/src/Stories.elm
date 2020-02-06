@@ -8,6 +8,7 @@ import Stories.Knob
 import Stories.Menu
 import Stories.Navigation
 import Stories.Range
+import Stories.NotFound
 
 
 port save_settings : String -> Cmd msg
@@ -23,4 +24,5 @@ main =
         , Stories.Navigation.story
         , Stories.Knob.story
         , Stories.Error.story
+        , Stories.NotFound.story
         ]

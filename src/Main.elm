@@ -8,7 +8,7 @@ import Browser.Navigation
 import Css
 import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
-import Error
+import Error exposing (Error)
 import Html.Styled as Html exposing (Html, div, nav, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
@@ -17,6 +17,7 @@ import Json.Encode exposing (encode)
 import Knob
 import Menu
 import Navigation
+import NotFound
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
@@ -54,8 +55,11 @@ type alias State =
     }
 
 
-type Model
-    = Model Settings State (Dict Story.Path Knob.State)
+type alias Model =
+    { settings : Settings
+    , state : State
+    , knobs : Dict Story.Path Knob.State
+    }
 
 
 init : List (Story Never Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
@@ -129,7 +133,7 @@ saveSettings onSettingsChange settings =
 
 
 update : (String -> Cmd msg) -> Msg -> Model -> ( Model, Cmd Msg )
-update onSettingsChange msg (Model settings state knobs) =
+update onSettingsChange msg { settings, state, knobs } =
     case msg of
         NoOp ->
             ( Model settings state knobs, Cmd.none )
@@ -300,7 +304,7 @@ update onSettingsChange msg (Model settings state knobs) =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions (Model _ state _) =
+subscriptions { state } =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
         , Sub.map MenuMsg (Menu.subscriptions state.menuOpened)
@@ -365,7 +369,9 @@ styledStoryContainer settings =
         , Css.boxSizing Css.borderBox
         , Css.position Css.relative
         , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
+        , Css.width (Css.pct 100)
         , Css.minWidth (Css.pct 100)
+        , Css.height (Css.pct 100)
         , Css.minHeight (Css.pct 100)
         , if settings.showGrid then
             Css.batch (cssGrid settings)
@@ -454,6 +460,17 @@ viewDragger orientation styles attributes =
         []
 
 
+styledDockScroller : List (Html msg) -> Html msg
+styledDockScroller =
+    styled div
+        [ Css.displayFlex
+        , Css.width (Css.pct 100)
+        , Css.height (Css.pct 100)
+        , Css.overflow Css.auto
+        ]
+        []
+
+
 styledDock : Settings -> List (Html msg) -> Html msg
 styledDock settings =
     styled div
@@ -467,17 +484,6 @@ styledDock settings =
 
             Vertical ->
                 Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
-        ]
-        []
-
-
-styledDockScroller : List (Html msg) -> Html msg
-styledDockScroller =
-    styled div
-        [ Css.displayFlex
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.overflow Css.auto
         ]
         []
 
@@ -538,11 +544,6 @@ viewWorkspace payload settings state knobs =
         ]
 
 
-viewEmpty : Html msg
-viewEmpty =
-    text "Nothing to show"
-
-
 styledGlobal : Settings -> Dragging -> Html msg
 styledGlobal settings dragging =
     global
@@ -578,32 +579,6 @@ styledGlobal settings dragging =
         ]
 
 
-viewRoot : Settings -> Dragging -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-viewRoot settings dragging attributes children =
-    styled div
-        [ Css.position Css.relative
-        , Css.displayFlex
-        , Css.flexDirection Css.row
-        , Css.flexWrap Css.noWrap
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.fontFamilies Palette.font
-        , Css.fontSize (Css.px 13)
-        ]
-        attributes
-        (styledGlobal settings dragging :: children)
-
-
-styledNavigation : List (Html msg) -> Html msg
-styledNavigation =
-    styled nav
-        [ Css.position Css.relative
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.overflow Css.hidden
-        ]
-        []
-
-
 styledMenu : List (Html msg) -> Html msg
 styledMenu =
     styled div
@@ -616,35 +591,82 @@ styledMenu =
         []
 
 
-view : List (Story Never Renderer) -> Model -> Browser.Document Msg
-view stories (Model settings state knobs) =
+styledNavigation : List (Html msg) -> Html msg
+styledNavigation =
+    styled nav
+        [ Css.position Css.relative
+        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
+        , Css.overflow Css.hidden
+        ]
+        []
+
+
+styledRoot : List (Html.Attribute msg) -> List (Html msg) -> Html msg
+styledRoot =
+    styled div
+        [ Css.position Css.relative
+        , Css.displayFlex
+        , Css.flexDirection Css.row
+        , Css.flexWrap Css.noWrap
+        , Css.width (Css.pct 100)
+        , Css.height (Css.pct 100)
+        , Css.fontFamilies Palette.font
+        , Css.fontSize (Css.px 13)
+        ]
+
+
+viewRoot : Settings -> Dragging -> List (Html Msg) -> Html Msg
+viewRoot settings dragging children =
+    styledRoot
+        (case dragging of
+            NoDragging ->
+                []
+
+            NavigationResizing _ _ ->
+                [ Events.on "mousemove" (Decode.map Drag screenX)
+                , Events.on "mouseup" (Decode.succeed DragEnd)
+                , Events.on "mouseleave" (Decode.succeed DragEnd)
+                ]
+
+            DockResizing _ _ ->
+                [ ifelse (Settings.isHorizontal settings.dockOrientation) screenY screenX
+                    |> Decode.map Drag
+                    |> Events.on "mousemove"
+                , Events.on "mouseup" (Decode.succeed DragEnd)
+                , Events.on "mouseleave" (Decode.succeed DragEnd)
+                ]
+        )
+        (styledGlobal settings dragging :: children)
+
+
+viewBulletproof : List (Story Never Renderer) -> Model -> Browser.Document Msg
+viewBulletproof stories { settings, state, knobs } =
     let
-        attrs =
-            case state.dragging of
-                NoDragging ->
-                    []
+        ( actualSettings, workspaceView ) =
+            case Story.get state.current state.store of
+                Nothing ->
+                    ( { settings | navigationVisible = True }
+                    , styledWorkspace
+                        { settings | navigationVisible = True }
+                        state
+                        [ NotFound.view state.current
+                        ]
+                    )
 
-                NavigationResizing _ _ ->
-                    [ Events.on "mousemove" (Decode.map Drag screenX)
-                    , Events.on "mouseup" (Decode.succeed DragEnd)
-                    , Events.on "mouseleave" (Decode.succeed DragEnd)
-                    ]
-
-                DockResizing _ _ ->
-                    [ ifelse (Settings.isHorizontal settings.dockOrientation) screenY screenX
-                        |> Decode.map Drag
-                        |> Events.on "mousemove"
-                    , Events.on "mouseup" (Decode.succeed DragEnd)
-                    , Events.on "mouseleave" (Decode.succeed DragEnd)
-                    ]
+                Just payload ->
+                    ( settings
+                    , knobs
+                        |> Dict.get state.current
+                        |> Maybe.withDefault Knob.initial
+                        |> viewWorkspace payload settings state
+                    )
     in
-    Browser.Document "Bulletproof"
+    Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
         [ viewRoot
-            settings
+            actualSettings
             state.dragging
-            attrs
             [ styledMenu
-                [ Html.map MenuMsg (Menu.view state.menuOpened settings)
+                [ Html.map MenuMsg (Menu.view state.menuOpened actualSettings)
                 ]
 
             --
@@ -660,15 +682,19 @@ view stories (Model settings state knobs) =
                 ]
 
             --
-            , case Story.get state.current state.store of
-                Nothing ->
-                    viewEmpty
+            , workspaceView
+            ]
+            |> Html.toUnstyled
+        ]
 
-                Just payload ->
-                    knobs
-                        |> Dict.get state.current
-                        |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace payload settings state
+
+viewError : List Error -> Browser.Document msg
+viewError errors =
+    Browser.Document "Bulletproof | Warning"
+        [ styledRoot
+            []
+            [ styledGlobal Settings.default NoDragging
+            , Error.view errors
             ]
             |> Html.toUnstyled
         ]
@@ -685,20 +711,12 @@ run onSettingsChange dangerousStories =
             case Error.validateStories [] dangerousStories of
                 Err errors ->
                     ( init []
-                    , \(Model settings _ _) ->
-                        Browser.Document "Error"
-                            [ viewRoot settings
-                                NoDragging
-                                []
-                                [ Error.view errors
-                                ]
-                                |> Html.toUnstyled
-                            ]
+                    , always (viewError errors)
                     )
 
                 Ok stories ->
                     ( init stories
-                    , view stories
+                    , viewBulletproof stories
                     )
     in
     Browser.application

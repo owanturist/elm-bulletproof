@@ -1268,7 +1268,6 @@ styledError =
     styled div
         [ Css.margin2 (Css.px 8) Css.zero
         , Css.padding3 (Css.px 12) (Css.px 16) (Css.px 8)
-        , Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
         , Css.backgroundColor Palette.white
         , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
         ]
