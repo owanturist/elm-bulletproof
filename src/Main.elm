@@ -344,8 +344,9 @@ styledStoryScroller settings { viewport, dragging } =
                     )
     in
     styled div
-        [ Css.overflow Css.auto
-        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
+        [ Css.displayFlex
+        , Css.flexDirection Css.column
+        , Css.overflow Css.auto
 
         --
         , if dragging == NoDragging then
@@ -366,14 +367,12 @@ styledStoryContainer : Settings -> List (Html msg) -> Html msg
 styledStoryContainer settings =
     styled div
         [ Css.all Css.initial
+        , Css.flex2 (Css.int 1) Css.zero
+        , Css.flexBasis Css.auto
         , Css.display Css.block
-        , Css.boxSizing Css.borderBox
         , Css.position Css.relative
         , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
-        , Css.width (Css.pct 100)
-        , Css.minWidth (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.minHeight (Css.pct 100)
+        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , if settings.showGrid then
             Css.batch (cssGrid settings)
 
