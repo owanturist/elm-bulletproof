@@ -16,7 +16,7 @@ import Color exposing (Color)
 import Css
 import Date exposing (Date, Time)
 import File exposing (File)
-import Html.Styled as Html exposing (Html, input, label, option, span, styled, table, td, text, textarea, tr)
+import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, table, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -561,6 +561,29 @@ viewKnob state name knob =
             viewKnobFile name
 
 
+styledEmpty : List (Html msg) -> Html msg
+styledEmpty =
+    styled div
+        [ Css.boxSizing Css.borderBox
+        , Css.displayFlex
+        , Css.justifyContent Css.center
+        , Css.alignItems Css.center
+        , Css.padding (Css.px 12)
+        , Css.width (Css.pct 100)
+        , Css.color Palette.dark
+        , Css.fontSize (Css.px 18)
+        , Css.fontFamilies Palette.font
+        ]
+        []
+
+
+viewEmpty : Html msg
+viewEmpty =
+    styledEmpty
+        [ text "There are not declared Knobs to use."
+        ]
+
+
 styledRoot : List (Html msg) -> Html msg
 styledRoot =
     styled table
@@ -576,7 +599,11 @@ styledRoot =
 
 view : List ( String, Knob ) -> State -> Html Msg
 view knobs state =
-    knobs
-        |> List.reverse
-        |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob state name knob))
-        |> styledRoot
+    if List.isEmpty knobs then
+        viewEmpty
+
+    else
+        knobs
+            |> List.reverse
+            |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob state name knob))
+            |> styledRoot
