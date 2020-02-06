@@ -24,13 +24,14 @@ story =
                 [ h1 [] [ text storyTitle ]
                 , p [] [ text storyText ]
                 ]
-            |> Bulletproof.fromHtml
+                |> Bulletproof.fromHtml
         )
         |> Bulletproof.Knob.string "Story title" "Hello World"
         |> Bulletproof.Knob.radio "Story text"
             [ ( "Never ending story", "I once brought a honeycomb and a jackass into a brothel..." )
             , ( "Long story", "A long time ago in a galaxy far, far away..." )
             ]
+
     """
 
 
