@@ -8,8 +8,9 @@ import Browser.Navigation
 import Css
 import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
+import Empty
 import Error exposing (Error)
-import Html.Styled as Html exposing (Html, div, nav, styled, text)
+import Html.Styled as Html exposing (Html, div, nav, styled)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder, decodeString)
@@ -700,6 +701,18 @@ viewError errors =
         ]
 
 
+viewEmpty : Browser.Document msg
+viewEmpty =
+    Browser.Document "Bulletproof"
+        [ styledRoot
+            []
+            [ styledGlobal Settings.default NoDragging
+            , Empty.view
+            ]
+            |> Html.toUnstyled
+        ]
+
+
 type alias Program =
     Platform.Program (Maybe String) Model Msg
 
@@ -712,6 +725,11 @@ run onSettingsChange dangerousStories =
                 Err errors ->
                     ( init []
                     , always (viewError errors)
+                    )
+
+                Ok [] ->
+                    ( init []
+                    , always viewEmpty
                     )
 
                 Ok stories ->

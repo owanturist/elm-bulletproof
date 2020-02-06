@@ -34,11 +34,12 @@ styledRoot =
         , Css.alignItems Css.center
         , Css.justifyContent Css.center
         , Css.height (Css.pct 100)
+        , Css.width (Css.pct 100)
         , Css.color Palette.dark
         , Css.backgroundColor Palette.white
         , Css.fontFamilies Palette.font
         , Css.fontSize (Css.px 24)
-        , Css.fontSize (Css.vw 2)
+        , Css.fontSize (Css.vmin 3)
         , Css.lineHeight (Css.num 1.5)
         ]
         []

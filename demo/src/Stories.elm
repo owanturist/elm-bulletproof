@@ -2,13 +2,14 @@ port module Stories exposing (main)
 
 import Bulletproof
 import Stories.Button
+import Stories.Empty
 import Stories.Error
 import Stories.Icon
 import Stories.Knob
 import Stories.Menu
 import Stories.Navigation
-import Stories.Range
 import Stories.NotFound
+import Stories.Range
 
 
 port save_settings : String -> Cmd msg
@@ -25,4 +26,5 @@ main =
         , Stories.Knob.story
         , Stories.Error.story
         , Stories.NotFound.story
+        , Stories.Empty.story
         ]
