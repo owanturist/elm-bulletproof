@@ -2,7 +2,10 @@ module Bulletproof.Knob exposing
     ( bool, string
     , Property, min, max, step, range, int, float
     , radio, select
-    , Color, Date, File, Time, color, date, files, time
+    , Color, color
+    , Date, date
+    , Time, time
+    , File, files
     )
 
 {-| Whant to add some dynamics to your stories?
@@ -21,20 +24,20 @@ module Bulletproof.Knob exposing
 
 # Composites
 
-@docs Color color
-@docs Date date
-@docs Time time
-@docs File files
+@docs Color, color
+@docs Date, date
+@docs Time, time
+@docs File, files
 
 -}
 
 import AVL.Dict as Dict
-import Color
 import Date
 import Error
 import File
-import Knob exposing (Choice(..), Knob(..), Limits, Value(..), extract)
+import Knob exposing (Choice(..), Limits, Value(..), extract)
 import Story
+import Time
 
 
 type alias Story view =
@@ -66,7 +69,7 @@ bool name defaultValue story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Bool defaultValue ) :: payload.knobs
+                { knobs = ( config.name, Knob.Bool defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -115,7 +118,7 @@ string name defaultValue story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, String defaultValue ) :: payload.knobs
+                { knobs = ( config.name, Knob.String defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -178,7 +181,7 @@ range =
 
 {-| Set minimum value for numeric knobs.
 
-> Default for `int` and `float` ranges is `0`
+> **Note:** Default for `int` and `float` ranges is `0`
 
     storyInput : Bulletproof.Story
     storyInput =
@@ -208,7 +211,7 @@ min =
 
 {-| Set maximum value for numeric knobs.
 
-> Defaults for `int` and `float` ranges are `100` and `1` respectively.
+> **Note:** Defaults for `int` and `float` ranges are `100` and `1` respectively.
 
     storyInput : Bulletproof.Story
     storyInput =
@@ -238,7 +241,7 @@ max =
 
 {-| Set step for numeric knobs.
 
-> Defaults for `int` and `float` ranges are `1` and `0.01` respectively.
+> **Note:** Defaults for `int` and `float` ranges are `1` and `0.01` respectively.
 
     storyInput : Bulletproof.Story
     storyInput =
@@ -319,7 +322,7 @@ int name defaultValue properties story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Int asRange defaultValue limits ) :: payload.knobs
+                { knobs = ( config.name, Knob.Int asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -373,7 +376,7 @@ float name defaultValue properties story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Float asRange defaultValue limits ) :: payload.knobs
+                { knobs = ( config.name, Knob.Float asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -412,7 +415,7 @@ makeChoice choice name options story =
                     Dict.fromList options
             in
             Story.Single title
-                { knobs = ( config.name, Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
+                { knobs = ( config.name, Knob.Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
                 , view =
                     \knobs ->
                         let
@@ -493,7 +496,14 @@ select =
 {-| Simple shape contains both hex and rgb components.
 -}
 type alias Color =
-    Color.Color
+    { hex : String
+    , red : Int
+    , green : Int
+    , blue : Int
+    , r : Int
+    , g : Int
+    , b : Int
+    }
 
 
 {-| Knob of a `Color` value.
@@ -521,7 +531,7 @@ color name defaultValue story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Color config.color ) :: payload.knobs
+                { knobs = ( config.name, Knob.Color config.color ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -548,7 +558,11 @@ color name defaultValue story =
 {-| Simple shape contains year, month, day and `Time.Posix` values.
 -}
 type alias Date =
-    Date.Date
+    { posix : Time.Posix
+    , year : Int
+    , month : Int
+    , day : Int
+    }
 
 
 {-| Knob of a `Date` value.
@@ -580,7 +594,7 @@ date name defaultValue story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Date config.date ) :: payload.knobs
+                { knobs = ( config.name, Knob.Date config.date ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -607,7 +621,9 @@ date name defaultValue story =
 {-| Simple shape contains hours and minutes
 -}
 type alias Time =
-    Date.Time
+    { hours : Int
+    , minutes : Int
+    }
 
 
 {-| Knob of a `Time` value.
@@ -638,7 +654,7 @@ time name defaultValue story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Time config.time ) :: payload.knobs
+                { knobs = ( config.name, Knob.Time config.time ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of
@@ -691,7 +707,7 @@ files name story =
 
         ( Ok config, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Files ) :: payload.knobs
+                { knobs = ( config.name, Knob.Files ) :: payload.knobs
                 , view =
                     \knobs ->
                         case extract config.name knobs of

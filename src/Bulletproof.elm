@@ -40,7 +40,7 @@ type alias Renderer =
 
 {-| Allows your `Html.Styled` component to be rendered in Bulletproof.
 
-> In case of `elm-css` compatibility issues
+> **Note:** In case of `elm-css` compatibility issues
 > please convert `Html.Styled` to plain `Html` and use `fromHtml` then.
 
 -}
@@ -58,7 +58,7 @@ fromHtml layout =
 
 {-| Allows your `Element` component to be rendered in Bulletproof.
 
-> In case of `elm-ui` compatibility issues
+> **Note:** In case of `elm-ui` compatibility issues
 > please convert `Element` to plain `Html` and use `fromHtml` then.
 
 -}
@@ -80,7 +80,9 @@ To dynamically change the inputs please take a look into knobs.
     staticStory : Bulletproof.Story
     staticStory =
         Bulletproof.story "Simple static story"
-            (button [] [ text "Funny Button" ]
+            (button
+                []
+                [ text "Funny Button" ]
                 |> Bulletproof.fromHtml
             )
 
@@ -100,12 +102,18 @@ A folder might includes stories, todos, labels and other folders
     someFolder =
         Bulletproof.folder "Button"
             [ Bulletproof.story "default"
-                (button [] [ text "Button Label" ])
+                (button
+                    []
+                    [ text "Button Label" ]
+                )
                 |> Bulletproof.fromHtml
 
             --
             , Bulletproof.story "disabled"
-                (button [ disabled True ] [ text "Button Label" ])
+                (button
+                    [ disabled True ]
+                    [ text "Button Label" ]
+                )
                 |> Bulletproof.fromHtml
             ]
 
@@ -147,7 +155,7 @@ type alias Program =
 
 {-| Program to represent your stories.
 
-> To run a program you have to pass port to work with localStorage.
+> **Note:** To run a program you have to pass port to work with localStorage.
 > I'm sorry you have to do so but it's not forever.
 
 -}
