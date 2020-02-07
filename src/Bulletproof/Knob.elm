@@ -41,7 +41,7 @@ type alias Story view =
     Story.Story Error.Reason view
 
 
-{-| Knob of a boolean value.
+{-| Knob of a `Bool` value.
 
     storyButton : Bulletproof.Story
     storyButton =
@@ -90,7 +90,7 @@ bool name defaultValue story =
             Story.Fail title reasons
 
 
-{-| Knob of a string value.
+{-| Knob of a `String` value.
 
     storyButton : Bulletproof.Story
     storyButton =
@@ -289,7 +289,7 @@ propertiesToNumberPayload =
         ( False, Limits Nothing Nothing Nothing )
 
 
-{-| Knob of a string value.
+{-| Knob of a `Int` value.
 
     storyInput : Bulletproof.Story
     storyInput =
@@ -343,7 +343,7 @@ int name defaultValue properties story =
             Story.Fail title reasons
 
 
-{-| Knob of a string value.
+{-| Knob of a `Float` value.
 
     storyInput : Bulletproof.Story
     storyInput =
@@ -440,20 +440,76 @@ makeChoice choice name options story =
             Story.Fail title reasons
 
 
+{-| Knob of a custom value represented as radio group.
+The first option is selected by default.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\inputType ->
+                input
+                    [ type_ (Maybe.withDefault "text" inputType)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.radio "Type"
+                [ ( "none", Nothing )
+                , ( "email", Just "email" )
+                , ( "password", Just "password" )
+                ]
+
+-}
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
 radio =
     makeChoice Radio
 
 
+{-| Knob of a custom value represented as select element.
+The first option is selected by default.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\inputType ->
+                input
+                    [ type_ (Maybe.withDefault "text" inputType)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.select "Type"
+                [ ( "none", Nothing )
+                , ( "email", Just "email" )
+                , ( "password", Just "password" )
+                ]
+
+-}
 select : String -> List ( String, option ) -> Story (option -> a) -> Story a
 select =
     makeChoice Select
 
 
+{-| Simple shape contains both hex and rgb components.
+-}
 type alias Color =
     Color.Color
 
 
+{-| Knob of a `Color` value.
+
+    storyButton : Bulletproof.Story
+    storyButton =
+        Bulletproof.story "Button"
+            (\bgcolor ->
+                button
+                    [ style "background" bgcolor.hex ]
+                    [ text "Sign In" ]
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.color "Background" "#444"
+
+-}
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultValue story =
     case ( Error.validateColor name defaultValue, story ) of
@@ -489,10 +545,30 @@ color name defaultValue story =
             Story.Fail title reasons
 
 
+{-| Simple shape contains year, month, day and `Time.Posix` values.
+-}
 type alias Date =
     Date.Date
 
 
+{-| Knob of a `Date` value.
+
+    storyToday : Bulletproof.Story
+    storyToday =
+        Bulletproof.story "Today"
+            (\date ->
+                div
+                    []
+                    [ text "Today is: "
+                    , text (String.fromInt date.day ++ " / ")
+                    , text (String.fromInt date.month ++ " / ")
+                    , text (String.fromInt date.year)
+                    ]
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.date "Date" "31-12-1999"
+
+-}
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultValue story =
     case ( Error.validateDate name defaultValue, story ) of
@@ -528,10 +604,29 @@ date name defaultValue story =
             Story.Fail title reasons
 
 
+{-| Simple shape contains hours and minutes
+-}
 type alias Time =
     Date.Time
 
 
+{-| Knob of a `Time` value.
+
+    storyNow : Bulletproof.Story
+    storyNow =
+        Bulletproof.story "Now"
+            (\time ->
+                div
+                    []
+                    [ text ("Minutes: " ++ String.fromInt time.minutes)
+                    , text " | "
+                    , text ("Hours: " String.fromInt time.hours)
+                    ]
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.time "Time" "14:01"
+
+-}
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultValue story =
     case ( Error.validateTime name defaultValue, story ) of
@@ -567,10 +662,24 @@ time name defaultValue story =
             Story.Fail title reasons
 
 
+{-| Alias for Elm `File` representation.
+-}
 type alias File =
     File.File
 
 
+{-| Knob of a `List File` value.
+
+    storyCountFiles : Bulletproof.Story
+    storyCountFiles =
+        Bulletproof.story "Count Files"
+            (\files ->
+                text (String.fromInt (List.length files) ++ " files are ready to upload")
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.files "Files"
+
+-}
 files : String -> Story (List File -> a) -> Story a
 files name story =
     case ( Error.validateFile name, story ) of
