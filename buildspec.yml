@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 10
+    commands:
+      - cd demo
+      - pwd
+      - echo Entered the install phase...
+      - npm init -y
+      - npm install create-elm-app
+
+  build:
+    commands:
+      - echo Entered the build phase...
+      - node_modules/.bin/elm-app build
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
+artifacts:
+  base-directory: 'demo/build'
+  files:
+    - '**/*'
+
