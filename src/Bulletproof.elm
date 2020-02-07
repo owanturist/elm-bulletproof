@@ -4,7 +4,7 @@ module Bulletproof exposing
     , Program, program
     )
 
-{-| There are basic API to create and organize static stories.
+{-| Basic API to create and organize static stories.
 
 
 # Tell a story
@@ -77,11 +77,11 @@ type alias Story =
 {-| Story represents a component according inputs.
 To dynamically change the inputs please take a look into knobs.
 
-    staticStory : Story
+    staticStory : Bulletproof.Story
     staticStory =
-        story "Simple static story"
+        Bulletproof.story "Simple static story"
             (button [] [ text "Funny Button" ]
-                |> fromHtml
+                |> Bulletproof.fromHtml
             )
 
 -}
@@ -96,17 +96,17 @@ story title view =
 {-| Folder organizes your stories.
 A folder might includes stories, todos, labels and other folders
 
-    someFolder : Story
+    someFolder : Bulletproof.Story
     someFolder =
-        folder "Button"
-            [ story "default"
+        Bulletproof.folder "Button"
+            [ Bulletproof.story "default"
                 (button [] [ text "Button Label" ])
-                |> fromHtml
+                |> Bulletproof.fromHtml
 
             --
-            , story "disabled"
+            , Bulletproof.story "disabled"
                 (button [ disabled True ] [ text "Button Label" ])
-                |> fromHtml
+                |> Bulletproof.fromHtml
             ]
 
 -}
@@ -118,12 +118,12 @@ folder title stories =
 {-| Each todo is a story which has not started yet...
 Helps to remember components' states you want to make as a story.
 
-    newComponent : Story
+    newComponent : Bulletproof.Story
     newComponent =
-        folder "New component even without a name"
-            [ todo "disabled"
-            , todo "loading"
-            , todo "failed"
+        Bulletproof.folder "New component even without a name"
+            [ Bulletproof.todo "disabled"
+            , Bulletproof.todo "loading"
+            , Bulletproof.todo "failed"
             ]
 
 -}

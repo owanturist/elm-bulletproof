@@ -1,24 +1,32 @@
 module Bulletproof.Knob exposing
-    ( Color
-    , Date
-    , File
-    , Property
-    , Time
-    , bool
-    , color
-    , date
-    , files
-    , float
-    , int
-    , max
-    , min
-    , radio
-    , range
-    , select
-    , step
-    , string
-    , time
+    ( bool, string
+    , Property, min, max, step, range, int, float
+    , radio, select
+    , Color, Date, File, Time, color, date, files, time
     )
+
+{-| Whant to add some dynamics to your stories?
+
+
+# Primitives
+
+@docs bool, string
+@docs Property, min, max, step, range, int, float
+
+
+# Customs
+
+@docs radio, select
+
+
+# Composites
+
+@docs Color color
+@docs Date date
+@docs Time time
+@docs File files
+
+-}
 
 import AVL.Dict as Dict
 import Color
@@ -33,6 +41,20 @@ type alias Story view =
     Story.Story Error.Reason view
 
 
+{-| Knob of a boolean value.
+
+    storyButton : Bulletproof.Story
+    storyButton =
+        Bulletproof.story "Button"
+            (\bool ->
+                button
+                    [ disabled bool ]
+                    [ text "Sign In" ]
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.bool "disabled" True
+
+-}
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultValue story =
     case ( Error.validateBool name, story ) of
@@ -68,6 +90,20 @@ bool name defaultValue story =
             Story.Fail title reasons
 
 
+{-| Knob of a string value.
+
+    storyButton : Bulletproof.Story
+    storyButton =
+        Bulletproof.story "Button"
+            (\title ->
+                button
+                    []
+                    [ text title ]
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.string "Title" "Sign In"
+
+-}
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultValue story =
     case ( Error.validateString name, story ) of
@@ -103,6 +139,8 @@ string name defaultValue story =
             Story.Fail title reasons
 
 
+{-| Specific property to configurate numeric knobs.
+-}
 type Property num
     = Range
     | Min num
@@ -110,21 +148,119 @@ type Property num
     | Step num
 
 
+{-| Represent numeric knob as range but not input.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\int float ->
+                input
+                    [ size int
+                    , style "width" (pct float)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.int "Size"
+                10
+                [ Bulletproof.Knob.range
+                ]
+            |> Bulletproof.Knob.float "Width"
+                0.5
+                [ Bulletproof.Knob.range
+                ]
+
+-}
 range : Property num
 range =
     Range
 
 
+{-| Set minimum value for numeric knobs.
+
+> Default for `int` and `float` ranges is `0`
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\int float ->
+                input
+                    [ size int
+                    , style "width" (pct float)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.int "Size"
+                200
+                [ Bulletproof.Knob.min 100
+                ]
+            |> Bulletproof.Knob.float "Width"
+                0.5
+                [ Bulletproof.Knob.min 0.25
+                ]
+
+-}
 min : number -> Property number
 min =
     Min
 
 
+{-| Set maximum value for numeric knobs.
+
+> Defaults for `int` and `float` ranges are `100` and `1` respectively.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\int float ->
+                input
+                    [ size int
+                    , style "width" (pct float)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.int "Size"
+                200
+                [ Bulletproof.Knob.max 1000
+                ]
+            |> Bulletproof.Knob.float "Width"
+                0.5
+                [ Bulletproof.Knob.max 0.75
+                ]
+
+-}
 max : number -> Property number
 max =
     Max
 
 
+{-| Set step for numeric knobs.
+
+> Defaults for `int` and `float` ranges are `1` and `0.01` respectively.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\int float ->
+                input
+                    [ size int
+                    , style "width" (pct float)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.int "Size"
+                200
+                [ Bulletproof.Knob.step 100
+                ]
+            |> Bulletproof.Knob.float "Width"
+                0.5
+                [ Bulletproof.Knob.step 0.1
+                ]
+
+-}
 step : number -> Property number
 step =
     Step
@@ -153,6 +289,21 @@ propertiesToNumberPayload =
         ( False, Limits Nothing Nothing Nothing )
 
 
+{-| Knob of a string value.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\int ->
+                input
+                    [ size int
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.int "Size" 10 []
+
+-}
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultValue properties story =
     let
@@ -192,6 +343,21 @@ int name defaultValue properties story =
             Story.Fail title reasons
 
 
+{-| Knob of a string value.
+
+    storyInput : Bulletproof.Story
+    storyInput =
+        Bulletproof.story "Input"
+            (\float ->
+                input
+                    [ style "width" (pct float)
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+            |> Bulletproof.Knob.float "Width" 0.5 []
+
+-}
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultValue properties story =
     let
