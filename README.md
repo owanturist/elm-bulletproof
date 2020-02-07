@@ -1,6 +1,5 @@
 # Make your UI Bulletproof
 
-
 Bulletproof is a tool which helps you to organize UI components isolated of each other.
 Inspired by [Storybook](https://storybook.js.org) project.
 
@@ -9,7 +8,7 @@ elm install owanturist/elm-bulletproof
 ```
 
 
-## Example
+## Example and [Demo](http://bulletproof-demo.s3-website-eu-west-1.amazonaws.com)
 
 ```elm
 module HelloWorld exposing (story)
@@ -64,6 +63,7 @@ Otherwise a developer must to develop wide system of custom messages and models 
 
 
 ## Roadmap
+
 - [ ] Create npm package to avoid passing ports by hands. Should be something simillar with 
 [elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest)
 - [ ] Searching
