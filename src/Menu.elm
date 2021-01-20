@@ -316,7 +316,7 @@ styledRoot =
 
 
 view : Bool -> Settings -> Html Msg
-view opened settings  =
+view opened settings =
     styledRoot
         [ viewTrigger settings opened
         , if opened then

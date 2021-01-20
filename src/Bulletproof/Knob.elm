@@ -67,12 +67,12 @@ bool name defaultValue story =
         ( Err reason, Story.Single title _ ) ->
             Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single title payload ) ->
+        ( Ok validName, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Knob.Bool defaultValue ) :: payload.knobs
+                { knobs = ( validName, Knob.Bool defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract config.name knobs of
+                        case extract validName knobs of
                             Just (BoolValue value) ->
                                 payload.view knobs value
 
@@ -116,12 +116,12 @@ string name defaultValue story =
         ( Err reason, Story.Single title _ ) ->
             Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single title payload ) ->
+        ( Ok validName, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Knob.String defaultValue ) :: payload.knobs
+                { knobs = ( validName, Knob.String defaultValue ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract config.name knobs of
+                        case extract validName knobs of
                             Just (StringValue value) ->
                                 payload.view knobs value
 
@@ -320,12 +320,12 @@ int name defaultValue properties story =
         ( Err reasons, Story.Single title _ ) ->
             Story.Fail title reasons
 
-        ( Ok config, Story.Single title payload ) ->
+        ( Ok validName, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Knob.Int asRange defaultValue limits ) :: payload.knobs
+                { knobs = ( validName, Knob.Int asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract config.name knobs of
+                        case extract validName knobs of
                             Just (IntValue val) ->
                                 payload.view knobs (Maybe.withDefault defaultValue val)
 
@@ -374,12 +374,12 @@ float name defaultValue properties story =
         ( Err reasons, Story.Single title _ ) ->
             Story.Fail title reasons
 
-        ( Ok config, Story.Single title payload ) ->
+        ( Ok validName, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Knob.Float asRange defaultValue limits ) :: payload.knobs
+                { knobs = ( validName, Knob.Float asRange defaultValue limits ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract config.name knobs of
+                        case extract validName knobs of
                             Just (FloatValue val) ->
                                 payload.view knobs (Maybe.withDefault defaultValue val)
 
@@ -705,12 +705,12 @@ files name story =
         ( Err reason, Story.Single title _ ) ->
             Story.Fail title [ reason ]
 
-        ( Ok config, Story.Single title payload ) ->
+        ( Ok validName, Story.Single title payload ) ->
             Story.Single title
-                { knobs = ( config.name, Knob.Files ) :: payload.knobs
+                { knobs = ( validName, Knob.Files ) :: payload.knobs
                 , view =
                     \knobs ->
-                        case extract config.name knobs of
+                        case extract validName knobs of
                             Just (FileValue value) ->
                                 payload.view knobs value
 

@@ -62,27 +62,27 @@ type alias Error =
     }
 
 
-validateOnlyKnobName : String -> Result Reason { name : String }
+validateOnlyKnobName : String -> Result Reason String
 validateOnlyKnobName rawName =
     case nonBlank rawName of
         Nothing ->
             Err EmptyKnobTitle
 
         Just name ->
-            Ok { name = name }
+            Ok name
 
 
-validateString : String -> Result Reason { name : String }
+validateString : String -> Result Reason String
 validateString =
     validateOnlyKnobName
 
 
-validateBool : String -> Result Reason { name : String }
+validateBool : String -> Result Reason String
 validateBool =
     validateOnlyKnobName
 
 
-validateFile : String -> Result Reason { name : String }
+validateFile : String -> Result Reason String
 validateFile =
     validateOnlyKnobName
 
@@ -126,7 +126,7 @@ validateFloatLimits =
         }
 
 
-validateInt : String -> Int -> Knob.Limits Int -> Result (List Reason) { name : String }
+validateInt : String -> Int -> Knob.Limits Int -> Result (List Reason) String
 validateInt rawName int limits =
     case nonBlank rawName of
         Nothing ->
@@ -135,13 +135,13 @@ validateInt rawName int limits =
         Just name ->
             case validateIntLimits name int limits of
                 [] ->
-                    Ok { name = name }
+                    Ok name
 
                 reasons ->
                     Err reasons
 
 
-validateFloat : String -> Float -> Knob.Limits Float -> Result (List Reason) { name : String }
+validateFloat : String -> Float -> Knob.Limits Float -> Result (List Reason) String
 validateFloat rawName float limits =
     case nonBlank rawName of
         Nothing ->
@@ -150,7 +150,7 @@ validateFloat rawName float limits =
         Just name ->
             case validateFloatLimits name float limits of
                 [] ->
-                    Ok { name = name }
+                    Ok name
 
                 reasons ->
                     Err reasons
