@@ -38,9 +38,9 @@ story =
 
 ## Setup
 
-To setup Bulletproofs' app please take a look into [`demo`](./demo) folder. 
-There you might find files with exapmles of code required to run it. 
-I'm sorry you have to copy-paste the configuration. 
+To setup Bulletproofs' app please take a look into [`demo`](https://github.com/owanturist/elm-bulletproof/tree/master/demo) folder.
+There you might find files with exapmles of code required to run it.
+I'm sorry you have to copy-paste the configuration.
 It's under progress to get started by single command.
 
 
