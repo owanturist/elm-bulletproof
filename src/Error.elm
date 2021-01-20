@@ -14,10 +14,10 @@ module Error exposing
     , view
     )
 
-import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
+import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, br, code, div, pre, styled, text)
 import Html.Styled.Attributes as Attributes
 import Knob

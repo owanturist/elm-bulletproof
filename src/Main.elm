@@ -1,6 +1,5 @@
 module Main exposing (Program, run)
 
-import AVL.Dict as Dict exposing (Dict)
 import Browser
 import Browser.Dom
 import Browser.Events
@@ -8,6 +7,7 @@ import Browser.Navigation
 import Css
 import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
+import Dict exposing (Dict)
 import Empty
 import Error exposing (Error)
 import Html.Styled as Html exposing (Html, div, nav, styled)

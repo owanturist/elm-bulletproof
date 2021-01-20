@@ -1,6 +1,5 @@
 module Navigation exposing (Model, Msg, initial, open, update, view)
 
-import AVL.Set as Set exposing (Set)
 import Css
 import Html.Styled as Html exposing (Html, a, div, header, span, styled, text)
 import Html.Styled.Attributes as Attributes exposing (css)
@@ -10,6 +9,7 @@ import Icon
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
+import Set exposing (Set)
 import Story exposing (Story(..))
 import Utils exposing (ifelse, onSpaceOrEnter)
 
@@ -64,7 +64,11 @@ update key msg model =
             )
 
         Toggle path ->
-            ( Set.toggle path model
+            ( if Set.member path model then
+                Set.remove path model
+
+              else
+                Set.insert path model
             , Cmd.none
             )
 

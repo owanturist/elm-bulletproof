@@ -1,6 +1,6 @@
 module Story exposing (Path, Payload, Store, Story(..), get, makeStore, next, prev)
 
-import AVL.Dict as Dict exposing (Dict)
+import Dict exposing (Dict)
 import Knob exposing (Knob)
 import Renderer exposing (Renderer)
 

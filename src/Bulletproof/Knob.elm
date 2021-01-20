@@ -31,8 +31,8 @@ module Bulletproof.Knob exposing
 
 -}
 
-import AVL.Dict as Dict
 import Date
+import Dict
 import Error
 import File
 import Knob exposing (Choice(..), Limits, Value(..), extract)

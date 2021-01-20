@@ -11,10 +11,10 @@ module Knob exposing
     , view
     )
 
-import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
+import Dict exposing (Dict)
 import File exposing (File)
 import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, table, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
