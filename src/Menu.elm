@@ -158,15 +158,15 @@ className =
     "__bp-menu-dropdown__"
 
 
-viewTrigger : Settings -> Bool -> Html Msg
-viewTrigger { navigationVisible } opened =
-    button (ifelse opened Close Open)
+viewTrigger : Bool -> Msg -> Html Msg
+viewTrigger solid onClick =
+    button onClick
         [ Attributes.css
-            [ Css.opacity (ifelse (navigationVisible || opened) (Css.num 1) (Css.num 0.2))
+            [ Css.opacity (ifelse solid (Css.num 1) (Css.num 0.2))
 
             --
             , transition
-                [ Css.Transitions.opacity (ifelse (navigationVisible || opened) 200 1000)
+                [ Css.Transitions.opacity (ifelse solid 200 1000)
                 ]
 
             --
@@ -317,11 +317,13 @@ styledRoot =
 
 view : Bool -> Settings -> Html Msg
 view opened settings =
-    styledRoot
-        [ viewTrigger settings opened
-        , if opened then
-            viewDropdown settings
+    if opened then
+        styledRoot
+            [ viewTrigger True Close
+            , viewDropdown settings
+            ]
 
-          else
-            text ""
-        ]
+    else
+        styledRoot
+            [ viewTrigger settings.navigationVisible Open
+            ]
