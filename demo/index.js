@@ -1,4 +1,4 @@
-import { Elm } from './Stories.elm';
+import { Elm } from './src/Stories.elm';
 
 
 const SETTINGS_KEY = 'bf_settings'
