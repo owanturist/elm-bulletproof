@@ -1,4 +1,4 @@
-module Story exposing (Path, Payload, Store, Story(..), get, makeStore, next, prev)
+module Story exposing (Path, Payload, Store, Story(..), get, getFirst, getNext, getPrev)
 
 import Dict exposing (Dict)
 import Knob exposing (Knob)
@@ -132,13 +132,21 @@ makeStoreR path story ( nextStory, store ) =
             ( nextStory, store )
 
 
-get : Path -> Store -> Maybe (Payload Renderer)
-get path store =
+get : Path -> List (Story error Renderer) -> Maybe (Payload Renderer)
+get path stories =
+    let
+        store =
+            makeStore stories
+    in
     Maybe.map .payload (Dict.get path store.connections)
 
 
-next : Path -> Store -> Maybe Path
-next path store =
+getNext : Path -> List (Story error Renderer) -> Maybe Path
+getNext path stories =
+    let
+        store =
+            makeStore stories
+    in
     Maybe.andThen
         (\connection ->
             if connection.next == path then
@@ -150,8 +158,12 @@ next path store =
         (Dict.get path store.connections)
 
 
-prev : Path -> Store -> Maybe Path
-prev path store =
+getPrev : Path -> List (Story error Renderer) -> Maybe Path
+getPrev path stories =
+    let
+        store =
+            makeStore stories
+    in
     Maybe.andThen
         (\connection ->
             if connection.prev == path then
@@ -161,3 +173,9 @@ prev path store =
                 Just connection.prev
         )
         (Dict.get path store.connections)
+
+
+getFirst : List (Story error Renderer) -> Maybe Path
+getFirst stories =
+    makeStore stories
+        |> .first

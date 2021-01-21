@@ -49,7 +49,6 @@ type alias State =
     { key : Browser.Navigation.Key
     , viewport : Viewport
     , menuOpened : Bool
-    , store : Story.Store
     , current : Story.Path
     , dragging : Dragging
     , navigation : Navigation.Model
@@ -71,9 +70,6 @@ init stories settingsJSON url key =
                 |> Maybe.andThen (Result.toMaybe << decodeString Settings.decoder)
                 |> Maybe.withDefault Settings.default
 
-        store =
-            Story.makeStore stories
-
         ( initialStoryPath, initialCmd ) =
             case Router.parse url of
                 Router.ToStory storyPath ->
@@ -81,7 +77,7 @@ init stories settingsJSON url key =
 
                 Router.ToNotFound ->
                     ( []
-                    , store.first
+                    , Story.getFirst stories
                         |> Maybe.withDefault []
                         |> Router.ToStory
                         |> Router.replace key
@@ -92,7 +88,6 @@ init stories settingsJSON url key =
         { key = key
         , viewport = Viewport 0 0
         , menuOpened = False
-        , store = store
         , current = initialStoryPath
         , dragging = NoDragging
         , navigation = Navigation.open initialStoryPath Navigation.initial
@@ -120,7 +115,7 @@ type Msg
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
-    | MenuMsg Menu.Msg
+    | MenuMsg (List (Story Never Renderer)) Menu.Msg
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
 
@@ -238,7 +233,7 @@ update onSettingsChange msg { settings, state, knobs } =
             , saveSettings onSettingsChange settings
             )
 
-        MenuMsg msgOfMenu ->
+        MenuMsg stories msgOfMenu ->
             case Menu.update msgOfMenu settings of
                 Menu.Opened ->
                     ( Model settings { state | menuOpened = True } knobs
@@ -251,7 +246,7 @@ update onSettingsChange msg { settings, state, knobs } =
                     )
 
                 Menu.PrevStory ->
-                    case Story.prev state.current state.store of
+                    case Story.getPrev state.current stories of
                         Nothing ->
                             ( Model settings state knobs
                             , Cmd.none
@@ -263,7 +258,7 @@ update onSettingsChange msg { settings, state, knobs } =
                             )
 
                 Menu.NextStory ->
-                    case Story.next state.current state.store of
+                    case Story.getNext state.current stories of
                         Nothing ->
                             ( Model settings state knobs
                             , Cmd.none
@@ -304,11 +299,11 @@ update onSettingsChange msg { settings, state, knobs } =
 -- S U B S C R I P T I O N S
 
 
-subscriptions : Model -> Sub Msg
-subscriptions { state } =
+subscriptions : List (Story Never Renderer) -> Model -> Sub Msg
+subscriptions stories { state } =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
-        , Sub.map MenuMsg (Menu.subscriptions state.menuOpened)
+        , Sub.map (MenuMsg stories) (Menu.subscriptions state.menuOpened)
         ]
 
 
@@ -643,7 +638,7 @@ viewBulletproof : List (Story Never Renderer) -> Model -> Browser.Document Msg
 viewBulletproof stories { settings, state, knobs } =
     let
         ( actualSettings, workspaceView ) =
-            case Story.get state.current state.store of
+            case Story.get state.current stories of
                 Nothing ->
                     ( { settings | navigationVisible = True }
                     , styledWorkspace
@@ -666,7 +661,7 @@ viewBulletproof stories { settings, state, knobs } =
             actualSettings
             state.dragging
             [ styledMenu
-                [ Html.map MenuMsg (Menu.view state.menuOpened actualSettings)
+                [ Html.map (MenuMsg stories) (Menu.view state.menuOpened actualSettings)
                 ]
 
             --
@@ -719,28 +714,28 @@ type alias Program =
 run : (String -> Cmd msg) -> List (Story Error.Reason Renderer) -> Program
 run onSettingsChange dangerousStories =
     let
-        ( initialisator, document ) =
+        ( stories, document ) =
             case Error.validateStories [] dangerousStories of
                 Err errors ->
-                    ( init []
+                    ( []
                     , always (viewError errors)
                     )
 
                 Ok [] ->
-                    ( init []
+                    ( []
                     , always viewEmpty
                     )
 
-                Ok stories ->
-                    ( init stories
-                    , viewBulletproof stories
+                Ok safeStories ->
+                    ( safeStories
+                    , viewBulletproof safeStories
                     )
     in
     Browser.application
-        { init = initialisator
+        { init = init stories
         , update = update onSettingsChange
         , view = document
-        , subscriptions = subscriptions
+        , subscriptions = subscriptions stories
         , onUrlRequest = UrlRequested
         , onUrlChange = UrlChanged
         }
