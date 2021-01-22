@@ -134,7 +134,11 @@ update onSettingsChange msg { settings, state, knobs } =
 
         UrlRequested (Browser.Internal url) ->
             ( Model settings state knobs
-            , Browser.Navigation.pushUrl state.key (Url.toString url)
+            , if List.isEmpty (Router.parse url) then
+                Cmd.none
+
+              else
+                Browser.Navigation.pushUrl state.key (Url.toString url)
             )
 
         UrlRequested (Browser.External path) ->
