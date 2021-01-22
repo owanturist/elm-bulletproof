@@ -14,7 +14,9 @@ parse : Url -> Story.Path
 parse url =
     case String.split "/" (String.dropLeft 1 url.path) of
         "story" :: path ->
-            List.filterMap Url.percentDecode path
+            path
+                |> List.filterMap Url.percentDecode
+                |> List.filter (not << String.isEmpty)
 
         _ ->
             []
