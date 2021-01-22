@@ -70,18 +70,8 @@ init stories settingsJSON url key =
                 |> Maybe.andThen (Result.toMaybe << decodeString Settings.decoder)
                 |> Maybe.withDefault Settings.default
 
-        ( initialStoryPath, initialCmd ) =
-            case Router.parse url of
-                Router.ToStory storyPath ->
-                    ( storyPath, Cmd.none )
-
-                Router.ToNotFound ->
-                    ( []
-                    , Story.getFirst stories
-                        |> Maybe.withDefault []
-                        |> Router.ToStory
-                        |> Router.replace key
-                    )
+        initialStoryPath =
+            Router.parse url
     in
     ( Model
         initialSettings
@@ -94,7 +84,15 @@ init stories settingsJSON url key =
         }
         Dict.empty
     , Cmd.batch
-        [ initialCmd
+        [ if List.isEmpty initialStoryPath then
+            Story.getFirst stories
+                |> Maybe.withDefault []
+                |> Router.replace key
+
+          else
+            Cmd.none
+
+        --
         , Task.perform
             (\{ scene } -> ViewportChanged (round scene.width) (round scene.height))
             Browser.Dom.getViewport
@@ -146,11 +144,11 @@ update onSettingsChange msg { settings, state, knobs } =
 
         UrlChanged url ->
             ( case Router.parse url of
-                Router.ToStory storyPath ->
-                    Model settings { state | current = storyPath } knobs
-
-                Router.ToNotFound ->
+                [] ->
                     Model settings { state | current = [] } knobs
+
+                storyPath ->
+                    Model settings { state | current = storyPath } knobs
             , Cmd.none
             )
 
@@ -254,7 +252,7 @@ update onSettingsChange msg { settings, state, knobs } =
 
                         Just prevStoryPath ->
                             ( Model settings { state | navigation = Navigation.open prevStoryPath state.navigation } knobs
-                            , Router.push state.key (Router.ToStory prevStoryPath)
+                            , Router.push state.key prevStoryPath
                             )
 
                 Menu.NextStory ->
@@ -266,7 +264,7 @@ update onSettingsChange msg { settings, state, knobs } =
 
                         Just nextStoryPath ->
                             ( Model settings { state | navigation = Navigation.open nextStoryPath state.navigation } knobs
-                            , Router.push state.key (Router.ToStory nextStoryPath)
+                            , Router.push state.key nextStoryPath
                             )
 
                 Menu.SettingsChanged nextSettings ->

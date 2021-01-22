@@ -60,7 +60,7 @@ update key msg model =
     case msg of
         GoToStory storyPath ->
             ( model
-            , Router.push key (Router.ToStory storyPath)
+            , Router.push key storyPath
             )
 
         Toggle path ->
@@ -192,9 +192,7 @@ viewStoryLink active path title =
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
         , Attributes.title (String.join " / " exactStoryPath)
-        , Router.ToStory exactStoryPath
-            |> Router.toString
-            |> Attributes.href
+        , Attributes.href (Router.toString exactStoryPath)
         , onSpaceOrEnter (GoToStory exactStoryPath)
         ]
         [ viewSpacer (List.length path)
