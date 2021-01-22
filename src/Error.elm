@@ -1097,8 +1097,8 @@ Bulletproof.story "Time show"
             ]
             |> Bulletproof.fromHtml
     )
-    |> Bulletproof.Knob.time "Show time" "32-13-2020"
-    |> Bulletproof.Knob.time "Show time" "02-02-2020"
+    |> Bulletproof.Knob.time "Show time" "24:00"
+    |> Bulletproof.Knob.time "Show time" "00:00"
         """
         [ ( SyntaxHighlight.Del, 9, 10 )
         , ( SyntaxHighlight.Add, 10, 11 )
