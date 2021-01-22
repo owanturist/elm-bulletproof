@@ -35,7 +35,7 @@ import Date
 import Dict
 import Error
 import File
-import Knob exposing (Choice(..), Limits, Value(..), extract)
+import Knob exposing (Choice(..), KnobValue(..), Limits, extract)
 import Story
 import Time
 

@@ -7,6 +7,7 @@ import Css.Transitions exposing (transition)
 import Html.Styled as Html exposing (Html, div, span, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
+import Html.Styled.Lazy as Lazy
 import Icon
 import Json.Decode as Decode exposing (Decoder)
 import Palette
@@ -281,7 +282,10 @@ viewDropdown settings =
                 viewItem ToggleDockOrientation 'o' "Move dock to bottom"
 
         --
-        , ifelse (settings.navigationVisible || settings.dockVisible) "Go to full screen" "Exit full screen"
+        , ifelse
+            (settings.navigationVisible || settings.dockVisible)
+            "Go to full screen"
+            "Exit full screen"
             |> viewItem ToggleFullscreen 'f'
 
         --
@@ -319,11 +323,11 @@ view : Bool -> Settings -> Html Msg
 view opened settings =
     if opened then
         styledRoot
-            [ viewTrigger True Close
-            , viewDropdown settings
+            [ Lazy.lazy2 viewTrigger True Close
+            , Lazy.lazy viewDropdown settings
             ]
 
     else
         styledRoot
-            [ viewTrigger settings.navigationVisible Open
+            [ Lazy.lazy2 viewTrigger settings.navigationVisible Open
             ]

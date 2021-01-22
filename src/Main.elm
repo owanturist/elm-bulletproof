@@ -13,6 +13,7 @@ import Error exposing (Error)
 import Html.Styled as Html exposing (Html, div, nav, styled)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
+import Html.Styled.Lazy as Lazy
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
 import Knob
@@ -522,7 +523,7 @@ styledWorkspace settings { viewport, dragging } =
 
 
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
-viewWorkspace payload settings state knobs =
+viewWorkspace renderer settings state knobs =
     styledWorkspace
         settings
         state
@@ -530,12 +531,12 @@ viewWorkspace payload settings state knobs =
             settings
             state
             [ styledStoryContainer settings
-                [ Html.map (always NoOp) (Renderer.unwrap (payload.view knobs))
+                [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs))
                 ]
             ]
 
         --
-        , Knob.view payload.knobs knobs
+        , Lazy.lazy2 Knob.view renderer.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -633,7 +634,7 @@ viewRoot settings dragging children =
                 , Events.on "mouseleave" (Decode.succeed DragEnd)
                 ]
         )
-        (styledGlobal settings dragging :: children)
+        (Lazy.lazy2 styledGlobal settings dragging :: children)
 
 
 viewBulletproof : List (Story Never Renderer) -> Model -> Browser.Document Msg
@@ -650,12 +651,12 @@ viewBulletproof stories { settings, state, knobs } =
                         ]
                     )
 
-                Just payload ->
+                Just renderer ->
                     ( settings
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace payload settings state
+                        |> Lazy.lazy4 viewWorkspace renderer settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
@@ -663,7 +664,9 @@ viewBulletproof stories { settings, state, knobs } =
             actualSettings
             state.dragging
             [ styledMenu
-                [ Html.map (MenuMsg stories) (Menu.view state.menuOpened actualSettings)
+                [ Html.map
+                    (MenuMsg stories)
+                    (Lazy.lazy2 Menu.view state.menuOpened actualSettings)
                 ]
 
             --
@@ -675,7 +678,9 @@ viewBulletproof stories { settings, state, knobs } =
                     ]
                     [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
                     ]
-                , Html.map NavigationMsg (Navigation.view state.current stories state.navigation)
+                , Html.map
+                    NavigationMsg
+                    (Lazy.lazy3 Navigation.view state.current stories state.navigation)
                 ]
 
             --
