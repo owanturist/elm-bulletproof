@@ -8,7 +8,7 @@ elm install owanturist/elm-bulletproof
 ```
 
 
-## Example and [Demo](http://bulletproof-demo.s3-website-eu-west-1.amazonaws.com)
+## Example and [Demo](http://bulletproof-demo.surge.sh)
 
 ```elm
 module HelloWorld exposing (story)
