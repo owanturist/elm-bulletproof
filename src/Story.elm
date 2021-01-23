@@ -1,4 +1,4 @@
-module Story exposing (Path, Payload, Store, Story(..), get, getFirst, getNext, getPrev)
+module Story exposing (Path, Payload, Story(..), get, getFirst, getNext, getPrev)
 
 import Dict exposing (Dict)
 import Knob exposing (Knob)
