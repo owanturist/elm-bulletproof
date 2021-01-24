@@ -64,7 +64,8 @@ Otherwise a developer must to develop wide system of custom messages and models 
 
 ## Roadmap
 
-- [ ] Create npm package to avoid passing ports by hands. Should be something simillar with 
-[elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest)
 - [ ] Searching
-- [ ] Mark todos on high level to indicate how much of them and where they exist
+- [ ] Restore knobs state from URL
+- [ ] ~~Create npm package to avoid passing ports by hands. Should be something simillar with 
+[elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest)~~
+- [ ] ~~Mark todos on high level to indicate how much of them and where they exist~~
