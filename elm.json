@@ -3,7 +3,7 @@
     "name": "owanturist/elm-bulletproof",
     "summary": "Make your components Bulletproof",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "exposed-modules": [
         "Bulletproof",
         "Bulletproof.Knob"
