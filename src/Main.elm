@@ -319,6 +319,23 @@ subscriptions stories { state } =
 -- V I E W
 
 
+calcStoryViewport : Settings -> Viewport -> Viewport
+calcStoryViewport settings viewport =
+    case settings.dockOrientation of
+        Horizontal ->
+            Viewport
+                (viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0)
+                (viewport.height - ifelse settings.dockVisible settings.dockHeight 0)
+
+        Vertical ->
+            Viewport
+                (viewport.width
+                    - ifelse settings.navigationVisible settings.navigationWidth 0
+                    - ifelse settings.dockVisible settings.dockWidth 0
+                )
+                viewport.height
+
+
 screenX : Decoder Int
 screenX =
     Decode.field "screenX" Decode.int
@@ -329,40 +346,25 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStoryScroller : Settings -> State -> List (Html msg) -> Html msg
-styledStoryScroller settings { viewport, dragging } =
-    let
-        ( width, height ) =
-            case settings.dockOrientation of
-                Horizontal ->
-                    ( viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
-                    , viewport.height - ifelse settings.dockVisible settings.dockHeight 0
-                    )
-
-                Vertical ->
-                    ( viewport.width
-                        - ifelse settings.navigationVisible settings.navigationWidth 0
-                        - ifelse settings.dockVisible settings.dockWidth 0
-                    , viewport.height
-                    )
-    in
+styledStoryScroller : Viewport -> Bool -> List (Html msg) -> Html msg
+styledStoryScroller storyViewport isDragging =
     styled div
         [ Css.displayFlex
         , Css.flexDirection Css.column
         , Css.overflow Css.auto
 
         --
-        , if dragging == NoDragging then
+        , if isDragging then
+            Css.batch []
+
+          else
             transition
                 [ Css.Transitions.width 150
                 , Css.Transitions.height 150
                 ]
-
-          else
-            Css.batch []
         ]
-        [ Attributes.style "width" (String.fromInt width ++ "px")
-        , Attributes.style "height" (String.fromInt height ++ "px")
+        [ Attributes.style "width" (String.fromInt storyViewport.width ++ "px")
+        , Attributes.style "height" (String.fromInt storyViewport.height ++ "px")
         ]
 
 
@@ -529,12 +531,16 @@ styledWorkspace settings { viewport, dragging } =
 
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace renderer settings state knobs =
+    let
+        storyViewport =
+            calcStoryViewport settings state.viewport
+    in
     styledWorkspace
         settings
         state
         [ styledStoryScroller
-            settings
-            state
+            storyViewport
+            (state.dragging /= NoDragging)
             [ styledStoryContainer settings
                 [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs))
                 ]
