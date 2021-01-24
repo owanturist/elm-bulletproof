@@ -1,6 +1,6 @@
 module Stories.Navigation exposing (story)
 
-import AVL.Set as Set
+import Set
 import Bulletproof
 import Bulletproof.Knob
 import Css

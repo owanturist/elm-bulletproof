@@ -8,7 +8,7 @@ elm install owanturist/elm-bulletproof
 ```
 
 
-## Example and [Demo](http://bulletproof-demo.s3-website-eu-west-1.amazonaws.com)
+## Example and [Demo](http://bulletproof-demo.surge.sh)
 
 ```elm
 module HelloWorld exposing (story)
@@ -38,9 +38,9 @@ story =
 
 ## Setup
 
-To setup Bulletproofs' app please take a look into [`demo`](./demo) folder. 
-There you might find files with exapmles of code required to run it. 
-I'm sorry you have to copy-paste the configuration. 
+To setup Bulletproofs' app please take a look into [`demo`](https://github.com/owanturist/elm-bulletproof/tree/master/demo) folder.
+There you might find files with exapmles of code required to run it.
+I'm sorry you have to copy-paste the configuration.
 It's under progress to get started by single command.
 
 
@@ -64,7 +64,8 @@ Otherwise a developer must to develop wide system of custom messages and models 
 
 ## Roadmap
 
-- [ ] Create npm package to avoid passing ports by hands. Should be something simillar with 
-[elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest)
 - [ ] Searching
-- [ ] Mark todos on high level to indicate how much of them and where they exist
+- [ ] Restore knobs state from URL
+- [ ] ~~Create npm package to avoid passing ports by hands. Should be something simillar with 
+[elm-test](https://package.elm-lang.org/packages/elm-explorations/test/latest)~~
+- [ ] ~~Mark todos on high level to indicate how much of them and where they exist~~

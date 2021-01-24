@@ -16,6 +16,6 @@ story =
                 |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.select "Icon"
-            [ ( "Dock Horizontal", Icon.dockHorizontal )
-            , ( "Dock Vertical", Icon.dockVertical )
+            [ ( "folder", Icon.folder )
+            , ( "folderOpen", Icon.folderOpen )
             ]

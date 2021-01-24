@@ -1,4 +1,4 @@
-module Router exposing (Key, Route(..), parse, push, replace, toString)
+module Router exposing (Key, parse, push, replace, toString)
 
 import Browser.Navigation
 import Story
@@ -10,39 +10,32 @@ type alias Key =
     Browser.Navigation.Key
 
 
-type Route
-    = ToStory Story.Path
-    | ToNotFound
-
-
-parse : Url -> Route
+parse : Url -> Story.Path
 parse url =
     case String.split "/" (String.dropLeft 1 url.path) of
-        "story" :: [] ->
-            ToNotFound
-
         "story" :: path ->
-            ToStory (List.filterMap Url.percentDecode path)
+            path
+                |> List.filterMap Url.percentDecode
+                |> List.filter (not << String.isEmpty)
 
         _ ->
-            ToNotFound
+            []
 
 
-toString : Route -> String
-toString route =
-    case route of
-        ToStory path ->
-            Url.Builder.absolute ("story" :: path) []
+toString : Story.Path -> String
+toString path =
+    if List.isEmpty path then
+        Url.Builder.absolute [] []
 
-        ToNotFound ->
-            Url.Builder.absolute [] []
-
-
-replace : Browser.Navigation.Key -> Route -> Cmd msg
-replace key route =
-    Browser.Navigation.replaceUrl key (toString route)
+    else
+        Url.Builder.absolute ("story" :: path) []
 
 
-push : Browser.Navigation.Key -> Route -> Cmd msg
-push key route =
-    Browser.Navigation.pushUrl key (toString route)
+replace : Browser.Navigation.Key -> Story.Path -> Cmd msg
+replace key path =
+    Browser.Navigation.replaceUrl key (toString path)
+
+
+push : Browser.Navigation.Key -> Story.Path -> Cmd msg
+push key path =
+    Browser.Navigation.pushUrl key (toString path)

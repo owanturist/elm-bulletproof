@@ -14,17 +14,16 @@ module Error exposing
     , view
     )
 
-import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
 import Date exposing (Time)
+import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, br, code, div, pre, styled, text)
 import Html.Styled.Attributes as Attributes
 import Knob
 import Palette
 import Renderer exposing (Renderer)
 import Story exposing (Story)
-import String.Format
 import SyntaxHighlight
 import Time
 import Utils exposing (ifelse, nonBlank)
@@ -62,27 +61,27 @@ type alias Error =
     }
 
 
-validateOnlyKnobName : String -> Result Reason { name : String }
+validateOnlyKnobName : String -> Result Reason String
 validateOnlyKnobName rawName =
     case nonBlank rawName of
         Nothing ->
             Err EmptyKnobTitle
 
         Just name ->
-            Ok { name = name }
+            Ok name
 
 
-validateString : String -> Result Reason { name : String }
+validateString : String -> Result Reason String
 validateString =
     validateOnlyKnobName
 
 
-validateBool : String -> Result Reason { name : String }
+validateBool : String -> Result Reason String
 validateBool =
     validateOnlyKnobName
 
 
-validateFile : String -> Result Reason { name : String }
+validateFile : String -> Result Reason String
 validateFile =
     validateOnlyKnobName
 
@@ -126,7 +125,7 @@ validateFloatLimits =
         }
 
 
-validateInt : String -> Int -> Knob.Limits Int -> Result (List Reason) { name : String }
+validateInt : String -> Int -> Knob.Limits Int -> Result (List Reason) String
 validateInt rawName int limits =
     case nonBlank rawName of
         Nothing ->
@@ -135,13 +134,13 @@ validateInt rawName int limits =
         Just name ->
             case validateIntLimits name int limits of
                 [] ->
-                    Ok { name = name }
+                    Ok name
 
                 reasons ->
                     Err reasons
 
 
-validateFloat : String -> Float -> Knob.Limits Float -> Result (List Reason) { name : String }
+validateFloat : String -> Float -> Knob.Limits Float -> Result (List Reason) String
 validateFloat rawName float limits =
     case nonBlank rawName of
         Nothing ->
@@ -150,7 +149,7 @@ validateFloat rawName float limits =
         Just name ->
             case validateFloatLimits name float limits of
                 [] ->
-                    Ok { name = name }
+                    Ok name
 
                 reasons ->
                     Err reasons
@@ -422,8 +421,8 @@ textCode =
         << text
 
 
-reasonEmptyLabelTitle : Explanation msg
-reasonEmptyLabelTitle =
+explanationEmptyLabelTitle : Explanation msg
+explanationEmptyLabelTitle =
     Explanation
         [ textCode "Bulletproof.label"
         , text " has either empty or blank title"
@@ -445,8 +444,8 @@ reasonEmptyLabelTitle =
         ]
 
 
-reasonEmptyTodoTitle : Explanation msg
-reasonEmptyTodoTitle =
+explanationEmptyTodoTitle : Explanation msg
+explanationEmptyTodoTitle =
     Explanation
         [ textCode "Bulletproof.todo"
         , text " has either empty or blank title"
@@ -468,8 +467,8 @@ reasonEmptyTodoTitle =
         ]
 
 
-reasonEmptyStoryTitle : Explanation msg
-reasonEmptyStoryTitle =
+explanationEmptyStoryTitle : Explanation msg
+explanationEmptyStoryTitle =
     Explanation
         [ textCode "Bulletproof.story"
         , text " has either empty or blank title"
@@ -497,8 +496,8 @@ reasonEmptyStoryTitle =
         ]
 
 
-reasonEmptyFolderTitle : Explanation msg
-reasonEmptyFolderTitle =
+explanationEmptyFolderTitle : Explanation msg
+explanationEmptyFolderTitle =
     Explanation
         [ textCode "Bulletproof.folder"
         , text " has either empty or blank title"
@@ -520,8 +519,8 @@ reasonEmptyFolderTitle =
         ]
 
 
-reasonDuplicateLabels : String -> Int -> Explanation msg
-reasonDuplicateLabels title n =
+explanationDuplicateLabels : String -> Int -> Explanation msg
+explanationDuplicateLabels title n =
     Explanation
         [ textCode ("Bulletproof.label \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
@@ -543,8 +542,8 @@ reasonDuplicateLabels title n =
         ]
 
 
-reasonDuplicateStories : String -> Int -> Explanation msg
-reasonDuplicateStories title n =
+explanationDuplicateStories : String -> Int -> Explanation msg
+explanationDuplicateStories title n =
     Explanation
         [ textCode ("Bulletproof.story \"" ++ title ++ "\"")
         , text " or "
@@ -580,8 +579,8 @@ Each todo is a story which has not started yet...
         ]
 
 
-reasonDuplicateFolders : String -> Int -> Explanation msg
-reasonDuplicateFolders title n =
+explanationDuplicateFolders : String -> Int -> Explanation msg
+explanationDuplicateFolders title n =
     Explanation
         [ textCode ("Bulletproof.folder \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
@@ -615,8 +614,8 @@ reasonDuplicateFolders title n =
         ]
 
 
-reasonEmptyKnobTitle : Explanation msg
-reasonEmptyKnobTitle =
+explanationEmptyKnobTitle : Explanation msg
+explanationEmptyKnobTitle =
     Explanation
         [ textCode "Bulletproof.Knob.*"
         , text " has either empty or blank name"
@@ -644,8 +643,8 @@ Bulletproof.story "Button"
         ]
 
 
-reasonDuplicateKnobs : String -> Int -> Explanation msg
-reasonDuplicateKnobs name n =
+explanationDuplicateKnobs : String -> Int -> Explanation msg
+explanationDuplicateKnobs name n =
     Explanation
         [ textCode ("Bulletproof.Knob.* \"" ++ name ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
@@ -683,8 +682,8 @@ choiceToString choice =
             "select"
 
 
-reasonEmptyChoice : Knob.Choice -> String -> Explanation msg
-reasonEmptyChoice choice name =
+explanationEmptyChoice : Knob.Choice -> String -> Explanation msg
+explanationEmptyChoice choice name =
     Explanation
         [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
         , text " has no options"
@@ -700,22 +699,22 @@ Bulletproof.story "Button"
             ]
             |> Bulletproof.fromHtml
     )
-    |> Bulletproof.Knob.{{ knob }} "Button type"
+    |> Bulletproof.Knob.${knob} "Button type"
         []
         [ ( "button", "button" )
         , ( "reset", "reset" )
         , ( "submit", "submit" )
         ]
         """
-            |> String.Format.namedValue "knob" (choiceToString choice)
+            |> String.replace "${knob}" (choiceToString choice)
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 15 )
         ]
 
 
-reasonEmptyChoiceOption : Knob.Choice -> String -> Explanation msg
-reasonEmptyChoiceOption choice name =
+explanationEmptyChoiceOption : Knob.Choice -> String -> Explanation msg
+explanationEmptyChoiceOption choice name =
     Explanation
         [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
         , text " has either empty or blank options"
@@ -731,7 +730,7 @@ Bulletproof.story "Input"
             []
             |> Bulletproof.fromHtml
     )
-    |> Bulletproof.Knob.{{ knob }} "Input value"
+    |> Bulletproof.Knob.${knob} "Input value"
         [ ( "", "" )
         [ ( "empty string", "" )
         , ( "   ", "   " )
@@ -740,7 +739,7 @@ Bulletproof.story "Input"
         , ( "long string", "Lorem ipsum dolor..." )
         ]
         """
-            |> String.Format.namedValue "knob" (choiceToString choice)
+            |> String.replace "${knob}" (choiceToString choice)
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
@@ -749,8 +748,8 @@ Bulletproof.story "Input"
         ]
 
 
-reasonDuplicateChoiceOptions : Knob.Choice -> String -> String -> Int -> Explanation msg
-reasonDuplicateChoiceOptions choice name option n =
+explanationDuplicateChoiceOptions : Knob.Choice -> String -> String -> Int -> Explanation msg
+explanationDuplicateChoiceOptions choice name option n =
     Explanation
         [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
         , text (" has " ++ String.fromInt n ++ "\u{00A0}times repeated option ")
@@ -766,7 +765,7 @@ Bulletproof.story "Input"
             []
             |> Bulletproof.fromHtml
     )
-    |> Bulletproof.Knob.{{ knob }} "Input type"
+    |> Bulletproof.Knob.${knob} "Input type"
         [ ( "string", "text" )
         , ( "string", "email" )
         , ( "string", "password" )
@@ -775,15 +774,15 @@ Bulletproof.story "Input"
         , ( "user password", "password" )
         ]
         """
-            |> String.Format.namedValue "knob" (choiceToString choice)
+            |> String.replace "${knob}" (choiceToString choice)
         )
         [ ( SyntaxHighlight.Del, 9, 12 )
         , ( SyntaxHighlight.Add, 12, 15 )
         ]
 
 
-reasonInvalidIntStep : String -> Int -> Explanation msg
-reasonInvalidIntStep name step =
+explanationInvalidIntStep : String -> Int -> Explanation msg
+explanationInvalidIntStep name step =
     Explanation
         [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" ")
         , text " has not positive "
@@ -812,8 +811,8 @@ Bulletproof.story "Input"
         ]
 
 
-reasonInvalidFloatStep : String -> Float -> Explanation msg
-reasonInvalidFloatStep name step =
+explanationInvalidFloatStep : String -> Float -> Explanation msg
+explanationInvalidFloatStep name step =
     Explanation
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" ")
         , text " has not positive "
@@ -842,8 +841,8 @@ Bulletproof.story "Progressbar"
         ]
 
 
-reasonInvalidIntMin : String -> Int -> Int -> Explanation msg
-reasonInvalidIntMin name value min =
+explanationInvalidIntMin : String -> Int -> Int -> Explanation msg
+explanationInvalidIntMin name value min =
     Explanation
         [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
         , text " has "
@@ -873,8 +872,8 @@ Bulletproof.story "Input"
         ]
 
 
-reasonInvalidFloatMin : String -> Float -> Float -> Explanation msg
-reasonInvalidFloatMin name value min =
+explanationInvalidFloatMin : String -> Float -> Float -> Explanation msg
+explanationInvalidFloatMin name value min =
     Explanation
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" " ++ String.fromFloat value)
         , text " has "
@@ -904,8 +903,8 @@ Bulletproof.story "Progressbar"
         ]
 
 
-reasonInvalidIntMax : String -> Int -> Int -> Explanation msg
-reasonInvalidIntMax name value max =
+explanationInvalidIntMax : String -> Int -> Int -> Explanation msg
+explanationInvalidIntMax name value max =
     Explanation
         [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
         , text " has "
@@ -935,8 +934,8 @@ Bulletproof.story "Input"
         ]
 
 
-reasonInvalidFloatMax : String -> Float -> Float -> Explanation msg
-reasonInvalidFloatMax name value max =
+explanationInvalidFloatMax : String -> Float -> Float -> Explanation msg
+explanationInvalidFloatMax name value max =
     Explanation
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" " ++ String.fromFloat value)
         , text " has "
@@ -966,8 +965,8 @@ Bulletproof.story "Progressbar"
         ]
 
 
-reasonInvalidIntMinMax : String -> Int -> Int -> Explanation msg
-reasonInvalidIntMinMax name min max =
+explanationInvalidIntMinMax : String -> Int -> Int -> Explanation msg
+explanationInvalidIntMinMax name min max =
     Explanation
         [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" ")
         , text " has "
@@ -998,8 +997,8 @@ Bulletproof.story "Input"
         ]
 
 
-reasonInvalidFloatMinMax : String -> Float -> Float -> Explanation msg
-reasonInvalidFloatMinMax name min max =
+explanationInvalidFloatMinMax : String -> Float -> Float -> Explanation msg
+explanationInvalidFloatMinMax name min max =
     Explanation
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" ")
         , text " has "
@@ -1030,8 +1029,8 @@ Bulletproof.story "Progressbar"
         ]
 
 
-reasonInvalidColor : String -> String -> Explanation msg
-reasonInvalidColor name color =
+explanationInvalidColor : String -> String -> Explanation msg
+explanationInvalidColor name color =
     Explanation
         [ textCode ("Bulletproof.Knob.color" ++ " \"" ++ name ++ "\" \"" ++ color ++ "\"")
         , text " has invalid color"
@@ -1055,8 +1054,8 @@ Bulletproof.story "Colored Button"
         ]
 
 
-reasonInvalidDate : String -> String -> Explanation msg
-reasonInvalidDate name date =
+explanationInvalidDate : String -> String -> Explanation msg
+explanationInvalidDate name date =
     Explanation
         [ textCode ("Bulletproof.Knob.date" ++ " \"" ++ name ++ "\" \"" ++ date ++ "\"")
         , text " has invalid date"
@@ -1081,8 +1080,8 @@ Bulletproof.story "Date show"
         ]
 
 
-reasonInvalidTime : String -> String -> Explanation msg
-reasonInvalidTime name time =
+explanationInvalidTime : String -> String -> Explanation msg
+explanationInvalidTime name time =
     Explanation
         [ textCode ("Bulletproof.Knob.time" ++ " \"" ++ name ++ "\" \"" ++ time ++ "\"")
         , text " has invalid time "
@@ -1098,8 +1097,8 @@ Bulletproof.story "Time show"
             ]
             |> Bulletproof.fromHtml
     )
-    |> Bulletproof.Knob.time "Show time" "32-13-2020"
-    |> Bulletproof.Knob.time "Show time" "02-02-2020"
+    |> Bulletproof.Knob.time "Show time" "24:00"
+    |> Bulletproof.Knob.time "Show time" "00:00"
         """
         [ ( SyntaxHighlight.Del, 9, 10 )
         , ( SyntaxHighlight.Add, 10, 11 )
@@ -1110,73 +1109,73 @@ reasonToExplanation : Reason -> Explanation msg
 reasonToExplanation reason =
     case reason of
         EmptyLabelTitle ->
-            reasonEmptyLabelTitle
+            explanationEmptyLabelTitle
 
         EmptyTodoTitle ->
-            reasonEmptyTodoTitle
+            explanationEmptyTodoTitle
 
         EmptyStoryTitle ->
-            reasonEmptyStoryTitle
+            explanationEmptyStoryTitle
 
         EmptyFolderTitle ->
-            reasonEmptyFolderTitle
+            explanationEmptyFolderTitle
 
         DuplicateLabels title n ->
-            reasonDuplicateLabels title n
+            explanationDuplicateLabels title n
 
         DuplicateStories title n ->
-            reasonDuplicateStories title n
+            explanationDuplicateStories title n
 
         DuplicateFolders title n ->
-            reasonDuplicateFolders title n
+            explanationDuplicateFolders title n
 
         EmptyKnobTitle ->
-            reasonEmptyKnobTitle
+            explanationEmptyKnobTitle
 
         DuplicateKnobs name n ->
-            reasonDuplicateKnobs name n
+            explanationDuplicateKnobs name n
 
         EmptyChoice choice name ->
-            reasonEmptyChoice choice name
+            explanationEmptyChoice choice name
 
         EmptyChoiceOption choice name ->
-            reasonEmptyChoiceOption choice name
+            explanationEmptyChoiceOption choice name
 
         DuplicateChoiceOptions choice name option n ->
-            reasonDuplicateChoiceOptions choice name option n
+            explanationDuplicateChoiceOptions choice name option n
 
         InvalidIntStep name step ->
-            reasonInvalidIntStep name step
+            explanationInvalidIntStep name step
 
         InvalidFloatStep name step ->
-            reasonInvalidFloatStep name step
+            explanationInvalidFloatStep name step
 
         InvalidIntMin name value min ->
-            reasonInvalidIntMin name value min
+            explanationInvalidIntMin name value min
 
         InvalidFloatMin name value min ->
-            reasonInvalidFloatMin name value min
+            explanationInvalidFloatMin name value min
 
         InvalidIntMax name value max ->
-            reasonInvalidIntMax name value max
+            explanationInvalidIntMax name value max
 
         InvalidFloatMax name value max ->
-            reasonInvalidFloatMax name value max
+            explanationInvalidFloatMax name value max
 
         InvalidIntMinMax name min max ->
-            reasonInvalidIntMinMax name min max
+            explanationInvalidIntMinMax name min max
 
         InvalidFloatMinMax name min max ->
-            reasonInvalidFloatMinMax name min max
+            explanationInvalidFloatMinMax name min max
 
         InvalidColor name color ->
-            reasonInvalidColor name color
+            explanationInvalidColor name color
 
         InvalidDate name date ->
-            reasonInvalidDate name date
+            explanationInvalidDate name date
 
         InvalidTime name time ->
-            reasonInvalidTime name time
+            explanationInvalidTime name time
 
 
 styledLabel : List (Html msg) -> Html msg

@@ -316,16 +316,6 @@ story =
             )
 
         --
-        , Bulletproof.story "Duplicates"
-            (Knob.view
-                [ ( "Knob #2", Knob.Bool True )
-                , ( "Knob #1", Knob.String "Text" )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
         , Bulletproof.story "Single"
             (\name ->
                 Knob.view
@@ -359,21 +349,19 @@ story =
         --
         , Bulletproof.story "All Together"
             (Knob.view
-                (List.reverse
-                    [ ( "String", Knob.String "String Value" )
-                    , ( "Bool", Knob.Bool True )
-                    , ( "Int", Knob.Int False 10 { min = Nothing, max = Nothing, step = Nothing } )
-                    , ( "Float", Knob.Float False 0.1 { min = Nothing, max = Nothing, step = Nothing } )
-                    , ( "Int Range", Knob.Float True 1 { min = Just -10, max = Just 10, step = Just 2 } )
-                    , ( "Float Range", Knob.Float True 0.5 { min = Just -1, max = Just 1, step = Just 0.5 } )
-                    , ( "Radio", Knob.Choice Knob.Radio "first" [ "first", "second", "third" ] )
-                    , ( "Select", Knob.Choice Knob.Select "first" [ "first", "second", "third" ] )
-                    , ( "Color", Knob.Color (Color.makeColor "#ffff00" 255 255 0) )
-                    , ( "Date", Knob.Date (Time.millisToPosix 0) )
-                    , ( "Time", Knob.Time (Date.Time 2 20) )
-                    , ( "Files", Knob.Files )
-                    ]
-                )
+                [ ( "String", Knob.String "String Value" )
+                , ( "Bool", Knob.Bool True )
+                , ( "Int", Knob.Int False 10 { min = Nothing, max = Nothing, step = Nothing } )
+                , ( "Float", Knob.Float False 0.1 { min = Nothing, max = Nothing, step = Nothing } )
+                , ( "Int Range", Knob.Float True 1 { min = Just -10, max = Just 10, step = Just 2 } )
+                , ( "Float Range", Knob.Float True 0.5 { min = Just -1, max = Just 1, step = Just 0.5 } )
+                , ( "Radio", Knob.Choice Knob.Radio "first" [ "first", "second", "third" ] )
+                , ( "Select", Knob.Choice Knob.Select "first" [ "first", "second", "third" ] )
+                , ( "Color", Knob.Color (Color.makeColor "#ffff00" 255 255 0) )
+                , ( "Date", Knob.Date (Time.millisToPosix 0) )
+                , ( "Time", Knob.Time (Date.Time 2 20) )
+                , ( "Files", Knob.Files )
+                ]
                 Knob.initial
                 |> Bulletproof.fromElmCss
             )

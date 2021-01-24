@@ -158,15 +158,15 @@ className =
     "__bp-menu-dropdown__"
 
 
-viewTrigger : Settings -> Bool -> Html Msg
-viewTrigger { navigationVisible } opened =
-    button (ifelse opened Close Open)
+viewTrigger : Bool -> Msg -> Html Msg
+viewTrigger solid onClick =
+    button onClick
         [ Attributes.css
-            [ Css.opacity (ifelse (navigationVisible || opened) (Css.num 1) (Css.num 0.2))
+            [ Css.opacity (ifelse solid (Css.num 1) (Css.num 0.2))
 
             --
             , transition
-                [ Css.Transitions.opacity (ifelse (navigationVisible || opened) 200 1000)
+                [ Css.Transitions.opacity (ifelse solid 200 1000)
                 ]
 
             --
@@ -281,7 +281,10 @@ viewDropdown settings =
                 viewItem ToggleDockOrientation 'o' "Move dock to bottom"
 
         --
-        , ifelse (settings.navigationVisible || settings.dockVisible) "Go to full screen" "Exit full screen"
+        , ifelse
+            (settings.navigationVisible || settings.dockVisible)
+            "Go to full screen"
+            "Exit full screen"
             |> viewItem ToggleFullscreen 'f'
 
         --
@@ -316,12 +319,14 @@ styledRoot =
 
 
 view : Bool -> Settings -> Html Msg
-view opened settings  =
-    styledRoot
-        [ viewTrigger settings opened
-        , if opened then
-            viewDropdown settings
+view opened settings =
+    if opened then
+        styledRoot
+            [ viewTrigger True Close
+            , viewDropdown settings
+            ]
 
-          else
-            text ""
-        ]
+    else
+        styledRoot
+            [ viewTrigger settings.navigationVisible Open
+            ]

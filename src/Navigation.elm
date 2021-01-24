@@ -1,6 +1,5 @@
 module Navigation exposing (Model, Msg, initial, open, update, view)
 
-import AVL.Set as Set exposing (Set)
 import Css
 import Html.Styled as Html exposing (Html, a, div, header, span, styled, text)
 import Html.Styled.Attributes as Attributes exposing (css)
@@ -10,6 +9,7 @@ import Icon
 import Palette
 import Renderer exposing (Renderer(..))
 import Router
+import Set exposing (Set)
 import Story exposing (Story(..))
 import Utils exposing (ifelse, onSpaceOrEnter)
 
@@ -60,11 +60,15 @@ update key msg model =
     case msg of
         GoToStory storyPath ->
             ( model
-            , Router.push key (Router.ToStory storyPath)
+            , Router.push key storyPath
             )
 
         Toggle path ->
-            ( Set.toggle path model
+            ( if Set.member path model then
+                Set.remove path model
+
+              else
+                Set.insert path model
             , Cmd.none
             )
 
@@ -103,10 +107,9 @@ styledIconHolder =
         []
 
 
-viewTodo : Story.Path -> String -> ( String, Html msg )
+viewTodo : Story.Path -> String -> Html msg
 viewTodo path title =
-    ( toKey ("TODO" :: title :: path)
-    , div
+    div
         [ css (cssStaticItem False)
         , Attributes.tabindex -1
         ]
@@ -114,7 +117,6 @@ viewTodo path title =
         , styledIconHolder [ Icon.tools ]
         , text title
         ]
-    )
 
 
 styledLabel : List (Html msg) -> Html msg
@@ -133,14 +135,12 @@ styledLabel =
         []
 
 
-viewLabel : Story.Path -> String -> ( String, Html msg )
+viewLabel : Story.Path -> String -> Html msg
 viewLabel path title =
-    ( toKey ("LABEL" :: title :: path)
-    , styledLabel
+    styledLabel
         [ viewSpacer (List.length path)
         , text (String.toUpper title)
         ]
-    )
 
 
 cssStaticItem : Bool -> List Css.Style
@@ -173,7 +173,7 @@ cssItem active =
         :: cssStaticItem active
 
 
-viewStoryLink : Bool -> Story.Path -> String -> ( String, Html Msg )
+viewStoryLink : Bool -> Story.Path -> String -> Html Msg
 viewStoryLink active path title =
     let
         storyPath =
@@ -182,22 +182,18 @@ viewStoryLink active path title =
         exactStoryPath =
             List.reverse storyPath
     in
-    ( toKey ("STORY" :: storyPath)
-    , a
+    a
         [ css (cssItem active)
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
         , Attributes.title (String.join " / " exactStoryPath)
-        , Router.ToStory exactStoryPath
-            |> Router.toString
-            |> Attributes.href
+        , Attributes.href (Router.toString exactStoryPath)
         , onSpaceOrEnter (GoToStory exactStoryPath)
         ]
         [ viewSpacer (List.length path)
         , styledIconHolder [ Icon.elm ]
         , text title
         ]
-    )
 
 
 styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
@@ -205,8 +201,8 @@ styledFolder active =
     styled div (Css.cursor Css.pointer :: cssItem active)
 
 
-viewFolder : Model -> Story.Path -> Story.Path -> String -> List (Story error Renderer) -> List ( String, Html Msg )
-viewFolder model current path title stories =
+viewFolderTree : Model -> Story.Path -> Story.Path -> String -> List (Story error Renderer) -> List ( String, Html Msg )
+viewFolderTree model current path title stories =
     let
         folderPath =
             title :: path
@@ -252,25 +248,25 @@ viewItem : Model -> Story.Path -> Story.Path -> Story error Renderer -> List ( S
 viewItem model current path story =
     case story of
         Story.Label title ->
-            [ viewLabel path title
+            [ ( toKey ("LABEL" :: title :: path)
+              , viewLabel path title
+              )
             ]
 
         Story.Todo title ->
-            [ viewTodo path title
+            [ ( toKey ("TODO" :: title :: path)
+              , viewTodo path title
+              )
             ]
 
-        Story.Single storyID _ ->
-            case current of
-                fragmentID :: [] ->
-                    [ viewStoryLink (fragmentID == storyID) path storyID
-                    ]
+        Story.Single title _ ->
+            [ ( toKey ("STORY" :: title :: path)
+              , viewStoryLink (current == [ title ]) path title
+              )
+            ]
 
-                _ ->
-                    [ viewStoryLink False path storyID
-                    ]
-
-        Story.Batch folderID stories ->
-            viewFolder model current path folderID stories
+        Story.Batch title stories ->
+            viewFolderTree model current path title stories
 
         Story.Fail _ _ ->
             []

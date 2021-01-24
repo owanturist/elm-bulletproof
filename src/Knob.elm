@@ -1,22 +1,22 @@
 module Knob exposing
     ( Choice(..)
     , Knob(..)
+    , KnobValue(..)
     , Limits
     , Msg
     , State
-    , Value(..)
     , extract
     , initial
     , update
     , view
     )
 
-import AVL.Dict as Dict exposing (Dict)
 import Color exposing (Color)
 import Css
-import Date exposing (Date, Time)
+import Date exposing (Time)
+import Dict exposing (Dict)
 import File exposing (File)
-import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, table, td, text, textarea, tr)
+import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -50,7 +50,7 @@ type Choice
     | Select
 
 
-type Value
+type KnobValue
     = BoolValue Bool
     | StringValue String
     | IntValue (Maybe Int)
@@ -62,7 +62,7 @@ type Value
 
 
 type alias State =
-    Dict String Value
+    Dict String KnobValue
 
 
 initial : State
@@ -70,12 +70,12 @@ initial =
     Dict.empty
 
 
-extract : String -> State -> Maybe Value
+extract : String -> State -> Maybe KnobValue
 extract =
     Dict.get
 
 
-insert : String -> Value -> State -> State
+insert : String -> KnobValue -> State -> State
 insert =
     Dict.insert
 
@@ -427,142 +427,126 @@ styledKnobCell =
         []
 
 
-viewKnobRow : String -> Html msg -> Html msg
-viewKnobRow name knob =
+viewKnobRow : String -> Knob -> Maybe KnobValue -> Html Msg
+viewKnobRow name knob value =
     styledKnobRow
         [ styledKnobName [ text name ]
-        , styledKnobCell [ knob ]
+        , styledKnobCell [ viewKnob name knob value ]
         ]
 
 
-viewKnob : State -> String -> Knob -> Html Msg
-viewKnob state name knob =
-    case knob of
-        Bool defaultValue ->
-            case extract name state of
-                Just (BoolValue bool) ->
-                    viewKnobBool name bool
+viewKnob : String -> Knob -> Maybe KnobValue -> Html Msg
+viewKnob name knob value =
+    case ( knob, value ) of
+        ( Bool _, Just (BoolValue bool) ) ->
+            viewKnobBool name bool
 
-                _ ->
-                    viewKnobBool name defaultValue
+        ( Bool defaultBool, _ ) ->
+            viewKnobBool name defaultBool
 
-        String defaultValue ->
-            case extract name state of
-                Just (StringValue string) ->
-                    viewKnobString name string
+        ( String _, Just (StringValue string) ) ->
+            viewKnobString name string
 
-                _ ->
-                    viewKnobString name defaultValue
+        ( String defaultString, _ ) ->
+            viewKnobString name defaultString
 
-        Int False defaultValue limits ->
-            case extract name state of
-                Just (IntValue value) ->
-                    viewKnobNumber UpdateInt String.fromInt name value limits
+        ( Int False _ limits, Just (IntValue int) ) ->
+            viewKnobNumber UpdateInt String.fromInt name int limits
 
-                _ ->
-                    viewKnobNumber UpdateInt String.fromInt name (Just defaultValue) limits
+        ( Int False defaultInt limits, _ ) ->
+            viewKnobNumber UpdateInt String.fromInt name (Just defaultInt) limits
 
-        Int True defaultValue limits ->
-            let
-                value =
-                    case extract name state of
-                        Just (IntValue val) ->
-                            Maybe.withDefault defaultValue val
-
-                        _ ->
-                            defaultValue
-            in
+        ( Int True defaultInt limits, Just (IntValue int) ) ->
             range (UpdateInt name)
                 name
                 String.fromInt
                 { min = Maybe.withDefault 0 limits.min
                 , max = Maybe.withDefault 100 limits.max
                 , step = Maybe.withDefault 1 limits.step
-                , value = value
+                , value = Maybe.withDefault defaultInt int
                 }
 
-        Float False defaultValue limits ->
-            case extract name state of
-                Just (FloatValue value) ->
-                    viewKnobNumber UpdateFloat String.fromFloat name value limits
+        ( Int True defaultInt limits, _ ) ->
+            range (UpdateInt name)
+                name
+                String.fromInt
+                { min = Maybe.withDefault 0 limits.min
+                , max = Maybe.withDefault 100 limits.max
+                , step = Maybe.withDefault 1 limits.step
+                , value = defaultInt
+                }
 
-                _ ->
-                    viewKnobNumber UpdateFloat String.fromFloat name (Just defaultValue) limits
+        ( Float False _ limits, Just (FloatValue float) ) ->
+            viewKnobNumber UpdateFloat String.fromFloat name float limits
 
-        Float True defaultValue limits ->
-            let
-                value =
-                    case extract name state of
-                        Just (FloatValue val) ->
-                            Maybe.withDefault defaultValue val
+        ( Float False defaultFloat limits, _ ) ->
+            viewKnobNumber UpdateFloat String.fromFloat name (Just defaultFloat) limits
 
-                        _ ->
-                            defaultValue
-            in
+        ( Float True defaultFloat limits, Just (FloatValue float) ) ->
             range (UpdateFloat name)
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 limits.min
                 , max = Maybe.withDefault 1 limits.max
                 , step = Maybe.withDefault 0.01 limits.step
-                , value = value
+                , value = Maybe.withDefault defaultFloat float
                 }
 
-        Choice Radio defaultValue options ->
-            case extract name state of
-                Just (StringValue string) ->
-                    viewKnobRadio name options string
+        ( Float True defaultFloat limits, _ ) ->
+            range (UpdateFloat name)
+                name
+                String.fromFloat
+                { min = Maybe.withDefault 0 limits.min
+                , max = Maybe.withDefault 1 limits.max
+                , step = Maybe.withDefault 0.01 limits.step
+                , value = defaultFloat
+                }
 
-                _ ->
-                    viewKnobRadio name options defaultValue
+        ( Choice Radio _ options, Just (StringValue string) ) ->
+            viewKnobRadio name options string
 
-        Choice Select defaultValue options ->
-            case extract name state of
-                Just (StringValue string) ->
-                    viewKnobSelect name options string
+        ( Choice Radio defaultString options, _ ) ->
+            viewKnobRadio name options defaultString
 
-                _ ->
-                    viewKnobSelect name options defaultValue
+        ( Choice Select _ options, Just (StringValue string) ) ->
+            viewKnobSelect name options string
 
-        Color defaultValue ->
-            case extract name state of
-                Just (ColorValue Nothing) ->
-                    viewKnobColor name ""
+        ( Choice Select defaultValue options, _ ) ->
+            viewKnobSelect name options defaultValue
 
-                Just (ColorValue (Just color)) ->
-                    viewKnobColor name color.hex
+        ( Color _, Just (ColorValue Nothing) ) ->
+            viewKnobColor name ""
 
-                _ ->
-                    viewKnobColor name defaultValue.hex
+        ( Color _, Just (ColorValue (Just color)) ) ->
+            viewKnobColor name color.hex
 
-        Date defaultValue ->
-            case extract name state of
-                Just (DateValue Nothing) ->
-                    viewKnobDate name ""
+        ( Color defaultColor, _ ) ->
+            viewKnobColor name defaultColor.hex
 
-                Just (DateValue (Just date)) ->
-                    viewKnobDate name (Date.posixToString date)
+        ( Date _, Just (DateValue Nothing) ) ->
+            viewKnobDate name ""
 
-                _ ->
-                    viewKnobDate name (Date.posixToString defaultValue)
+        ( Date _, Just (DateValue (Just date)) ) ->
+            viewKnobDate name (Date.posixToString date)
 
-        Time defaultValue ->
-            case extract name state of
-                Just (TimeValue Nothing) ->
-                    viewKnobTime name ""
+        ( Date defaultPosix, _ ) ->
+            viewKnobDate name (Date.posixToString defaultPosix)
 
-                Just (TimeValue (Just time)) ->
-                    viewKnobTime name (Date.timeToString time)
+        ( Time _, Just (TimeValue Nothing) ) ->
+            viewKnobTime name ""
 
-                _ ->
-                    viewKnobTime name (Date.timeToString defaultValue)
+        ( Time _, Just (TimeValue (Just time)) ) ->
+            viewKnobTime name (Date.timeToString time)
 
-        Files ->
+        ( Time defaultTime, _ ) ->
+            viewKnobTime name (Date.timeToString defaultTime)
+
+        ( Files, _ ) ->
             viewKnobFile name
 
 
-styledEmpty : List (Html msg) -> Html msg
-styledEmpty =
+viewEmpty : Html msg
+viewEmpty =
     styled div
         [ Css.boxSizing Css.borderBox
         , Css.displayFlex
@@ -575,26 +559,19 @@ styledEmpty =
         , Css.fontFamilies Palette.font
         ]
         []
-
-
-viewEmpty : Html msg
-viewEmpty =
-    styledEmpty
         [ text "There are not declared Knobs to use."
         ]
 
 
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled table
-        [ Css.width (Css.pct 100)
-        , Css.verticalAlign Css.middle
-        , Css.borderCollapse Css.collapse
-        , Css.color Palette.dark
-        , Css.fontSize (Css.px 13)
-        , Css.fontFamilies Palette.font
-        ]
-        []
+cssRoot : List Css.Style
+cssRoot =
+    [ Css.width (Css.pct 100)
+    , Css.verticalAlign Css.middle
+    , Css.borderCollapse Css.collapse
+    , Css.color Palette.dark
+    , Css.fontSize (Css.px 13)
+    , Css.fontFamilies Palette.font
+    ]
 
 
 view : List ( String, Knob ) -> State -> Html Msg
@@ -605,5 +582,5 @@ view knobs state =
     else
         knobs
             |> List.reverse
-            |> List.map (\( name, knob ) -> viewKnobRow name (viewKnob state name knob))
-            |> styledRoot
+            |> List.map (\( name, knob ) -> ( name, viewKnobRow name knob (extract name state) ))
+            |> Keyed.node "table" [ Attributes.css cssRoot ]
