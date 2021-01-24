@@ -85,9 +85,15 @@ init stories settingsJSON url key =
         Dict.empty
     , Cmd.batch
         [ if List.isEmpty initialStoryPath then
-            Story.getFirst stories
-                |> Maybe.withDefault []
-                |> Router.replace key
+            case Story.getFirst stories of
+                Nothing ->
+                    Cmd.none
+
+                Just [] ->
+                    Cmd.none
+
+                Just firstStoryPath ->
+                    Router.replace key firstStoryPath
 
           else
             Cmd.none
