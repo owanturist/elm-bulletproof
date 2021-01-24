@@ -691,7 +691,7 @@ viewBulletproof stories { settings, state, knobs } =
 
 viewError : List Error -> Browser.Document msg
 viewError errors =
-    Browser.Document "Bulletproof | Warning"
+    Browser.Document "Bulletproof | Error"
         [ styledRoot
             []
             [ styledGlobal Settings.default NoDragging
