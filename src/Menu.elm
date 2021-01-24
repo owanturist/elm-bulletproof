@@ -7,7 +7,6 @@ import Css.Transitions exposing (transition)
 import Html.Styled as Html exposing (Html, div, span, styled, text)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
-import Html.Styled.Lazy as Lazy
 import Icon
 import Json.Decode as Decode exposing (Decoder)
 import Palette
@@ -323,11 +322,11 @@ view : Bool -> Settings -> Html Msg
 view opened settings =
     if opened then
         styledRoot
-            [ Lazy.lazy2 viewTrigger True Close
-            , Lazy.lazy viewDropdown settings
+            [ viewTrigger True Close
+            , viewDropdown settings
             ]
 
     else
         styledRoot
-            [ Lazy.lazy2 viewTrigger settings.navigationVisible Open
+            [ viewTrigger settings.navigationVisible Open
             ]

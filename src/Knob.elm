@@ -20,7 +20,6 @@ import Html.Styled as Html exposing (Html, div, input, label, option, span, styl
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
-import Html.Styled.Lazy as Lazy
 import Json.Decode as Decode exposing (Decoder)
 import Palette
 import Range exposing (range)
@@ -583,5 +582,5 @@ view knobs state =
     else
         knobs
             |> List.reverse
-            |> List.map (\( name, knob ) -> ( name, Lazy.lazy3 viewKnobRow name knob (extract name state) ))
+            |> List.map (\( name, knob ) -> ( name, viewKnobRow name knob (extract name state) ))
             |> Keyed.node "table" [ Attributes.css cssRoot ]

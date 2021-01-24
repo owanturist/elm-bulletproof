@@ -13,7 +13,6 @@ import Error exposing (Error)
 import Html.Styled as Html exposing (Html, div, nav, styled)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
-import Html.Styled.Lazy as Lazy
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
 import Knob
@@ -536,7 +535,7 @@ viewWorkspace renderer settings state knobs =
             ]
 
         --
-        , Lazy.lazy2 Knob.view renderer.knobs knobs
+        , Knob.view renderer.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -634,7 +633,7 @@ viewRoot settings dragging children =
                 , Events.on "mouseleave" (Decode.succeed DragEnd)
                 ]
         )
-        (Lazy.lazy2 styledGlobal settings dragging :: children)
+        (styledGlobal settings dragging :: children)
 
 
 viewBulletproof : List (Story Never Renderer) -> Model -> Browser.Document Msg
@@ -656,7 +655,7 @@ viewBulletproof stories { settings, state, knobs } =
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> Lazy.lazy4 viewWorkspace renderer settings state
+                        |> viewWorkspace renderer settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
@@ -666,7 +665,7 @@ viewBulletproof stories { settings, state, knobs } =
             [ styledMenu
                 [ Html.map
                     (MenuMsg stories)
-                    (Lazy.lazy2 Menu.view state.menuOpened actualSettings)
+                    (Menu.view state.menuOpened actualSettings)
                 ]
 
             --
@@ -680,7 +679,7 @@ viewBulletproof stories { settings, state, knobs } =
                     ]
                 , Html.map
                     NavigationMsg
-                    (Lazy.lazy3 Navigation.view state.current stories state.navigation)
+                    (Navigation.view state.current stories state.navigation)
                 ]
 
             --

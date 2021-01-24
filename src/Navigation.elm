@@ -5,7 +5,6 @@ import Html.Styled as Html exposing (Html, a, div, header, span, styled, text)
 import Html.Styled.Attributes as Attributes exposing (css)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
-import Html.Styled.Lazy as Lazy
 import Icon
 import Palette
 import Renderer exposing (Renderer(..))
@@ -250,19 +249,19 @@ viewItem model current path story =
     case story of
         Story.Label title ->
             [ ( toKey ("LABEL" :: title :: path)
-              , Lazy.lazy2 viewLabel path title
+              , viewLabel path title
               )
             ]
 
         Story.Todo title ->
             [ ( toKey ("TODO" :: title :: path)
-              , Lazy.lazy2 viewTodo path title
+              , viewTodo path title
               )
             ]
 
         Story.Single title _ ->
             [ ( toKey ("STORY" :: title :: path)
-              , Lazy.lazy3 viewStoryLink (current == [ title ]) path title
+              , viewStoryLink (current == [ title ]) path title
               )
             ]
 
