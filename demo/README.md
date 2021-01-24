@@ -5,11 +5,11 @@ Bulletproof sandbox of Bulletproof components.
 ### Develop
 
 ```bash
-npx parcel index.html
+npm run dev
 ```
 
 ### Build
 
 ```bash
-npx parcel build index.html
+npm run build
 ```

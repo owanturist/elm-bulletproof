@@ -1,7 +1,14 @@
 {
   "private": true,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "parcel index.html",
+    "prebuild": "npm run clean",
+    "build": "parcel build index.html --out-file 200.html"
+  },
   "devDependencies": {
     "elm-hot": "^1.1.5",
-    "node-elm-compiler": "^5.0.5"
+    "node-elm-compiler": "^5.0.5",
+    "parcel": "^1.12.4"
   }
 }
