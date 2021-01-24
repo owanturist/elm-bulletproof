@@ -316,16 +316,6 @@ story =
             )
 
         --
-        , Bulletproof.story "Duplicates"
-            (Knob.view
-                [ ( "Knob #2", Knob.Bool True )
-                , ( "Knob #1", Knob.String "Text" )
-                ]
-                Knob.initial
-                |> Bulletproof.fromElmCss
-            )
-
-        --
         , Bulletproof.story "Single"
             (\name ->
                 Knob.view
