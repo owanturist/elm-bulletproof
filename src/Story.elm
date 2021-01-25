@@ -3,6 +3,7 @@ module Story exposing (Path, Payload, Story(..), get, getFirst, getNext, getPrev
 import Dict exposing (Dict)
 import Knob exposing (Knob)
 import Renderer exposing (Renderer)
+import Utils exposing (Viewport)
 
 
 type Story error view
@@ -15,7 +16,7 @@ type Story error view
 
 type alias Payload view =
     { knobs : List ( String, Knob )
-    , view : Knob.State -> view
+    , view : Knob.State -> Viewport -> view
     }
 
 

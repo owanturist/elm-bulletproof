@@ -21,9 +21,12 @@ import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Json.Decode as Decode exposing (Decoder)
+import List
 import Palette
 import Range exposing (range)
+import String
 import Time
+import Utils exposing (Viewport, textCode)
 
 
 type Knob
@@ -36,6 +39,7 @@ type Knob
     | Date Time.Posix
     | Time Time
     | Files
+    | StoryViewport
 
 
 type alias Limits x =
@@ -75,11 +79,6 @@ extract =
     Dict.get
 
 
-insert : String -> KnobValue -> State -> State
-insert =
-    Dict.insert
-
-
 
 -- U P D A T E
 
@@ -99,13 +98,13 @@ update : Msg -> State -> State
 update msg state =
     case msg of
         UpdateBool name bool ->
-            insert name (BoolValue bool) state
+            Dict.insert name (BoolValue bool) state
 
         UpdateString name string ->
-            insert name (StringValue string) state
+            Dict.insert name (StringValue string) state
 
         UpdateInt name "" ->
-            insert name (IntValue Nothing) state
+            Dict.insert name (IntValue Nothing) state
 
         UpdateInt name str ->
             case String.toInt str of
@@ -113,10 +112,10 @@ update msg state =
                     state
 
                 Just int ->
-                    insert name (IntValue (Just int)) state
+                    Dict.insert name (IntValue (Just int)) state
 
         UpdateFloat name "" ->
-            insert name (FloatValue Nothing) state
+            Dict.insert name (FloatValue Nothing) state
 
         UpdateFloat name str ->
             case String.toFloat str of
@@ -124,10 +123,10 @@ update msg state =
                     state
 
                 Just float ->
-                    insert name (FloatValue (Just float)) state
+                    Dict.insert name (FloatValue (Just float)) state
 
         UpdateColor name "" ->
-            insert name (ColorValue Nothing) state
+            Dict.insert name (ColorValue Nothing) state
 
         UpdateColor name str ->
             case Color.fromString str of
@@ -135,10 +134,10 @@ update msg state =
                     state
 
                 Just color ->
-                    insert name (ColorValue (Just color)) state
+                    Dict.insert name (ColorValue (Just color)) state
 
         UpdateDate name "" ->
-            insert name (DateValue Nothing) state
+            Dict.insert name (DateValue Nothing) state
 
         UpdateDate name str ->
             case Date.posixFromString str of
@@ -146,10 +145,10 @@ update msg state =
                     state
 
                 Just date ->
-                    insert name (DateValue (Just date)) state
+                    Dict.insert name (DateValue (Just date)) state
 
         UpdateTime name "" ->
-            insert name (TimeValue Nothing) state
+            Dict.insert name (TimeValue Nothing) state
 
         UpdateTime name str ->
             case Date.timeFromString str of
@@ -157,10 +156,10 @@ update msg state =
                     state
 
                 Just time ->
-                    insert name (TimeValue (Just time)) state
+                    Dict.insert name (TimeValue (Just time)) state
 
         UpdateFiles name files ->
-            insert name (FileValue files) state
+            Dict.insert name (FileValue files) state
 
 
 
@@ -395,6 +394,20 @@ viewKnobFile name =
         []
 
 
+px : Int -> String
+px n =
+    String.fromInt n ++ "px"
+
+
+viewKnobStoryViewport : Viewport -> Html msg
+viewKnobStoryViewport { width, height } =
+    div []
+        [ textCode (px width)
+        , text " × "
+        , textCode (px height)
+        ]
+
+
 styledKnobRow : List (Html msg) -> Html msg
 styledKnobRow =
     styled tr
@@ -427,16 +440,18 @@ styledKnobCell =
         []
 
 
-viewKnobRow : String -> Knob -> Maybe KnobValue -> Html Msg
-viewKnobRow name knob value =
-    styledKnobRow
+viewKnobRow : Viewport -> String -> Knob -> Maybe KnobValue -> ( String, Html Msg )
+viewKnobRow globalViewport name knob value =
+    ( name
+    , styledKnobRow
         [ styledKnobName [ text name ]
-        , styledKnobCell [ viewKnob name knob value ]
+        , styledKnobCell [ viewKnob globalViewport name knob value ]
         ]
+    )
 
 
-viewKnob : String -> Knob -> Maybe KnobValue -> Html Msg
-viewKnob name knob value =
+viewKnob : Viewport -> String -> Knob -> Maybe KnobValue -> Html Msg
+viewKnob globalViewport name knob value =
     case ( knob, value ) of
         ( Bool _, Just (BoolValue bool) ) ->
             viewKnobBool name bool
@@ -544,6 +559,9 @@ viewKnob name knob value =
         ( Files, _ ) ->
             viewKnobFile name
 
+        ( StoryViewport, _ ) ->
+            viewKnobStoryViewport globalViewport
+
 
 viewEmpty : Html msg
 viewEmpty =
@@ -574,13 +592,19 @@ cssRoot =
     ]
 
 
-view : List ( String, Knob ) -> State -> Html Msg
-view knobs state =
+viewRoot : Viewport -> List ( String, Knob ) -> State -> Html Msg
+viewRoot globalViewport knobs state =
+    knobs
+        |> List.map
+            (\( name, knob ) -> viewKnobRow globalViewport name knob (extract name state))
+        |> List.reverse
+        |> Keyed.node "table" [ Attributes.css cssRoot ]
+
+
+view : Viewport -> List ( String, Knob ) -> State -> Html Msg
+view globalViewport knobs state =
     if List.isEmpty knobs then
         viewEmpty
 
     else
-        knobs
-            |> List.reverse
-            |> List.map (\( name, knob ) -> ( name, viewKnobRow name knob (extract name state) ))
-            |> Keyed.node "table" [ Attributes.css cssRoot ]
+        viewRoot globalViewport knobs state

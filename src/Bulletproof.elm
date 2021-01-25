@@ -91,7 +91,7 @@ story : String -> view -> Story.Story Error.Reason view
 story title view =
     Story.Single title
         { knobs = []
-        , view = always view
+        , view = \_ _ -> view
         }
 
 

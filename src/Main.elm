@@ -26,7 +26,7 @@ import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Task
 import Url exposing (Url)
-import Utils exposing (ifelse)
+import Utils exposing (Viewport, ifelse)
 
 
 
@@ -37,12 +37,6 @@ type Dragging
     = NoDragging
     | NavigationResizing Int Int
     | DockResizing Int Int
-
-
-type alias Viewport =
-    { width : Int
-    , height : Int
-    }
 
 
 type alias State =
@@ -441,14 +435,16 @@ viewDragger : Orientation -> List Css.Style -> List (Html.Attribute msg) -> Html
 viewDragger orientation styles attributes =
     styled div
         [ Css.position Css.absolute
+        , Css.margin (Css.px -2)
         , case orientation of
             Horizontal ->
                 Css.batch
                     [ Css.top Css.zero
                     , Css.right Css.zero
                     , Css.left Css.zero
-                    , Css.height (Css.px 4)
+                    , Css.height (Css.px 2)
                     , Css.cursor Css.nsResize
+                    , Css.padding2 (Css.px 2) Css.zero
                     ]
 
             Vertical ->
@@ -456,13 +452,20 @@ viewDragger orientation styles attributes =
                     [ Css.top Css.zero
                     , Css.bottom Css.zero
                     , Css.left Css.zero
-                    , Css.width (Css.px 4)
+                    , Css.width (Css.px 2)
                     , Css.cursor Css.ewResize
+                    , Css.padding2 Css.zero (Css.px 2)
                     ]
         , Css.batch styles
         ]
         attributes
-        []
+        [ styled div
+            [ Css.backgroundColor Palette.smoke
+            , Css.height (Css.pct 100)
+            ]
+            []
+            []
+        ]
 
 
 styledDockScroller : List (Html msg) -> Html msg
@@ -476,26 +479,20 @@ styledDockScroller =
         []
 
 
-styledDock : Settings -> List (Html msg) -> Html msg
-styledDock settings =
+styledDock : List (Html msg) -> Html msg
+styledDock =
     styled div
         [ Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.backgroundColor Palette.white
         , Css.overflow Css.hidden
-        , case settings.dockOrientation of
-            Horizontal ->
-                Css.borderTop3 (Css.px 2) Css.solid Palette.smoke
-
-            Vertical ->
-                Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
         ]
         []
 
 
 viewDock : Settings -> Html Msg -> Html Msg
 viewDock settings knobs =
-    styledDock settings
+    styledDock
         [ viewDragger settings.dockOrientation
             []
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
@@ -542,12 +539,12 @@ viewWorkspace renderer settings state knobs =
             storyViewport
             (state.dragging /= NoDragging)
             [ styledStoryContainer settings
-                [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs))
+                [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs storyViewport))
                 ]
             ]
 
         --
-        , Knob.view renderer.knobs knobs
+        , Knob.view storyViewport renderer.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -733,7 +730,7 @@ run : (String -> Cmd msg) -> List (Story Error.Reason Renderer) -> Program
 run onSettingsChange dangerousStories =
     let
         ( stories, document ) =
-            case Error.validateStories [] dangerousStories of
+            case Error.validateStories dangerousStories of
                 Err errors ->
                     ( []
                     , always (viewError errors)

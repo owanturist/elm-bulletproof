@@ -14,14 +14,18 @@ type alias Color =
     }
 
 
-makeColor : String -> Int -> Int -> Int -> Color
-makeColor hex r g b =
+makeColor : Int -> Int -> Int -> Color
+makeColor r g b =
+    let
+        hex =
+            String.join "" ("#" :: List.map Hex.toString [ r, g, b ])
+    in
     Color hex r g b r g b
 
 
 parse : Char -> Char -> Char -> Char -> Char -> Char -> Maybe Color
 parse r1 r2 g1 g2 b1 b2 =
-    Result.map3 (makeColor (String.fromList [ '#', r1, r2, g1, g2, b1, b2 ]))
+    Result.map3 makeColor
         (Hex.fromString (String.fromList [ r1, r2 ]))
         (Hex.fromString (String.fromList [ g1, g2 ]))
         (Hex.fromString (String.fromList [ b1, b2 ]))

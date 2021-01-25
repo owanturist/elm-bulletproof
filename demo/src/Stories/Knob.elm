@@ -10,11 +10,16 @@ import Knob
 import Time
 
 
+viewport : Bulletproof.Knob.Viewport
+viewport =
+    Bulletproof.Knob.Viewport 1024 768
+
+
 storyString : Bulletproof.Story
 storyString =
     Bulletproof.folder "String"
         [ Bulletproof.story "Empty"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "String", Knob.String "" )
                 ]
                 Knob.initial
@@ -23,7 +28,7 @@ storyString =
 
         --
         , Bulletproof.story "Single line"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "String", Knob.String "A single line" )
                 ]
                 Knob.initial
@@ -33,7 +38,7 @@ storyString =
         --
         , Bulletproof.story "Single long line"
             (\n ->
-                Knob.view
+                Knob.view viewport
                     [ ( "String", Knob.String (String.repeat n "ASingleLongLine") )
                     ]
                     Knob.initial
@@ -49,7 +54,7 @@ storyString =
         --
         , Bulletproof.story "Multiline"
             (\n ->
-                Knob.view
+                Knob.view viewport
                     [ ( "String"
                       , List.range 1 n
                             |> List.map (\i -> "A line #" ++ String.fromInt i)
@@ -73,7 +78,7 @@ storyBool : Bulletproof.Story
 storyBool =
     Bulletproof.folder "Bool"
         [ Bulletproof.story "Unchecked"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Bool", Knob.Bool False )
                 ]
                 Knob.initial
@@ -82,7 +87,7 @@ storyBool =
 
         --
         , Bulletproof.story "Checked"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Bool", Knob.Bool True )
                 ]
                 Knob.initial
@@ -95,7 +100,7 @@ storyInt : Bulletproof.Story
 storyInt =
     Bulletproof.folder "Int"
         [ Bulletproof.story "Input"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Int", Knob.Int False 0 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
@@ -104,7 +109,7 @@ storyInt =
 
         --
         , Bulletproof.story "Range"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Int", Knob.Int True 0 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
@@ -117,7 +122,7 @@ storyFloat : Bulletproof.Story
 storyFloat =
     Bulletproof.folder "Float"
         [ Bulletproof.story "Input"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Float", Knob.Float False 0.21 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
@@ -126,7 +131,7 @@ storyFloat =
 
         --
         , Bulletproof.story "Range"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Float", Knob.Float True 0.21 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
@@ -139,7 +144,7 @@ storyRadio : Bulletproof.Story
 storyRadio =
     Bulletproof.folder "Radio"
         [ Bulletproof.story "Duplicates"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
                         "Option #1"
@@ -154,7 +159,7 @@ storyRadio =
 
         --
         , Bulletproof.story "Single"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Radio"
                   , Knob.Choice Knob.Radio
                         "Option #1"
@@ -174,7 +179,7 @@ storyRadio =
                     , Css.backgroundColor (Css.hex "#ccc")
                     ]
                     []
-                    [ Knob.view
+                    [ Knob.view viewport
                         [ ( "Radio"
                           , Knob.Choice Knob.Radio
                                 "Option #1"
@@ -202,7 +207,7 @@ storyRadio =
         --
         , Bulletproof.story "Multiple"
             (\n ->
-                Knob.view
+                Knob.view viewport
                     [ ( "Radio"
                       , List.range 1 n
                             |> List.map (\i -> "Option #" ++ String.fromInt i)
@@ -225,7 +230,7 @@ storySelect : Bulletproof.Story
 storySelect =
     Bulletproof.folder "Select"
         [ Bulletproof.story "Duplicates"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Select"
                   , Knob.Choice Knob.Select
                         "Option #1"
@@ -240,7 +245,7 @@ storySelect =
 
         --
         , Bulletproof.story "Single"
-            (Knob.view
+            (Knob.view viewport
                 [ ( "Select"
                   , Knob.Choice Knob.Select
                         "Option #1"
@@ -260,7 +265,7 @@ storySelect =
                     , Css.backgroundColor (Css.hex "#ccc")
                     ]
                     []
-                    [ Knob.view
+                    [ Knob.view viewport
                         [ ( "Select"
                           , Knob.Choice Knob.Select
                                 "Option #1"
@@ -288,7 +293,7 @@ storySelect =
         --
         , Bulletproof.story "Multiple"
             (\n ->
-                Knob.view
+                Knob.view viewport
                     [ ( "Select"
                       , List.range 1 n
                             |> List.map (\i -> "Option #" ++ String.fromInt i)
@@ -311,14 +316,14 @@ story : Bulletproof.Story
 story =
     Bulletproof.folder "Knob"
         [ Bulletproof.story "Empty"
-            (Knob.view [] Knob.initial
+            (Knob.view viewport [] Knob.initial
                 |> Bulletproof.fromElmCss
             )
 
         --
         , Bulletproof.story "Single"
             (\name ->
-                Knob.view
+                Knob.view viewport
                     [ ( name, Knob.Bool True )
                     ]
                     Knob.initial
@@ -329,7 +334,7 @@ story =
         --
         , Bulletproof.story "Multiple"
             (\n ->
-                Knob.view
+                Knob.view viewport
                     (List.map
                         (\i ->
                             ( "Knob #" ++ String.fromInt i, Knob.Bool True )
@@ -347,24 +352,77 @@ story =
                 ]
 
         --
-        , Bulletproof.story "All Together"
+        , Bulletproof.story "Color"
+            (\r g b ->
+                Knob.view
+                    viewport
+                    [ ( "Color", Knob.Color (Color.makeColor r g b) )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Red"
+                0
+                [ Bulletproof.Knob.range, Bulletproof.Knob.min 0, Bulletproof.Knob.max 255 ]
+            |> Bulletproof.Knob.int "Green"
+                0
+                [ Bulletproof.Knob.range, Bulletproof.Knob.min 0, Bulletproof.Knob.max 255 ]
+            |> Bulletproof.Knob.int "Blue"
+                0
+                [ Bulletproof.Knob.range, Bulletproof.Knob.min 0, Bulletproof.Knob.max 255 ]
+
+        --
+        , Bulletproof.story "Date"
+            (\ms ->
+                Knob.view
+                    viewport
+                    [ ( "Date", Knob.Date (Time.millisToPosix ms) )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Milliseconds" 0 [ Bulletproof.Knob.min 0 ]
+
+        --
+        , Bulletproof.story "Time"
+            (\hours minutes ->
+                Knob.view
+                    viewport
+                    [ ( "Time", Knob.Time (Date.Time hours minutes) )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Hours"
+                0
+                [ Bulletproof.Knob.range, Bulletproof.Knob.min 0, Bulletproof.Knob.max 23 ]
+            |> Bulletproof.Knob.int "Minutes"
+                0
+                [ Bulletproof.Knob.range, Bulletproof.Knob.min 0, Bulletproof.Knob.max 59 ]
+
+        --
+        , Bulletproof.story "Files"
             (Knob.view
-                [ ( "String", Knob.String "String Value" )
-                , ( "Bool", Knob.Bool True )
-                , ( "Int", Knob.Int False 10 { min = Nothing, max = Nothing, step = Nothing } )
-                , ( "Float", Knob.Float False 0.1 { min = Nothing, max = Nothing, step = Nothing } )
-                , ( "Int Range", Knob.Float True 1 { min = Just -10, max = Just 10, step = Just 2 } )
-                , ( "Float Range", Knob.Float True 0.5 { min = Just -1, max = Just 1, step = Just 0.5 } )
-                , ( "Radio", Knob.Choice Knob.Radio "first" [ "first", "second", "third" ] )
-                , ( "Select", Knob.Choice Knob.Select "first" [ "first", "second", "third" ] )
-                , ( "Color", Knob.Color (Color.makeColor "#ffff00" 255 255 0) )
-                , ( "Date", Knob.Date (Time.millisToPosix 0) )
-                , ( "Time", Knob.Time (Date.Time 2 20) )
-                , ( "Files", Knob.Files )
+                viewport
+                [ ( "Files", Knob.Files )
                 ]
                 Knob.initial
                 |> Bulletproof.fromElmCss
             )
+
+        --
+        , Bulletproof.story "Viewport"
+            (\width height _ ->
+                Knob.view
+                    { width = width, height = height }
+                    [ ( "Viewport", Knob.StoryViewport )
+                    ]
+                    Knob.initial
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Width" viewport.width []
+            |> Bulletproof.Knob.int "Height" viewport.height []
+            |> Bulletproof.Knob.viewport
 
         --
         , storyString
