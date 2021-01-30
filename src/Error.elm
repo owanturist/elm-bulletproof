@@ -1148,7 +1148,7 @@ explanationDuplicateStoryViewport n =
         [ textCode "Bulletproof.Knob.viewport"
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
-        [ text "Please make sure you've used the knob only once inside a story."
+        [ text "Please make sure you've used the viewport knob only once inside a story."
         ]
         """
 Bulletproof.story "Button"

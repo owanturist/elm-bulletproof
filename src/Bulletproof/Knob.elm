@@ -495,7 +495,7 @@ select =
     makeChoice Select
 
 
-{-| Simple shape contains both hex and rgb components.
+{-| Shape contains both hex and rgb components.
 -}
 type alias Color =
     { hex : String
@@ -557,7 +557,7 @@ color name defaultValue story =
             Story.Fail title reasons
 
 
-{-| Simple shape contains year, month, day and `Time.Posix` values.
+{-| Shape contains year, month, day and `Time.Posix` values.
 -}
 type alias Date =
     { posix : Time.Posix
@@ -620,7 +620,7 @@ date name defaultValue story =
             Story.Fail title reasons
 
 
-{-| Simple shape contains hours and minutes
+{-| Shape contains hours and minutes.
 -}
 type alias Time =
     { hours : Int
@@ -733,12 +733,35 @@ files name story =
             Story.Fail title reasons
 
 
+{-| Shape of story viewport dimension.
+-}
 type alias Viewport =
     { width : Int
     , height : Int
     }
 
 
+{-| Knob of a story viewport.
+
+Creates a knob with `"Viewport"` name.
+
+    storyCountFiles : Bulletproof.Story
+    storyCountFiles =
+        Bulletproof.story "Count Files"
+            (\viewport ->
+                img
+                    [ href "cat.jpg"
+                    , if viewport.width > viewport.height then
+                        style "width" "100%"
+
+                      else
+                        style "height" "100%"
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+
+-}
 viewport : Story (Viewport -> a) -> Story a
 viewport story =
     case story of
