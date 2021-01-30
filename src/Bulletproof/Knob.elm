@@ -6,6 +6,7 @@ module Bulletproof.Knob exposing
     , Date, date
     , Time, time
     , File, files
+    , Viewport, viewport
     )
 
 {-| Whant to add some dynamics to your stories?
@@ -28,6 +29,7 @@ module Bulletproof.Knob exposing
 @docs Date, date
 @docs Time, time
 @docs File, files
+@docs Viewport, viewport
 
 -}
 
@@ -35,7 +37,7 @@ import Date
 import Dict
 import Error
 import File
-import Knob exposing (Choice(..), KnobValue(..), Limits, extract)
+import Knob exposing (Choice(..), KnobValue(..), Limits)
 import Story
 import Time
 
@@ -71,13 +73,13 @@ bool name defaultValue story =
             Story.Single title
                 { knobs = ( validName, Knob.Bool defaultValue ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract validName knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract validName knobs of
                             Just (BoolValue value) ->
-                                payload.view knobs value
+                                payload.view knobs storyViewport value
 
                             _ ->
-                                payload.view knobs defaultValue
+                                payload.view knobs storyViewport defaultValue
                 }
 
         ( _, Story.Label title ) ->
@@ -120,13 +122,13 @@ string name defaultValue story =
             Story.Single title
                 { knobs = ( validName, Knob.String defaultValue ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract validName knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract validName knobs of
                             Just (StringValue value) ->
-                                payload.view knobs value
+                                payload.view knobs storyViewport value
 
                             _ ->
-                                payload.view knobs defaultValue
+                                payload.view knobs storyViewport defaultValue
                 }
 
         ( _, Story.Label title ) ->
@@ -324,13 +326,13 @@ int name defaultValue properties story =
             Story.Single title
                 { knobs = ( validName, Knob.Int asRange defaultValue limits ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract validName knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract validName knobs of
                             Just (IntValue val) ->
-                                payload.view knobs (Maybe.withDefault defaultValue val)
+                                payload.view knobs storyViewport (Maybe.withDefault defaultValue val)
 
                             _ ->
-                                payload.view knobs defaultValue
+                                payload.view knobs storyViewport defaultValue
                 }
 
         ( _, Story.Label title ) ->
@@ -378,13 +380,13 @@ float name defaultValue properties story =
             Story.Single title
                 { knobs = ( validName, Knob.Float asRange defaultValue limits ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract validName knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract validName knobs of
                             Just (FloatValue val) ->
-                                payload.view knobs (Maybe.withDefault defaultValue val)
+                                payload.view knobs storyViewport (Maybe.withDefault defaultValue val)
 
                             _ ->
-                                payload.view knobs defaultValue
+                                payload.view knobs storyViewport defaultValue
                 }
 
         ( _, Story.Label title ) ->
@@ -417,17 +419,17 @@ makeChoice choice name options story =
             Story.Single title
                 { knobs = ( config.name, Knob.Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
                 , view =
-                    \knobs ->
+                    \knobs storyViewport ->
                         let
                             value =
-                                case extract config.name knobs of
+                                case Knob.extract config.name knobs of
                                     Just (StringValue key) ->
                                         Maybe.withDefault config.option (Dict.get key optionsDict)
 
                                     _ ->
                                         config.option
                         in
-                        payload.view knobs value
+                        payload.view knobs storyViewport value
                 }
 
         ( _, Story.Label title ) ->
@@ -493,7 +495,7 @@ select =
     makeChoice Select
 
 
-{-| Simple shape contains both hex and rgb components.
+{-| Shape contains both hex and rgb components.
 -}
 type alias Color =
     { hex : String
@@ -533,13 +535,13 @@ color name defaultValue story =
             Story.Single title
                 { knobs = ( config.name, Knob.Color config.color ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract config.name knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract config.name knobs of
                             Just (ColorValue (Just value)) ->
-                                payload.view knobs value
+                                payload.view knobs storyViewport value
 
                             _ ->
-                                payload.view knobs config.color
+                                payload.view knobs storyViewport config.color
                 }
 
         ( _, Story.Label title ) ->
@@ -555,7 +557,7 @@ color name defaultValue story =
             Story.Fail title reasons
 
 
-{-| Simple shape contains year, month, day and `Time.Posix` values.
+{-| Shape contains year, month, day and `Time.Posix` values.
 -}
 type alias Date =
     { posix : Time.Posix
@@ -596,13 +598,13 @@ date name defaultValue story =
             Story.Single title
                 { knobs = ( config.name, Knob.Date config.date ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract config.name knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract config.name knobs of
                             Just (DateValue (Just value)) ->
-                                payload.view knobs (Date.dateFromPosix value)
+                                payload.view knobs storyViewport (Date.dateFromPosix value)
 
                             _ ->
-                                payload.view knobs (Date.dateFromPosix config.date)
+                                payload.view knobs storyViewport (Date.dateFromPosix config.date)
                 }
 
         ( _, Story.Label title ) ->
@@ -618,7 +620,7 @@ date name defaultValue story =
             Story.Fail title reasons
 
 
-{-| Simple shape contains hours and minutes
+{-| Shape contains hours and minutes.
 -}
 type alias Time =
     { hours : Int
@@ -656,13 +658,13 @@ time name defaultValue story =
             Story.Single title
                 { knobs = ( config.name, Knob.Time config.time ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract config.name knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract config.name knobs of
                             Just (TimeValue (Just value)) ->
-                                payload.view knobs value
+                                payload.view knobs storyViewport value
 
                             _ ->
-                                payload.view knobs config.time
+                                payload.view knobs storyViewport config.time
                 }
 
         ( _, Story.Label title ) ->
@@ -709,13 +711,13 @@ files name story =
             Story.Single title
                 { knobs = ( validName, Knob.Files ) :: payload.knobs
                 , view =
-                    \knobs ->
-                        case extract validName knobs of
+                    \knobs storyViewport ->
+                        case Knob.extract validName knobs of
                             Just (FileValue value) ->
-                                payload.view knobs value
+                                payload.view knobs storyViewport value
 
                             _ ->
-                                payload.view knobs []
+                                payload.view knobs storyViewport []
                 }
 
         ( _, Story.Label title ) ->
@@ -729,3 +731,56 @@ files name story =
 
         ( _, Story.Fail title reasons ) ->
             Story.Fail title reasons
+
+
+{-| Shape of story viewport dimension.
+-}
+type alias Viewport =
+    { width : Int
+    , height : Int
+    }
+
+
+{-| Knob of a story viewport.
+
+Creates a knob with `"Viewport"` name.
+
+    storyCountFiles : Bulletproof.Story
+    storyCountFiles =
+        Bulletproof.story "Count Files"
+            (\viewport ->
+                img
+                    [ href "cat.jpg"
+                    , if viewport.width > viewport.height then
+                        style "width" "100%"
+
+                      else
+                        style "height" "100%"
+                    ]
+                    []
+                    |> Bulletproof.fromHtml
+            )
+
+-}
+viewport : Story (Viewport -> a) -> Story a
+viewport story =
+    case story of
+        Story.Fail title reasons ->
+            Story.Fail title reasons
+
+        Story.Single title payload ->
+            Story.Single title
+                { knobs = ( "Viewport", Knob.StoryViewport ) :: payload.knobs
+                , view =
+                    \knobs storyViewport ->
+                        payload.view knobs storyViewport storyViewport
+                }
+
+        Story.Label title ->
+            Story.Label title
+
+        Story.Todo title ->
+            Story.Todo title
+
+        Story.Batch title stories ->
+            Story.Batch title stories

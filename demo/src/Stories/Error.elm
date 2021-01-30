@@ -466,4 +466,22 @@ story =
             )
             |> Bulletproof.Knob.string "Knob name" "Time name"
             |> Bulletproof.Knob.string "Time" "60:25"
+
+        --
+        , Bulletproof.label "Viewport"
+
+        --
+        , Bulletproof.story "Duplicate Viewport"
+            (\n ->
+                Error.view
+                    [ Error defaultPath (Error.DuplicateStoryViewport n)
+                    ]
+                    |> Bulletproof.fromElmCss
+            )
+            |> Bulletproof.Knob.int "Duplicates"
+                3
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 10
+                ]
         ]

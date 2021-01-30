@@ -77,7 +77,7 @@ view =
             [ styledTitle
                 [ text "Don't know where to start?"
                 , br [] []
-                , text "Let me tell you a classic story..."
+                , text "Let me tell you a story..."
                 ]
             , case SyntaxHighlight.elm (String.trim exampleGetStarted) of
                 Err _ ->

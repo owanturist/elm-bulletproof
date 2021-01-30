@@ -26,7 +26,12 @@ import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Task
 import Url exposing (Url)
-import Utils exposing (ifelse)
+import Utils exposing (Viewport, ifelse, px)
+
+
+paddingSize : Int
+paddingSize =
+    10
 
 
 
@@ -37,12 +42,6 @@ type Dragging
     = NoDragging
     | NavigationResizing Int Int
     | DockResizing Int Int
-
-
-type alias Viewport =
-    { width : Int
-    , height : Int
-    }
 
 
 type alias State =
@@ -319,6 +318,34 @@ subscriptions stories { state } =
 -- V I E W
 
 
+calcViewport : Settings -> Viewport -> Viewport
+calcViewport settings { width, height } =
+    case settings.dockOrientation of
+        Horizontal ->
+            Viewport
+                (width - ifelse settings.navigationVisible settings.navigationWidth 0)
+                (height - ifelse settings.dockVisible settings.dockHeight 0)
+
+        Vertical ->
+            Viewport
+                (width
+                    - ifelse settings.navigationVisible settings.navigationWidth 0
+                    - ifelse settings.dockVisible settings.dockWidth 0
+                )
+                height
+
+
+reducePaddingsForViewport : Bool -> Viewport -> Viewport
+reducePaddingsForViewport addPaddings viewport =
+    if addPaddings then
+        Viewport
+            (viewport.width - 2 * paddingSize)
+            (viewport.height - 2 * paddingSize)
+
+    else
+        viewport
+
+
 screenX : Decoder Int
 screenX =
     Decode.field "screenX" Decode.int
@@ -329,40 +356,25 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStoryScroller : Settings -> State -> List (Html msg) -> Html msg
-styledStoryScroller settings { viewport, dragging } =
-    let
-        ( width, height ) =
-            case settings.dockOrientation of
-                Horizontal ->
-                    ( viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
-                    , viewport.height - ifelse settings.dockVisible settings.dockHeight 0
-                    )
-
-                Vertical ->
-                    ( viewport.width
-                        - ifelse settings.navigationVisible settings.navigationWidth 0
-                        - ifelse settings.dockVisible settings.dockWidth 0
-                    , viewport.height
-                    )
-    in
+styledStoryScroller : Viewport -> Bool -> List (Html msg) -> Html msg
+styledStoryScroller storyViewport isDragging =
     styled div
         [ Css.displayFlex
         , Css.flexDirection Css.column
         , Css.overflow Css.auto
 
         --
-        , if dragging == NoDragging then
+        , if isDragging then
+            Css.batch []
+
+          else
             transition
                 [ Css.Transitions.width 150
                 , Css.Transitions.height 150
                 ]
-
-          else
-            Css.batch []
         ]
-        [ Attributes.style "width" (String.fromInt width ++ "px")
-        , Attributes.style "height" (String.fromInt height ++ "px")
+        [ Attributes.style "width" (px storyViewport.width)
+        , Attributes.style "height" (px storyViewport.height)
         ]
 
 
@@ -374,7 +386,7 @@ styledStoryContainer settings =
         , Css.flexBasis Css.auto
         , Css.display Css.block
         , Css.position Css.relative
-        , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
+        , Css.padding (Css.px (ifelse settings.addPaddings (toFloat paddingSize) 0))
         , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , if settings.showGrid then
             Css.batch (cssGrid settings)
@@ -439,14 +451,16 @@ viewDragger : Orientation -> List Css.Style -> List (Html.Attribute msg) -> Html
 viewDragger orientation styles attributes =
     styled div
         [ Css.position Css.absolute
+        , Css.margin (Css.px -2)
         , case orientation of
             Horizontal ->
                 Css.batch
                     [ Css.top Css.zero
                     , Css.right Css.zero
                     , Css.left Css.zero
-                    , Css.height (Css.px 4)
+                    , Css.height (Css.px 2)
                     , Css.cursor Css.nsResize
+                    , Css.padding2 (Css.px 2) Css.zero
                     ]
 
             Vertical ->
@@ -454,13 +468,20 @@ viewDragger orientation styles attributes =
                     [ Css.top Css.zero
                     , Css.bottom Css.zero
                     , Css.left Css.zero
-                    , Css.width (Css.px 4)
+                    , Css.width (Css.px 2)
                     , Css.cursor Css.ewResize
+                    , Css.padding2 Css.zero (Css.px 2)
                     ]
         , Css.batch styles
         ]
         attributes
-        []
+        [ styled div
+            [ Css.backgroundColor Palette.smoke
+            , Css.height (Css.pct 100)
+            ]
+            []
+            []
+        ]
 
 
 styledDockScroller : List (Html msg) -> Html msg
@@ -474,26 +495,20 @@ styledDockScroller =
         []
 
 
-styledDock : Settings -> List (Html msg) -> Html msg
-styledDock settings =
+styledDock : List (Html msg) -> Html msg
+styledDock =
     styled div
         [ Css.position Css.relative
         , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
         , Css.backgroundColor Palette.white
         , Css.overflow Css.hidden
-        , case settings.dockOrientation of
-            Horizontal ->
-                Css.borderTop3 (Css.px 2) Css.solid Palette.smoke
-
-            Vertical ->
-                Css.borderLeft3 (Css.px 2) Css.solid Palette.smoke
         ]
         []
 
 
 viewDock : Settings -> Html Msg -> Html Msg
 viewDock settings knobs =
-    styledDock settings
+    styledDock
         [ viewDragger settings.dockOrientation
             []
             [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
@@ -523,25 +538,32 @@ styledWorkspace settings { viewport, dragging } =
           else
             Css.batch []
         ]
-        [ Attributes.style "width" (String.fromInt width ++ "px")
+        [ Attributes.style "width" (px width)
         ]
 
 
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace renderer settings state knobs =
+    let
+        viewport =
+            calcViewport settings state.viewport
+
+        storyViewport =
+            reducePaddingsForViewport settings.addPaddings viewport
+    in
     styledWorkspace
         settings
         state
         [ styledStoryScroller
-            settings
-            state
+            viewport
+            (state.dragging /= NoDragging)
             [ styledStoryContainer settings
-                [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs))
+                [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs storyViewport))
                 ]
             ]
 
         --
-        , Knob.view renderer.knobs knobs
+        , Knob.view storyViewport renderer.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -727,7 +749,7 @@ run : (String -> Cmd msg) -> List (Story Error.Reason Renderer) -> Program
 run onSettingsChange dangerousStories =
     let
         ( stories, document ) =
-            case Error.validateStories [] dangerousStories of
+            case Error.validateStories dangerousStories of
                 Err errors ->
                     ( []
                     , always (viewError errors)

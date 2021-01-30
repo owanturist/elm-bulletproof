@@ -10,6 +10,7 @@ module Date exposing
     )
 
 import DateTime exposing (DateTime)
+import Dict exposing (Dict)
 import Time
 
 
@@ -25,47 +26,22 @@ type alias Date =
     }
 
 
-monthFromIndex : Int -> Maybe Time.Month
-monthFromIndex index =
-    case index of
-        1 ->
-            Just Time.Jan
-
-        2 ->
-            Just Time.Feb
-
-        3 ->
-            Just Time.Mar
-
-        4 ->
-            Just Time.Apr
-
-        5 ->
-            Just Time.May
-
-        6 ->
-            Just Time.Jun
-
-        7 ->
-            Just Time.Jul
-
-        8 ->
-            Just Time.Aug
-
-        9 ->
-            Just Time.Sep
-
-        10 ->
-            Just Time.Oct
-
-        11 ->
-            Just Time.Nov
-
-        12 ->
-            Just Time.Dec
-
-        _ ->
-            Nothing
+indexToMonthTable : Dict Int Time.Month
+indexToMonthTable =
+    [ ( 1, Time.Jan )
+    , ( 2, Time.Feb )
+    , ( 3, Time.Mar )
+    , ( 4, Time.Apr )
+    , ( 5, Time.May )
+    , ( 6, Time.Jun )
+    , ( 7, Time.Jul )
+    , ( 8, Time.Aug )
+    , ( 9, Time.Sep )
+    , ( 10, Time.Oct )
+    , ( 11, Time.Nov )
+    , ( 12, Time.Dec )
+    ]
+        |> Dict.fromList
 
 
 monthToIndex : Time.Month -> Int
@@ -123,7 +99,9 @@ parseWithDelimiter delimiter str =
             |> List.map String.toInt
     of
         [ Just day, Just monthIndex, Just year ] ->
-            Maybe.andThen (toDateTime day year) (monthFromIndex monthIndex)
+            Maybe.andThen
+                (toDateTime day year)
+                (Dict.get monthIndex indexToMonthTable)
 
         _ ->
             Nothing
@@ -156,7 +134,7 @@ posixFromString : String -> Maybe Time.Posix
 posixFromString str =
     case List.map String.toInt (String.split "-" str) of
         [ Just year, Just monthIndex, Just day ] ->
-            monthFromIndex monthIndex
+            Dict.get monthIndex indexToMonthTable
                 |> Maybe.andThen (toDateTime day year)
                 |> Maybe.map DateTime.toPosix
 

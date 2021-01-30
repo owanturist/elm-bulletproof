@@ -18,7 +18,7 @@ import Color exposing (Color)
 import Css
 import Date exposing (Time)
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, br, code, div, pre, styled, text)
+import Html.Styled as Html exposing (Html, code, div, p, pre, styled, text)
 import Html.Styled.Attributes as Attributes
 import Knob
 import Palette
@@ -26,7 +26,8 @@ import Renderer exposing (Renderer)
 import Story exposing (Story)
 import SyntaxHighlight
 import Time
-import Utils exposing (ifelse, nonBlank)
+import Tuple
+import Utils exposing (ifelse, nonBlank, textCode)
 
 
 type Reason
@@ -53,6 +54,7 @@ type Reason
     | InvalidColor String String
     | InvalidDate String String
     | InvalidTime String String
+    | DuplicateStoryViewport Int
 
 
 type alias Error =
@@ -222,46 +224,46 @@ validateTime rawName value =
             Ok { name = name, time = time }
 
 
-type alias Counter =
-    { counts : Dict String Int
-    , duplicates : List String
+type alias Counter key =
+    { counts : Dict key Int
+    , duplicates : List key
     }
 
 
-initialCounter : Counter
+initialCounter : Counter comparable
 initialCounter =
     Counter Dict.empty []
 
 
-count : String -> Counter -> Counter
-count title { counts, duplicates } =
-    case Dict.get title counts of
+count : comparable -> Counter comparable -> Counter comparable
+count key { counts, duplicates } =
+    case Dict.get key counts of
         Nothing ->
-            Counter (Dict.insert title 1 counts) duplicates
+            Counter (Dict.insert key 1 counts) duplicates
 
         Just 1 ->
-            Counter (Dict.insert title 2 counts) (title :: duplicates)
+            Counter (Dict.insert key 2 counts) (key :: duplicates)
 
         Just n ->
-            Counter (Dict.insert title (n + 1) counts) duplicates
+            Counter (Dict.insert key (n + 1) counts) duplicates
 
 
-incount : Counter -> List ( String, Int )
+incount : Counter comparable -> List ( comparable, Int )
 incount { counts, duplicates } =
     List.filterMap
         (\key -> Maybe.map (Tuple.pair key) (Dict.get key counts))
         duplicates
 
 
-countList : (a -> String) -> List a -> List ( String, Int )
+countList : (a -> comparable) -> List a -> List ( comparable, Int )
 countList toKey list =
     incount (List.foldr (count << toKey) initialCounter list)
 
 
 type alias FolderCounters =
-    { labels : Counter
-    , stories : Counter
-    , folders : Counter
+    { labels : Counter String
+    , stories : Counter String
+    , folders : Counter String
     }
 
 
@@ -315,11 +317,27 @@ validateStory path story counters =
                     )
 
                 Just title ->
-                    ( case
-                        countList Tuple.first payload.knobs
-                            |> List.map (\( name, n ) -> DuplicateKnobs name n)
-                            |> List.map (Error (List.reverse (title :: path)))
-                      of
+                    let
+                        -- split viewport and rest of knobs
+                        -- to calculate duplicates independently
+                        ( storyViewportKnobsN, restKnobs ) =
+                            payload.knobs
+                                |> List.partition ((==) Knob.StoryViewport << Tuple.second)
+                                |> Tuple.mapFirst List.length
+
+                        duplicatedKnobs =
+                            List.map
+                                (\( name, n ) -> DuplicateKnobs name n)
+                                (countList Tuple.first restKnobs)
+
+                        reasons =
+                            if storyViewportKnobsN > 1 then
+                                DuplicateStoryViewport storyViewportKnobsN :: duplicatedKnobs
+
+                            else
+                                duplicatedKnobs
+                    in
+                    ( case List.map (Error (List.reverse (title :: path))) reasons of
                         [] ->
                             Ok (Story.Single title payload)
 
@@ -348,13 +366,13 @@ validateStory path story counters =
                     )
 
                 Just title ->
-                    ( Result.map (Story.Batch title) (validateStories (title :: path) substories)
+                    ( Result.map (Story.Batch title) (validateStoriesHelp (title :: path) substories)
                     , { counters | folders = count title counters.folders }
                     )
 
 
-validateStories : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
-validateStories path stories =
+validateStoriesHelp : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
+validateStoriesHelp path stories =
     let
         ( result, counters ) =
             List.foldr
@@ -398,27 +416,17 @@ validateStories path stories =
             Err errors
 
 
+validateStories : List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
+validateStories =
+    validateStoriesHelp []
+
+
 type alias Explanation msg =
     { label : List (Html msg)
-    , description : String
+    , description : List (Html msg)
     , code : String
     , diffs : List ( SyntaxHighlight.Highlight, Int, Int )
     }
-
-
-textCode : String -> Html msg
-textCode =
-    styled code
-        [ Css.display Css.inlineBlock
-        , Css.padding2 (Css.px 2) (Css.px 4)
-        , Css.backgroundColor Palette.cloud
-        , Css.letterSpacing (Css.em 0.05)
-        , Css.fontFamily Css.monospace
-        , Css.lineHeight (Css.px 18)
-        ]
-        []
-        << List.singleton
-        << text
 
 
 explanationEmptyLabelTitle : Explanation msg
@@ -427,7 +435,8 @@ explanationEmptyLabelTitle =
         [ textCode "Bulletproof.label"
         , text " has either empty or blank title"
         ]
-        "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty or blank title."
+        ]
         """
 [ Bulletproof.label ""
 [ Bulletproof.label "Not empty title"
@@ -436,7 +445,7 @@ explanationEmptyLabelTitle =
 , Bulletproof.label "   "
 , Bulletproof.label "Not blank title"
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 4, 5 )
@@ -450,7 +459,8 @@ explanationEmptyTodoTitle =
         [ textCode "Bulletproof.todo"
         , text " has either empty or blank title"
         ]
-        "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty or blank title."
+        ]
         """
 [ Bulletproof.todo ""
 [ Bulletproof.todo "Not empty title"
@@ -459,7 +469,7 @@ explanationEmptyTodoTitle =
 , Bulletproof.todo "   "
 , Bulletproof.todo "Not blank title"
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 4, 5 )
@@ -473,7 +483,8 @@ explanationEmptyStoryTitle =
         [ textCode "Bulletproof.story"
         , text " has either empty or blank title"
         ]
-        "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty or blank title."
+        ]
         """
 [ Bulletproof.story ""
 [ Bulletproof.story "Not empty title"
@@ -488,7 +499,7 @@ explanationEmptyStoryTitle =
         |> Bulletproof.fromHtml
     )
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 7, 8 )
@@ -502,7 +513,8 @@ explanationEmptyFolderTitle =
         [ textCode "Bulletproof.folder"
         , text " has either empty or blank title"
         ]
-        "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty or blank title."
+        ]
         """
 [ Bulletproof.folder "" []
 [ Bulletproof.folder "Not empty title" []
@@ -511,7 +523,7 @@ explanationEmptyFolderTitle =
 , Bulletproof.folder "   " []
 , Bulletproof.folder "Not blank title" []
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 4, 5 )
@@ -525,7 +537,7 @@ explanationDuplicateLabels title n =
         [ textCode ("Bulletproof.label \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
-        "Please make sure you've defined unique titles for lables inside a folder."
+        [ text "Please make sure you've defined unique titles for lables inside a folder." ]
         """
 [ Bulletproof.label "Components"
 [ Bulletproof.label "Core components"
@@ -534,7 +546,7 @@ explanationDuplicateLabels title n =
 , Bulletproof.label "Components"
 , Bulletproof.label "Project Components"
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 4, 5 )
@@ -550,10 +562,8 @@ explanationDuplicateStories title n =
         , textCode ("Bulletproof.todo \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
-        """
-Please make sure you've defined unique titles for both stories and todos inside a folder.
-Each todo is a story which has not started yet...
-        """
+        [ text "Please make sure you've defined unique titles for both stories and todos inside a folder."
+        ]
         """
 [ Bulletproof.todo "Icon"
 [ Bulletproof.todo "Icon times"
@@ -569,7 +579,7 @@ Each todo is a story which has not started yet...
         |> Bulletproof.fromHtml
     )
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 4, 5 )
@@ -585,7 +595,8 @@ explanationDuplicateFolders title n =
         [ textCode ("Bulletproof.folder \"" ++ title ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
-        "Please make sure you've defined unique titles for folders inside a folder."
+        [ text "Please make sure you've defined unique titles for folders inside a folder."
+        ]
         """
 [ Bulletproof.folder "Searchbar" []
 [ Bulletproof.folder "Searchbar home page" []
@@ -604,7 +615,7 @@ explanationDuplicateFolders title n =
     , Bulletproof.todo "Hover"
     ]
 ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
         , ( SyntaxHighlight.Del, 4, 5 )
@@ -620,7 +631,8 @@ explanationEmptyKnobTitle =
         [ textCode "Bulletproof.Knob.*"
         , text " has either empty or blank name"
         ]
-        "Please make sure you've defined neither empty or blank name."
+        [ text "Please make sure you've defined neither empty or blank name."
+        ]
         """
 Bulletproof.story "Button"
     (\\buttonText buttonTabindex ->
@@ -635,7 +647,7 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.string "Not empty knob" "Funny Button"
     |> Bulletproof.Knob.int "  " 0
     |> Bulletproof.Knob.int "Not blank knob" 0
-        """
+"""
         [ ( SyntaxHighlight.Del, 9, 10 )
         , ( SyntaxHighlight.Add, 10, 11 )
         , ( SyntaxHighlight.Del, 11, 12 )
@@ -649,7 +661,8 @@ explanationDuplicateKnobs name n =
         [ textCode ("Bulletproof.Knob.* \"" ++ name ++ "\"")
         , text (" repeats " ++ String.fromInt n ++ " times")
         ]
-        "Please make sure you've defined unique names for knobs inside a story."
+        [ text "Please make sure you've defined unique names for knobs inside a story."
+        ]
         """
 Bulletproof.story "Button"
     (\\buttonText buttonTabindex ->
@@ -664,7 +677,7 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.string "Text" "Funny Button"
     |> Bulletproof.Knob.int "Property" 0
     |> Bulletproof.Knob.int "Tab Index" 0
-        """
+"""
         [ ( SyntaxHighlight.Del, 9, 10 )
         , ( SyntaxHighlight.Add, 10, 11 )
         , ( SyntaxHighlight.Del, 11, 12 )
@@ -688,7 +701,8 @@ explanationEmptyChoice choice name =
         [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
         , text " has no options"
         ]
-        "Please make sure you've defined neither empty or blank options."
+        [ text "Please make sure you've defined neither empty or blank options."
+        ]
         ("""
 Bulletproof.story "Button"
     (\\buttonType ->
@@ -705,7 +719,7 @@ Bulletproof.story "Button"
         , ( "reset", "reset" )
         , ( "submit", "submit" )
         ]
-        """
+"""
             |> String.replace "${knob}" (choiceToString choice)
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
@@ -719,7 +733,8 @@ explanationEmptyChoiceOption choice name =
         [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
         , text " has either empty or blank options"
         ]
-        "Please make sure you've defined neither empty or blank options."
+        [ text "Please make sure you've defined neither empty or blank options."
+        ]
         ("""
 Bulletproof.story "Input"
     (\\inputValue ->
@@ -738,7 +753,7 @@ Bulletproof.story "Input"
         , ( "short string", "Hello World!" )
         , ( "long string", "Lorem ipsum dolor..." )
         ]
-        """
+"""
             |> String.replace "${knob}" (choiceToString choice)
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
@@ -755,7 +770,8 @@ explanationDuplicateChoiceOptions choice name option n =
         , text (" has " ++ String.fromInt n ++ "\u{00A0}times repeated option ")
         , textCode ("\"" ++ option ++ "\"")
         ]
-        "Please make sure you've defined unique names of options."
+        [ text "Please make sure you've defined unique names of options."
+        ]
         ("""
 Bulletproof.story "Input"
     (\\inputType ->
@@ -773,7 +789,7 @@ Bulletproof.story "Input"
         , ( "user email", "email" )
         , ( "user password", "password" )
         ]
-        """
+"""
             |> String.replace "${knob}" (choiceToString choice)
         )
         [ ( SyntaxHighlight.Del, 9, 12 )
@@ -788,7 +804,8 @@ explanationInvalidIntStep name step =
         , text " has not positive "
         , textCode ("Bulletproof.Knob.step " ++ String.fromInt step)
         ]
-        "Please make sure you've defined a positive step."
+        [ text "Please make sure you've defined a positive step."
+        ]
         """
 Bulletproof.story "Input"
     (\\inputSize ->
@@ -805,7 +822,7 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step -10
         , Bulletproof.Knob.step 10
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 12, 13 )
         , ( SyntaxHighlight.Add, 13, 14 )
         ]
@@ -818,7 +835,8 @@ explanationInvalidFloatStep name step =
         , text " has not positive "
         , textCode ("Bulletproof.Knob.step " ++ String.fromFloat step)
         ]
-        "Please make sure you've defined a positive step."
+        [ text "Please make sure you've defined a positive step."
+        ]
         """
 Bulletproof.story "Progressbar"
     (\\percent ->
@@ -835,7 +853,7 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step -0.01
         , Bulletproof.Knob.step 0.01
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 12, 13 )
         , ( SyntaxHighlight.Add, 13, 14 )
         ]
@@ -849,7 +867,8 @@ explanationInvalidIntMin name value min =
         , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
         , text " more than actual value"
         ]
-        "Please make sure the min boundary is less or equal to the value."
+        [ text "Please make sure the min boundary is less or equal to the value."
+        ]
         """
 Bulletproof.story "Input"
     (\\inputSize ->
@@ -866,7 +885,7 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.max 1000
         , Bulletproof.Knob.step 10
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
         ]
@@ -880,7 +899,8 @@ explanationInvalidFloatMin name value min =
         , textCode ("Bulletproof.Knob.min " ++ String.fromFloat min)
         , text " more than actual value"
         ]
-        "Please make sure the min boundary is less or equal to the value."
+        [ text "Please make sure the min boundary is less or equal to the value."
+        ]
         """
 Bulletproof.story "Progressbar"
     (\\percent ->
@@ -897,7 +917,7 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.max 1
         , Bulletproof.Knob.step 0.01
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
         ]
@@ -911,7 +931,8 @@ explanationInvalidIntMax name value max =
         , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
         , text " less than actual value"
         ]
-        "Please make sure the max boundary is more or equal to the value."
+        [ text "Please make sure the max boundary is more or equal to the value."
+        ]
         """
 Bulletproof.story "Input"
     (\\inputSize ->
@@ -928,7 +949,7 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.max 1000
         , Bulletproof.Knob.step 10
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 11, 12 )
         , ( SyntaxHighlight.Add, 12, 13 )
         ]
@@ -942,7 +963,8 @@ explanationInvalidFloatMax name value max =
         , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
         , text " less than actual value"
         ]
-        "Please make sure the max boundary is more or equal to the value."
+        [ text "Please make sure the max boundary is more or equal to the value."
+        ]
         """
 Bulletproof.story "Progressbar"
     (\\percent ->
@@ -959,7 +981,7 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.max 1
         , Bulletproof.Knob.step 0.01
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 11, 12 )
         , ( SyntaxHighlight.Add, 12, 13 )
         ]
@@ -974,7 +996,8 @@ explanationInvalidIntMinMax name min max =
         , text " more than "
         , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
         ]
-        "Please make sure the min boundary less or equal to the max boundary."
+        [ text "Please make sure the min boundary less or equal to the max boundary."
+        ]
         """
 Bulletproof.story "Input"
     (\\inputSize ->
@@ -991,7 +1014,7 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.max 1000
         , Bulletproof.Knob.step 10
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
         ]
@@ -1006,7 +1029,8 @@ explanationInvalidFloatMinMax name min max =
         , text " more than "
         , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
         ]
-        "Please make sure the min boundary less or equal to the max boundary."
+        [ text "Please make sure the min boundary less or equal to the max boundary."
+        ]
         """
 Bulletproof.story "Progressbar"
     (\\percent ->
@@ -1023,7 +1047,7 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.max 1
         , Bulletproof.Knob.step 0.01
         ]
-        """
+"""
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
         ]
@@ -1035,7 +1059,12 @@ explanationInvalidColor name color =
         [ textCode ("Bulletproof.Knob.color" ++ " \"" ++ name ++ "\" \"" ++ color ++ "\"")
         , text " has invalid color"
         ]
-        "Please make sure provided value is following hex color pattern \"#rgb\" or \"#rrggbb\"."
+        [ text "Please make sure provided value is following one of the "
+        , textCode "#rgb"
+        , text " or "
+        , textCode "#rrggbb"
+        , text "hex color patterns."
+        ]
         """
 Bulletproof.story "Colored Button"
     (\\color ->
@@ -1048,7 +1077,7 @@ Bulletproof.story "Colored Button"
     )
     |> Bulletproof.Knob.color "Button color" "#cc0f"
     |> Bulletproof.Knob.color "Button color" "#cc0"
-        """
+"""
         [ ( SyntaxHighlight.Del, 9, 10 )
         , ( SyntaxHighlight.Add, 10, 11 )
         ]
@@ -1060,7 +1089,12 @@ explanationInvalidDate name date =
         [ textCode ("Bulletproof.Knob.date" ++ " \"" ++ name ++ "\" \"" ++ date ++ "\"")
         , text " has invalid date"
         ]
-        "Please make sure provided value is following one of the \"dd-mm-yyyy\" or \"dd/mm/yyyy\" date patterns."
+        [ text "Please make sure provided value is following one of the "
+        , textCode "dd-mm-yyyy"
+        , text " or "
+        , textCode "dd/mm/yyyy"
+        , text " date patterns."
+        ]
         """
 Bulletproof.story "Date show"
     (\\date ->
@@ -1074,7 +1108,7 @@ Bulletproof.story "Date show"
     )
     |> Bulletproof.Knob.date "Show date" "32-13-2020"
     |> Bulletproof.Knob.date "Show date" "02-02-2020"
-        """
+"""
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
         ]
@@ -1086,7 +1120,10 @@ explanationInvalidTime name time =
         [ textCode ("Bulletproof.Knob.time" ++ " \"" ++ name ++ "\" \"" ++ time ++ "\"")
         , text " has invalid time "
         ]
-        "Please make sure provided value is following the \"mm:hh\" time pattern."
+        [ text "Please make sure provided value is following the "
+        , textCode "mm:hh"
+        , text " time pattern."
+        ]
         """
 Bulletproof.story "Time show"
     (\\time ->
@@ -1099,9 +1136,42 @@ Bulletproof.story "Time show"
     )
     |> Bulletproof.Knob.time "Show time" "24:00"
     |> Bulletproof.Knob.time "Show time" "00:00"
-        """
+"""
         [ ( SyntaxHighlight.Del, 9, 10 )
         , ( SyntaxHighlight.Add, 10, 11 )
+        ]
+
+
+explanationDuplicateStoryViewport : Int -> Explanation msg
+explanationDuplicateStoryViewport n =
+    Explanation
+        [ textCode "Bulletproof.Knob.viewport"
+        , text (" repeats " ++ String.fromInt n ++ " times")
+        ]
+        [ text "Please make sure you've used the viewport knob only once inside a story."
+        ]
+        """
+Bulletproof.story "Button"
+    (\\viewport1 viewport2 ->
+    (\\viewport ->
+        button
+            [ style "width" (String.fromInt viewport1.width ++ "px")
+            , style "height" (String.fromInt viewport2.height ++ "px")
+            [ style "width" (String.fromInt viewport.width ++ "px")
+            , style "height" (String.fromInt viewport.height ++ "px")
+            ]
+            [ text "Hi, I am Elfo!"
+            ]
+            |> Bulletproof.fromHtml
+    )
+    |> Bulletproof.Knob.viewport
+    |> Bulletproof.Knob.viewport
+"""
+        [ ( SyntaxHighlight.Del, 1, 2 )
+        , ( SyntaxHighlight.Add, 2, 3 )
+        , ( SyntaxHighlight.Del, 4, 6 )
+        , ( SyntaxHighlight.Add, 6, 8 )
+        , ( SyntaxHighlight.Del, 14, 15 )
         ]
 
 
@@ -1177,6 +1247,9 @@ reasonToExplanation reason =
         InvalidTime name time ->
             explanationInvalidTime name time
 
+        DuplicateStoryViewport n ->
+            explanationDuplicateStoryViewport n
+
 
 styledLabel : List (Html msg) -> Html msg
 styledLabel =
@@ -1191,21 +1264,11 @@ styledLabel =
 
 styledDescription : List (Html msg) -> Html msg
 styledDescription =
-    styled div
-        [ Css.marginTop (Css.px 12)
+    styled p
+        [ Css.margin3 (Css.px 12) Css.zero Css.zero
         , Css.fontSize (Css.px 13)
         ]
         []
-
-
-viewDescription : String -> Html msg
-viewDescription description =
-    description
-        |> String.trim
-        |> String.split "\n"
-        |> List.map (text << String.trim)
-        |> List.intersperse (br [] [])
-        |> styledDescription
 
 
 styledPath : List (Html.Attribute msg) -> List (Html msg) -> Html msg
@@ -1225,11 +1288,7 @@ viewPath path =
     styledPath
         [ Attributes.title "Location"
         ]
-        [ if List.isEmpty path then
-            text "/"
-
-          else
-            text (String.join " / " ("" :: path))
+        [ text ("/ " ++ String.join " / " path)
         ]
 
 
@@ -1282,7 +1341,7 @@ viewError error =
     styledError
         [ styledLabel explanation.label
         , viewPath error.path
-        , viewDescription explanation.description
+        , styledDescription explanation.description
         , viewCodeExample explanation.code explanation.diffs
         ]
 
