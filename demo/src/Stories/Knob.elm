@@ -412,14 +412,20 @@ story =
 
         --
         , Bulletproof.story "Viewport"
-            (\width height _ ->
+            (\useCustomViewport width height storyViewport ->
                 Knob.view
-                    { width = width, height = height }
+                    (if useCustomViewport then
+                        { width = width, height = height }
+
+                     else
+                        storyViewport
+                    )
                     [ ( "Viewport", Knob.StoryViewport )
                     ]
                     Knob.initial
                     |> Bulletproof.fromElmCss
             )
+            |> Bulletproof.Knob.bool "Use custom viewport" False
             |> Bulletproof.Knob.int "Width" viewport.width []
             |> Bulletproof.Knob.int "Height" viewport.height []
             |> Bulletproof.Knob.viewport

@@ -29,6 +29,11 @@ import Url exposing (Url)
 import Utils exposing (Viewport, ifelse)
 
 
+paddingSize : Int
+paddingSize =
+    10
+
+
 
 -- M O D E L
 
@@ -313,21 +318,32 @@ subscriptions stories { state } =
 -- V I E W
 
 
-calcStoryViewport : Settings -> Viewport -> Viewport
-calcStoryViewport settings viewport =
+calcViewport : Settings -> Viewport -> Viewport
+calcViewport settings { width, height } =
     case settings.dockOrientation of
         Horizontal ->
             Viewport
-                (viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0)
-                (viewport.height - ifelse settings.dockVisible settings.dockHeight 0)
+                (width - ifelse settings.navigationVisible settings.navigationWidth 0)
+                (height - ifelse settings.dockVisible settings.dockHeight 0)
 
         Vertical ->
             Viewport
-                (viewport.width
+                (width
                     - ifelse settings.navigationVisible settings.navigationWidth 0
                     - ifelse settings.dockVisible settings.dockWidth 0
                 )
-                viewport.height
+                height
+
+
+reducePaddingsForViewport : Bool -> Viewport -> Viewport
+reducePaddingsForViewport addPaddings viewport =
+    if addPaddings then
+        Viewport
+            (viewport.width - 2 * paddingSize)
+            (viewport.height - 2 * paddingSize)
+
+    else
+        viewport
 
 
 screenX : Decoder Int
@@ -370,7 +386,7 @@ styledStoryContainer settings =
         , Css.flexBasis Css.auto
         , Css.display Css.block
         , Css.position Css.relative
-        , Css.padding (Css.px (ifelse settings.addPaddings 10 0))
+        , Css.padding (Css.px (ifelse settings.addPaddings (toFloat paddingSize) 0))
         , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
         , if settings.showGrid then
             Css.batch (cssGrid settings)
@@ -529,14 +545,17 @@ styledWorkspace settings { viewport, dragging } =
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace renderer settings state knobs =
     let
+        viewport =
+            calcViewport settings state.viewport
+
         storyViewport =
-            calcStoryViewport settings state.viewport
+            reducePaddingsForViewport settings.addPaddings viewport
     in
     styledWorkspace
         settings
         state
         [ styledStoryScroller
-            storyViewport
+            viewport
             (state.dragging /= NoDragging)
             [ styledStoryContainer settings
                 [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs storyViewport))
