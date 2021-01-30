@@ -1,4 +1,4 @@
-module Utils exposing (Viewport, ifelse, nonBlank, notClosest, onSpaceOrEnter, plural, textCode)
+module Utils exposing (Viewport, ifelse, nonBlank, notClosest, onSpaceOrEnter, plural, px, textCode)
 
 import Css
 import DOM
@@ -12,6 +12,11 @@ type alias Viewport =
     { width : Int
     , height : Int
     }
+
+
+px : Int -> String
+px n =
+    String.fromInt n ++ "px"
 
 
 textCode : String -> Html msg

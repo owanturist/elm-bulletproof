@@ -26,7 +26,7 @@ import Palette
 import Range exposing (range)
 import String
 import Time
-import Utils exposing (Viewport, textCode)
+import Utils exposing (Viewport, px, textCode)
 
 
 type Knob
@@ -392,11 +392,6 @@ viewKnobFile name =
         , Events.on "change" (Decode.map (UpdateFiles name) filesDecoder)
         ]
         []
-
-
-px : Int -> String
-px n =
-    String.fromInt n ++ "px"
 
 
 viewKnobStoryViewport : Viewport -> Html msg

@@ -26,7 +26,7 @@ import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Task
 import Url exposing (Url)
-import Utils exposing (Viewport, ifelse)
+import Utils exposing (Viewport, ifelse, px)
 
 
 paddingSize : Int
@@ -373,8 +373,8 @@ styledStoryScroller storyViewport isDragging =
                 , Css.Transitions.height 150
                 ]
         ]
-        [ Attributes.style "width" (String.fromInt storyViewport.width ++ "px")
-        , Attributes.style "height" (String.fromInt storyViewport.height ++ "px")
+        [ Attributes.style "width" (px storyViewport.width)
+        , Attributes.style "height" (px storyViewport.height)
         ]
 
 
@@ -538,7 +538,7 @@ styledWorkspace settings { viewport, dragging } =
           else
             Css.batch []
         ]
-        [ Attributes.style "width" (String.fromInt width ++ "px")
+        [ Attributes.style "width" (px width)
         ]
 
 
