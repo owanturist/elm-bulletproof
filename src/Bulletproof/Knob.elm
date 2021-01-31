@@ -56,10 +56,14 @@ import Time
 -}
 bool : String -> Bool -> Story (Bool -> a) -> Story a
 bool name defaultBool story =
+    let
+        trimmedName =
+            String.trim name
+    in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Bool defaultBool ) :: payload.knobs
-            , view = Knob.applyBool name defaultBool payload.view
+            { knobs = ( trimmedName, Knob.Bool defaultBool ) :: payload.knobs
+            , view = Knob.applyBool trimmedName defaultBool payload.view
             }
         )
         story
@@ -81,10 +85,14 @@ bool name defaultBool story =
 -}
 string : String -> String -> Story (String -> a) -> Story a
 string name defaultString story =
+    let
+        trimmedName =
+            String.trim name
+    in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.String defaultString ) :: payload.knobs
-            , view = Knob.applyString name defaultString payload.view
+            { knobs = ( trimmedName, Knob.String defaultString ) :: payload.knobs
+            , view = Knob.applyString trimmedName defaultString payload.view
             }
         )
         story
@@ -258,13 +266,16 @@ propertiesToNumberPayload =
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
 int name defaultInt properties story =
     let
+        trimmedName =
+            String.trim name
+
         ( asRange, limits ) =
             propertiesToNumberPayload properties
     in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Int asRange defaultInt limits ) :: payload.knobs
-            , view = Knob.applyInt name defaultInt payload.view
+            { knobs = ( trimmedName, Knob.Int asRange defaultInt limits ) :: payload.knobs
+            , view = Knob.applyInt trimmedName defaultInt payload.view
             }
         )
         story
@@ -288,13 +299,16 @@ int name defaultInt properties story =
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
 float name defaultFloat properties story =
     let
+        trimmedName =
+            String.trim name
+
         ( asRange, limits ) =
             propertiesToNumberPayload properties
     in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Float asRange defaultFloat limits ) :: payload.knobs
-            , view = Knob.applyFloat name defaultFloat payload.view
+            { knobs = ( trimmedName, Knob.Float asRange defaultFloat limits ) :: payload.knobs
+            , view = Knob.applyFloat trimmedName defaultFloat payload.view
             }
         )
         story
@@ -303,6 +317,9 @@ float name defaultFloat properties story =
 makeChoice : (List String -> Knob) -> String -> List ( String, option ) -> Story (option -> a) -> Story a
 makeChoice makeKnob name options story =
     let
+        trimmedName =
+            String.trim name
+
         keys =
             List.map Tuple.first options
 
@@ -314,8 +331,8 @@ makeChoice makeKnob name options story =
     in
     Story.map
         (\payload ->
-            { knobs = ( name, makeKnob keys ) :: payload.knobs
-            , view = Knob.applyChoice name defaultOption optionsDict payload.view
+            { knobs = ( trimmedName, makeKnob keys ) :: payload.knobs
+            , view = Knob.applyChoice trimmedName defaultOption optionsDict payload.view
             }
         )
         story
@@ -400,10 +417,14 @@ type alias Color =
 -}
 color : String -> String -> Story (Color -> a) -> Story a
 color name defaultHex story =
+    let
+        trimmedName =
+            String.trim name
+    in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Color defaultHex ) :: payload.knobs
-            , view = Knob.applyColor name defaultHex payload.view
+            { knobs = ( trimmedName, Knob.Color defaultHex ) :: payload.knobs
+            , view = Knob.applyColor trimmedName defaultHex payload.view
             }
         )
         story
@@ -439,10 +460,14 @@ type alias Date =
 -}
 date : String -> String -> Story (Date -> a) -> Story a
 date name defaultDate story =
+    let
+        trimmedName =
+            String.trim name
+    in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Date defaultDate ) :: payload.knobs
-            , view = Knob.applyDate name defaultDate payload.view
+            { knobs = ( trimmedName, Knob.Date defaultDate ) :: payload.knobs
+            , view = Knob.applyDate trimmedName defaultDate payload.view
             }
         )
         story
@@ -475,10 +500,14 @@ type alias Time =
 -}
 time : String -> String -> Story (Time -> a) -> Story a
 time name defaultTime story =
+    let
+        trimmedName =
+            String.trim name
+    in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Time defaultTime ) :: payload.knobs
-            , view = Knob.applyTime name defaultTime payload.view
+            { knobs = ( trimmedName, Knob.Time defaultTime ) :: payload.knobs
+            , view = Knob.applyTime trimmedName defaultTime payload.view
             }
         )
         story
@@ -504,10 +533,14 @@ type alias File =
 -}
 files : String -> Story (List File -> a) -> Story a
 files name story =
+    let
+        trimmedName =
+            String.trim name
+    in
     Story.map
         (\payload ->
-            { knobs = ( name, Knob.Files ) :: payload.knobs
-            , view = Knob.applyFiles name payload.view
+            { knobs = ( trimmedName, Knob.Files ) :: payload.knobs
+            , view = Knob.applyFiles trimmedName payload.view
             }
         )
         story
