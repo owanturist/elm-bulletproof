@@ -1,4 +1,14 @@
-module Utils exposing (Viewport, ifelse, nonBlank, notClosest, onSpaceOrEnter, plural, px, textCode)
+module Utils exposing
+    ( Viewport
+    , ifelse
+    , nonBlank
+    , notClosest
+    , onSpaceOrEnter
+    , orThen
+    , plural
+    , px
+    , textCode
+    )
 
 import Css
 import DOM
@@ -114,3 +124,13 @@ notClosest className msg =
             ]
         )
         |> DOM.target
+
+
+orThen : Maybe a -> Maybe a -> Maybe a
+orThen defaultMaybe maybe =
+    case maybe of
+        Nothing ->
+            defaultMaybe
+
+        just ->
+            just

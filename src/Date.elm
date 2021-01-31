@@ -1,17 +1,17 @@
 module Date exposing
     ( Date
     , Time
-    , dateFromPosix
-    , parseStringToPosix
-    , posixFromString
-    , posixToString
+    , dateFromString
+    , dateToString
     , timeFromString
     , timeToString
     )
 
 import DateTime exposing (DateTime)
 import Dict exposing (Dict)
+import Html.Attributes exposing (datetime)
 import Time
+import Utils exposing (orThen)
 
 
 
@@ -84,75 +84,60 @@ monthToIndex month =
             12
 
 
-toDateTime : Int -> Int -> Time.Month -> Maybe DateTime
-toDateTime day year month =
+dateFromDateTime : DateTime -> Date
+dateFromDateTime datetime =
+    Date
+        (DateTime.toPosix datetime)
+        (DateTime.getYear datetime)
+        (monthToIndex (DateTime.getMonth datetime))
+        (DateTime.getDay datetime)
+
+
+makeDateTime : Int -> Int -> Time.Month -> Maybe DateTime
+makeDateTime day year month =
     DateTime.fromRawParts
         { day = day, month = month, year = year }
         { hours = 0, minutes = 0, seconds = 0, milliseconds = 0 }
 
 
-parseWithDelimiter : Char -> String -> Maybe DateTime
-parseWithDelimiter delimiter str =
-    case
-        str
-            |> String.split (String.fromChar delimiter)
-            |> List.map String.toInt
-    of
-        [ Just day, Just monthIndex, Just year ] ->
-            Maybe.andThen
-                (toDateTime day year)
-                (Dict.get monthIndex indexToMonthTable)
+parseStringToDateTimeHelp : String -> Char -> Maybe DateTime
+parseStringToDateTimeHelp str delimiter =
+    case List.map String.toInt (String.split (String.fromChar delimiter) str) of
+        [ Just yearOrDay, Just monthIndex, Just dayOrYear ] ->
+            let
+                month =
+                    Dict.get monthIndex indexToMonthTable
+            in
+            orThen
+                (Maybe.andThen (makeDateTime dayOrYear yearOrDay) month)
+                (Maybe.andThen (makeDateTime yearOrDay dayOrYear) month)
 
         _ ->
             Nothing
 
 
-parseStringToPosix : String -> Maybe Time.Posix
-parseStringToPosix str =
-    List.foldl
-        (\delimiter result ->
-            case result of
-                Nothing ->
-                    Maybe.map DateTime.toPosix (parseWithDelimiter delimiter str)
-
-                just ->
-                    just
-        )
-        Nothing
-        [ '-', '/' ]
+parseStringToDateTime : String -> Maybe DateTime
+parseStringToDateTime str =
+    [ '-', '/' ]
+        |> List.filterMap (parseStringToDateTimeHelp str)
+        |> List.head
 
 
-dateFromPosix : Time.Posix -> Date
-dateFromPosix posix =
-    Date posix
-        (Time.toYear Time.utc posix)
-        (monthToIndex (Time.toMonth Time.utc posix))
-        (Time.toDay Time.utc posix)
+dateFromString : String -> Maybe Date
+dateFromString =
+    Maybe.map dateFromDateTime << parseStringToDateTime
 
 
-posixFromString : String -> Maybe Time.Posix
-posixFromString str =
-    case List.map String.toInt (String.split "-" str) of
-        [ Just year, Just monthIndex, Just day ] ->
-            Dict.get monthIndex indexToMonthTable
-                |> Maybe.andThen (toDateTime day year)
-                |> Maybe.map DateTime.toPosix
-
-        _ ->
-            Nothing
-
-
-posixToString : Time.Posix -> String
-posixToString posix =
+dateToString : Date -> String
+dateToString date =
     String.join "-"
-        [ Time.toYear Time.utc posix
+        [ date.year
             |> String.fromInt
             |> String.padLeft 4 '0'
-        , Time.toMonth Time.utc posix
-            |> monthToIndex
+        , date.month
             |> String.fromInt
             |> String.padLeft 2 '0'
-        , Time.toDay Time.utc posix
+        , date.day
             |> String.fromInt
             |> String.padLeft 2 '0'
         ]

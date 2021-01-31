@@ -24,7 +24,6 @@ module Bulletproof exposing
 -}
 
 import Element exposing (Element)
-import Error
 import Html
 import Html.Styled
 import Main
@@ -71,7 +70,7 @@ fromElmUI options attributes element =
 Stories helps you to organize UI components and describe different states.
 -}
 type alias Story =
-    Story.Story Error.Reason Renderer
+    Story.Story Renderer
 
 
 {-| Story represents a component according inputs.
@@ -87,11 +86,11 @@ To dynamically change the inputs please take a look into knobs.
             )
 
 -}
-story : String -> view -> Story.Story Error.Reason view
+story : String -> view -> Story.Story view
 story title view =
     Story.Single title
         { knobs = []
-        , view = \_ _ -> view
+        , view = \_ _ -> Just view
         }
 
 

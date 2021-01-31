@@ -1,4 +1,4 @@
-module Story exposing (Path, Payload, Story(..), get, getFirst, getNext, getPrev)
+module Story exposing (Path, Payload, Story(..), get, getFirst, getNext, getPrev, map)
 
 import Dict exposing (Dict)
 import Knob exposing (Knob)
@@ -6,18 +6,33 @@ import Renderer exposing (Renderer)
 import Utils exposing (Viewport)
 
 
-type Story error view
+type alias Payload view =
+    { knobs : List ( String, Knob )
+    , view : Knob.State -> Viewport -> Maybe view
+    }
+
+
+type Story view
     = Label String
     | Todo String
     | Single String (Payload view)
-    | Fail String (List error)
-    | Batch String (List (Story error Renderer))
+    | Batch String (List (Story Renderer))
 
 
-type alias Payload view =
-    { knobs : List ( String, Knob )
-    , view : Knob.State -> Viewport -> view
-    }
+map : (Payload a -> Payload b) -> Story a -> Story b
+map tagger story =
+    case story of
+        Label title ->
+            Label title
+
+        Todo title ->
+            Todo title
+
+        Batch title stories ->
+            Batch title stories
+
+        Single title payload ->
+            Single title (tagger payload)
 
 
 type alias Path =
@@ -43,7 +58,7 @@ emptyStore =
     Store Nothing Nothing Dict.empty
 
 
-makeStore : List (Story error Renderer) -> Store
+makeStore : List (Story Renderer) -> Store
 makeStore stories =
     let
         ( _, storeL ) =
@@ -68,7 +83,7 @@ makeStore stories =
                         |> Store first last
 
 
-makeStoreL : Path -> Story error Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreL : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreL path story ( prevStory, store ) =
     case story of
         Single storyID payload ->
@@ -98,7 +113,7 @@ makeStoreL path story ( prevStory, store ) =
             ( prevStory, store )
 
 
-makeStoreR : Path -> Story error Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreR : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreR path story ( nextStory, store ) =
     case story of
         Single storyID _ ->
@@ -133,7 +148,7 @@ makeStoreR path story ( nextStory, store ) =
             ( nextStory, store )
 
 
-get : Path -> List (Story error Renderer) -> Maybe (Payload Renderer)
+get : Path -> List (Story Renderer) -> Maybe (Payload Renderer)
 get path stories =
     let
         store =
@@ -142,7 +157,7 @@ get path stories =
     Maybe.map .payload (Dict.get path store.connections)
 
 
-getNext : Path -> List (Story error Renderer) -> Maybe Path
+getNext : Path -> List (Story Renderer) -> Maybe Path
 getNext path stories =
     let
         store =
@@ -159,7 +174,7 @@ getNext path stories =
         (Dict.get path store.connections)
 
 
-getPrev : Path -> List (Story error Renderer) -> Maybe Path
+getPrev : Path -> List (Story Renderer) -> Maybe Path
 getPrev path stories =
     let
         store =
@@ -176,7 +191,7 @@ getPrev path stories =
         (Dict.get path store.connections)
 
 
-getFirst : List (Story error Renderer) -> Maybe Path
+getFirst : List (Story Renderer) -> Maybe Path
 getFirst stories =
     makeStore stories
         |> .first

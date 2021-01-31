@@ -20,7 +20,8 @@ import Date exposing (Time)
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, code, div, p, pre, styled, text)
 import Html.Styled.Attributes as Attributes
-import Knob
+import Knob exposing (Knob)
+import List
 import Palette
 import Renderer exposing (Renderer)
 import Story exposing (Story)
@@ -61,6 +62,10 @@ type alias Error =
     { path : Story.Path
     , reason : Reason
     }
+
+
+
+-- V A L I D A T E   K N O B
 
 
 validateOnlyKnobName : String -> Result Reason String
@@ -224,6 +229,35 @@ validateTime rawName value =
             Ok { name = name, time = time }
 
 
+validateKnob : String -> Knob -> Result (List Reason) ( String, Knob )
+validateKnob name knob =
+    Ok ( name, knob )
+
+
+validateKnobs : List ( String, Knob ) -> Result (List Reason) (List ( String, Knob ))
+validateKnobs =
+    List.foldl
+        (\( rawName, rawKnob ) acc ->
+            case ( validateKnob rawName rawKnob, acc ) of
+                ( Err knobReasons, Err reasons ) ->
+                    Err (knobReasons ++ reasons)
+
+                ( Err knobsReasons, _ ) ->
+                    Err knobsReasons
+
+                ( _, Err reasons ) ->
+                    Err reasons
+
+                ( Ok nameKnob, Ok knobs ) ->
+                    Ok (nameKnob :: knobs)
+        )
+        (Ok [])
+
+
+
+-- V A L I D A T E   S T O R Y
+
+
 type alias Counter key =
     { counts : Dict key Int
     , duplicates : List key
@@ -282,7 +316,7 @@ initialFolderCounters =
     FolderCounters initialCounter initialCounter initialCounter
 
 
-validateStory : Story.Path -> Story Reason Renderer -> FolderCounters -> ( Result (List Error) (Story Never Renderer), FolderCounters )
+validateStory : Story.Path -> Story Renderer -> FolderCounters -> ( Result (List Error) (Story Renderer), FolderCounters )
 validateStory path story counters =
     case story of
         Story.Label rawTitle ->
@@ -317,44 +351,29 @@ validateStory path story counters =
                     )
 
                 Just title ->
-                    let
-                        -- split viewport and rest of knobs
-                        -- to calculate duplicates independently
-                        ( storyViewportKnobsN, restKnobs ) =
-                            payload.knobs
-                                |> List.partition ((==) Knob.StoryViewport << Tuple.second)
-                                |> Tuple.mapFirst List.length
+                    -- let
+                    -- split viewport and rest of knobs
+                    -- to calculate duplicates independently
+                    -- ( storyViewportKnobsN, restKnobs ) =
+                    --     payload.knobs
+                    --         |> List.partition ((==) Knob.StoryViewport << Tuple.second)
+                    --         |> Tuple.mapFirst List.length
+                    -- duplicatedKnobs =
+                    --     List.map
+                    --         (\( name, n ) -> DuplicateKnobs name n)
+                    --         (countList Tuple.first restKnobs)
+                    -- reasons =
+                    --     if storyViewportKnobsN > 1 then
+                    --         DuplicateStoryViewport storyViewportKnobsN :: duplicatedKnobs
+                    --     else
+                    --         duplicatedKnobs
+                    -- in
+                    ( case validateKnobs payload.knobs of
+                        Err reasons ->
+                            Err (List.map (Error (List.reverse (title :: path))) reasons)
 
-                        duplicatedKnobs =
-                            List.map
-                                (\( name, n ) -> DuplicateKnobs name n)
-                                (countList Tuple.first restKnobs)
-
-                        reasons =
-                            if storyViewportKnobsN > 1 then
-                                DuplicateStoryViewport storyViewportKnobsN :: duplicatedKnobs
-
-                            else
-                                duplicatedKnobs
-                    in
-                    ( case List.map (Error (List.reverse (title :: path))) reasons of
-                        [] ->
-                            Ok (Story.Single title payload)
-
-                        errors ->
-                            Err errors
-                    , { counters | stories = count title counters.stories }
-                    )
-
-        Story.Fail rawTitle reasons ->
-            case nonBlank rawTitle of
-                Nothing ->
-                    ( Err [ Error (List.reverse path) EmptyStoryTitle ]
-                    , counters
-                    )
-
-                Just title ->
-                    ( Err (List.map (Error (List.reverse (title :: path))) reasons)
+                        Ok knobs ->
+                            Ok (Story.Single title { knobs = knobs, view = payload.view })
                     , { counters | stories = count title counters.stories }
                     )
 
@@ -371,7 +390,7 @@ validateStory path story counters =
                     )
 
 
-validateStoriesHelp : Story.Path -> List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
+validateStoriesHelp : Story.Path -> List (Story Renderer) -> Result (List Error) (List (Story Renderer))
 validateStoriesHelp path stories =
     let
         ( result, counters ) =
@@ -416,7 +435,7 @@ validateStoriesHelp path stories =
             Err errors
 
 
-validateStories : List (Story Reason Renderer) -> Result (List Error) (List (Story Never Renderer))
+validateStories : List (Story Renderer) -> Result (List Error) (List (Story Renderer))
 validateStories =
     validateStoriesHelp []
 
