@@ -3,7 +3,7 @@ module Bulletproof.Knob exposing
     , Property, min, max, step, range, int, float
     , radio, select
     , Color, color
-    , date
+    , Date, date
     , Time, time
     , File, files
     , Viewport, viewport
