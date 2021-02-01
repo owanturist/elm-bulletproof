@@ -107,8 +107,8 @@ parseStringToDateTimeHelp str delimiter =
                 month =
                     Dict.get monthIndex indexToMonthTable
             in
-            [ Maybe.andThen (makeDateTime yearOrDay dayOrYear) month
-            , Maybe.andThen (makeDateTime dayOrYear yearOrDay) month
+            [ Maybe.andThen (makeDateTime dayOrYear yearOrDay) month
+            , Maybe.andThen (makeDateTime yearOrDay dayOrYear) month
             ]
                 |> List.filterMap identity
                 |> List.head
