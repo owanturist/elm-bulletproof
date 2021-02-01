@@ -1,34 +1,18 @@
-module Error exposing
-    ( Error
-    , Reason(..)
-    , validateBool
-    , validateChoice
-    , validateColor
-    , validateDate
-    , validateFile
-    , validateFloat
-    , validateInt
-    , validateStories
-    , validateString
-    , validateTime
-    , view
-    )
+module Error exposing (Error, Reason(..), validateStories, view)
 
-import Color exposing (Color)
+import Color
 import Css
-import Date exposing (Time)
+import Date
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, code, div, p, pre, styled, text)
 import Html.Styled.Attributes as Attributes
 import Knob exposing (Knob)
 import List
 import Palette
-import Renderer exposing (Renderer)
 import Story exposing (Story)
 import SyntaxHighlight
-import Time
 import Tuple
-import Utils exposing (ifelse, nonBlank, textCode)
+import Utils exposing (ifelse, textCode)
 
 
 type Reason
@@ -41,9 +25,9 @@ type Reason
     | DuplicateStories String Int
     | DuplicateFolders String Int
     | DuplicateKnobs String Int
-    | EmptyChoice Knob.Choice String
-    | EmptyChoiceOption Knob.Choice String
-    | DuplicateChoiceOptions Knob.Choice String String Int
+    | EmptyChoice String String
+    | EmptyChoiceOption String String
+    | DuplicateChoiceOptions String String String Int
     | InvalidIntStep String Int
     | InvalidIntMin String Int Int
     | InvalidIntMax String Int Int
@@ -66,31 +50,6 @@ type alias Error =
 
 
 -- V A L I D A T E   K N O B
-
-
-validateOnlyKnobName : String -> Result Reason String
-validateOnlyKnobName rawName =
-    case nonBlank rawName of
-        Nothing ->
-            Err EmptyKnobTitle
-
-        Just name ->
-            Ok name
-
-
-validateString : String -> Result Reason String
-validateString =
-    validateOnlyKnobName
-
-
-validateBool : String -> Result Reason String
-validateBool =
-    validateOnlyKnobName
-
-
-validateFile : String -> Result Reason String
-validateFile =
-    validateOnlyKnobName
 
 
 validateLimits :
@@ -132,126 +91,106 @@ validateFloatLimits =
         }
 
 
-validateInt : String -> Int -> Knob.Limits Int -> Result (List Reason) String
-validateInt rawName int limits =
-    case nonBlank rawName of
-        Nothing ->
-            Err [ EmptyKnobTitle ]
+validateChoice : String -> String -> List String -> List Reason
+validateChoice choice name options =
+    if List.isEmpty options then
+        [ EmptyChoice choice name ]
 
-        Just name ->
-            case validateIntLimits name int limits of
-                [] ->
-                    Ok name
+    else if List.member "" options then
+        [ EmptyChoiceOption choice name ]
 
-                reasons ->
-                    Err reasons
-
-
-validateFloat : String -> Float -> Knob.Limits Float -> Result (List Reason) String
-validateFloat rawName float limits =
-    case nonBlank rawName of
-        Nothing ->
-            Err [ EmptyKnobTitle ]
-
-        Just name ->
-            case validateFloatLimits name float limits of
-                [] ->
-                    Ok name
-
-                reasons ->
-                    Err reasons
+    else
+        List.map
+            (\( option, n ) -> DuplicateChoiceOptions choice name option n)
+            (countList identity options)
 
 
-validateChoice : Knob.Choice -> String -> List ( String, option ) -> Result (List Reason) { name : String, selected : String, option : option }
-validateChoice choice rawName options =
-    case nonBlank rawName of
-        Nothing ->
-            Err [ EmptyKnobTitle ]
+validateColor : String -> String -> List Reason
+validateColor name hex =
+    if Color.fromString hex == Nothing then
+        [ InvalidColor name hex ]
 
-        Just name ->
-            case List.map (Tuple.mapFirst String.trim) options of
-                [] ->
-                    Err [ EmptyChoice choice name ]
+    else
+        []
 
-                (( selected, option ) :: _) as trimmedOptions ->
-                    if List.member "" (List.map Tuple.first trimmedOptions) then
-                        Err [ EmptyChoiceOption choice name ]
+
+validateDate : String -> String -> List Reason
+validateDate name date =
+    if Date.dateFromString date == Nothing then
+        [ InvalidDate name date ]
+
+    else
+        []
+
+
+validateTime : String -> String -> List Reason
+validateTime name time =
+    if Date.timeFromString time == Nothing then
+        [ InvalidTime name time ]
+
+    else
+        []
+
+
+validateKnob : String -> Knob -> List Reason
+validateKnob name knob =
+    case knob of
+        Knob.Int _ int limits ->
+            validateIntLimits name int limits
+
+        Knob.Float _ float limits ->
+            validateFloatLimits name float limits
+
+        Knob.Radio options ->
+            validateChoice "radio" name options
+
+        Knob.Select options ->
+            validateChoice "select" name options
+
+        Knob.Color hex ->
+            validateColor name hex
+
+        Knob.Date date ->
+            validateDate name date
+
+        Knob.Time time ->
+            validateTime name time
+
+        _ ->
+            []
+
+
+validateKnobs : List ( String, Knob ) -> List Reason
+validateKnobs knobs =
+    let
+        -- split viewport and rest of knobs
+        -- to calculate duplicates independently
+        ( storyViewportKnobsN, restKnobs ) =
+            knobs
+                |> List.partition ((==) Knob.StoryViewport << Tuple.second)
+                |> Tuple.mapFirst List.length
+
+        duplicatedKnobsReasons =
+            List.map
+                (\( name, n ) -> DuplicateKnobs name n)
+                (countList Tuple.first restKnobs)
+
+        invalidKnobsReasons =
+            List.concatMap
+                (\( name, knob ) ->
+                    if String.isEmpty name then
+                        [ EmptyKnobTitle ]
 
                     else
-                        case
-                            List.map
-                                (\( value, n ) -> DuplicateChoiceOptions choice name value n)
-                                (countList Tuple.first options)
-                        of
-                            [] ->
-                                Ok { name = name, selected = selected, option = option }
+                        validateKnob name knob
+                )
+                knobs
+    in
+    if storyViewportKnobsN > 1 then
+        DuplicateStoryViewport storyViewportKnobsN :: duplicatedKnobsReasons ++ invalidKnobsReasons
 
-                            duplicateReasons ->
-                                Err duplicateReasons
-
-
-validateColor : String -> String -> Result Reason { name : String, color : Color }
-validateColor rawName value =
-    case ( nonBlank rawName, Color.fromString value ) of
-        ( Nothing, _ ) ->
-            Err EmptyKnobTitle
-
-        ( Just name, Nothing ) ->
-            Err (InvalidColor name value)
-
-        ( Just name, Just color ) ->
-            Ok { name = name, color = color }
-
-
-validateDate : String -> String -> Result Reason { name : String, date : Time.Posix }
-validateDate rawName value =
-    case ( nonBlank rawName, Date.parseStringToPosix value ) of
-        ( Nothing, _ ) ->
-            Err EmptyKnobTitle
-
-        ( Just name, Nothing ) ->
-            Err (InvalidDate name value)
-
-        ( Just name, Just date ) ->
-            Ok { name = name, date = date }
-
-
-validateTime : String -> String -> Result Reason { name : String, time : Time }
-validateTime rawName value =
-    case ( nonBlank rawName, Date.timeFromString value ) of
-        ( Nothing, _ ) ->
-            Err EmptyKnobTitle
-
-        ( Just name, Nothing ) ->
-            Err (InvalidTime name value)
-
-        ( Just name, Just time ) ->
-            Ok { name = name, time = time }
-
-
-validateKnob : String -> Knob -> Result (List Reason) ( String, Knob )
-validateKnob name knob =
-    Ok ( name, knob )
-
-
-validateKnobs : List ( String, Knob ) -> Result (List Reason) (List ( String, Knob ))
-validateKnobs =
-    List.foldl
-        (\( rawName, rawKnob ) acc ->
-            case ( validateKnob rawName rawKnob, acc ) of
-                ( Err knobReasons, Err reasons ) ->
-                    Err (knobReasons ++ reasons)
-
-                ( Err knobsReasons, _ ) ->
-                    Err knobsReasons
-
-                ( _, Err reasons ) ->
-                    Err reasons
-
-                ( Ok nameKnob, Ok knobs ) ->
-                    Ok (nameKnob :: knobs)
-        )
-        (Ok [])
+    else
+        duplicatedKnobsReasons ++ invalidKnobsReasons
 
 
 
@@ -316,126 +255,71 @@ initialFolderCounters =
     FolderCounters initialCounter initialCounter initialCounter
 
 
-validateStory : Story.Path -> Story Renderer -> FolderCounters -> ( Result (List Error) (Story Renderer), FolderCounters )
+validateStory : Story.Path -> Story view -> FolderCounters -> ( List Error, FolderCounters )
 validateStory path story counters =
     case story of
-        Story.Label rawTitle ->
-            case nonBlank rawTitle of
-                Nothing ->
-                    ( Err [ Error (List.reverse path) EmptyLabelTitle ]
-                    , counters
-                    )
+        Story.Label "" ->
+            ( [ Error (List.reverse path) EmptyLabelTitle ]
+            , counters
+            )
 
-                Just title ->
-                    ( Ok (Story.Label title)
-                    , { counters | labels = count title counters.labels }
-                    )
+        Story.Label title ->
+            ( []
+            , { counters | labels = count title counters.labels }
+            )
 
-        Story.Todo rawTitle ->
-            case nonBlank rawTitle of
-                Nothing ->
-                    ( Err [ Error (List.reverse path) EmptyTodoTitle ]
-                    , counters
-                    )
+        Story.Todo "" ->
+            ( [ Error (List.reverse path) EmptyTodoTitle ]
+            , counters
+            )
 
-                Just title ->
-                    ( Ok (Story.Todo title)
-                    , { counters | stories = count title counters.stories }
-                    )
+        Story.Todo title ->
+            ( []
+            , { counters | stories = count title counters.stories }
+            )
 
-        Story.Single rawTitle payload ->
-            case nonBlank rawTitle of
-                Nothing ->
-                    ( Err [ Error (List.reverse path) EmptyStoryTitle ]
-                    , counters
-                    )
+        Story.Single "" _ ->
+            ( [ Error (List.reverse path) EmptyStoryTitle ]
+            , counters
+            )
 
-                Just title ->
-                    -- let
-                    -- split viewport and rest of knobs
-                    -- to calculate duplicates independently
-                    -- ( storyViewportKnobsN, restKnobs ) =
-                    --     payload.knobs
-                    --         |> List.partition ((==) Knob.StoryViewport << Tuple.second)
-                    --         |> Tuple.mapFirst List.length
-                    -- duplicatedKnobs =
-                    --     List.map
-                    --         (\( name, n ) -> DuplicateKnobs name n)
-                    --         (countList Tuple.first restKnobs)
-                    -- reasons =
-                    --     if storyViewportKnobsN > 1 then
-                    --         DuplicateStoryViewport storyViewportKnobsN :: duplicatedKnobs
-                    --     else
-                    --         duplicatedKnobs
-                    -- in
-                    ( case validateKnobs payload.knobs of
-                        Err reasons ->
-                            Err (List.map (Error (List.reverse (title :: path))) reasons)
+        Story.Single title payload ->
+            ( List.map
+                (Error (List.reverse (title :: path)))
+                (validateKnobs payload.knobs)
+            , { counters | stories = count title counters.stories }
+            )
 
-                        Ok knobs ->
-                            Ok (Story.Single title { knobs = knobs, view = payload.view })
-                    , { counters | stories = count title counters.stories }
-                    )
+        Story.Batch "" _ ->
+            ( [ Error (List.reverse path) EmptyFolderTitle ]
+            , counters
+            )
 
-        Story.Batch rawTitle substories ->
-            case nonBlank rawTitle of
-                Nothing ->
-                    ( Err [ Error (List.reverse path) EmptyFolderTitle ]
-                    , counters
-                    )
-
-                Just title ->
-                    ( Result.map (Story.Batch title) (validateStoriesHelp (title :: path) substories)
-                    , { counters | folders = count title counters.folders }
-                    )
+        Story.Batch title substories ->
+            ( validateStoriesHelp (title :: path) substories
+            , { counters | folders = count title counters.folders }
+            )
 
 
-validateStoriesHelp : Story.Path -> List (Story Renderer) -> Result (List Error) (List (Story Renderer))
+validateStoriesHelp : Story.Path -> List (Story view) -> List Error
 validateStoriesHelp path stories =
     let
-        ( result, counters ) =
+        ( errors, counters ) =
             List.foldr
-                (\story ( acc, folderCounters ) ->
+                (\story ( allErrors, folderCounters ) ->
                     let
-                        ( validateion, nextCounters ) =
+                        ( newErrors, nextCounters ) =
                             validateStory path story folderCounters
                     in
-                    case ( validateion, acc ) of
-                        ( Err errors, Err errors_ ) ->
-                            ( Err (errors ++ errors_)
-                            , nextCounters
-                            )
-
-                        ( Err errors, Ok _ ) ->
-                            ( Err errors
-                            , nextCounters
-                            )
-
-                        ( Ok _, Err errors ) ->
-                            ( Err errors
-                            , nextCounters
-                            )
-
-                        ( Ok nextStory, Ok nextStories ) ->
-                            ( Ok (nextStory :: nextStories)
-                            , nextCounters
-                            )
+                    ( newErrors ++ allErrors, nextCounters )
                 )
-                ( Ok [], initialFolderCounters )
+                ( [], initialFolderCounters )
                 stories
     in
-    case ( result, incountFolder (List.reverse path) counters ) of
-        ( _, [] ) ->
-            result
-
-        ( Err errors, errors_ ) ->
-            Err (errors ++ errors_)
-
-        ( _, errors ) ->
-            Err errors
+    errors ++ incountFolder (List.reverse path) counters
 
 
-validateStories : List (Story Renderer) -> Result (List Error) (List (Story Renderer))
+validateStories : List (Story view) -> List Error
 validateStories =
     validateStoriesHelp []
 
@@ -704,20 +588,10 @@ Bulletproof.story "Button"
         ]
 
 
-choiceToString : Knob.Choice -> String
-choiceToString choice =
-    case choice of
-        Knob.Radio ->
-            "radio"
-
-        Knob.Select ->
-            "select"
-
-
-explanationEmptyChoice : Knob.Choice -> String -> Explanation msg
+explanationEmptyChoice : String -> String -> Explanation msg
 explanationEmptyChoice choice name =
     Explanation
-        [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text " has no options"
         ]
         [ text "Please make sure you've defined neither empty or blank options."
@@ -739,17 +613,17 @@ Bulletproof.story "Button"
         , ( "submit", "submit" )
         ]
 """
-            |> String.replace "${knob}" (choiceToString choice)
+            |> String.replace "${knob}" choice
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 15 )
         ]
 
 
-explanationEmptyChoiceOption : Knob.Choice -> String -> Explanation msg
+explanationEmptyChoiceOption : String -> String -> Explanation msg
 explanationEmptyChoiceOption choice name =
     Explanation
-        [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text " has either empty or blank options"
         ]
         [ text "Please make sure you've defined neither empty or blank options."
@@ -773,7 +647,7 @@ Bulletproof.story "Input"
         , ( "long string", "Lorem ipsum dolor..." )
         ]
 """
-            |> String.replace "${knob}" (choiceToString choice)
+            |> String.replace "${knob}" choice
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 12 )
@@ -782,10 +656,10 @@ Bulletproof.story "Input"
         ]
 
 
-explanationDuplicateChoiceOptions : Knob.Choice -> String -> String -> Int -> Explanation msg
+explanationDuplicateChoiceOptions : String -> String -> String -> Int -> Explanation msg
 explanationDuplicateChoiceOptions choice name option n =
     Explanation
-        [ textCode ("Bulletproof.Knob." ++ choiceToString choice ++ " \"" ++ name ++ "\" ")
+        [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text (" has " ++ String.fromInt n ++ "\u{00A0}times repeated option ")
         , textCode ("\"" ++ option ++ "\"")
         ]
@@ -809,7 +683,7 @@ Bulletproof.story "Input"
         , ( "user password", "password" )
         ]
 """
-            |> String.replace "${knob}" (choiceToString choice)
+            |> String.replace "${knob}" choice
         )
         [ ( SyntaxHighlight.Del, 9, 12 )
         , ( SyntaxHighlight.Add, 12, 15 )

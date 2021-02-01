@@ -320,14 +320,17 @@ makeChoice makeKnob name options story =
         trimmedName =
             String.trim name
 
+        trimmedOptions =
+            List.map (Tuple.mapFirst String.trim) options
+
         keys =
-            List.map Tuple.first options
+            List.map Tuple.first trimmedOptions
 
         defaultOption =
-            Maybe.map Tuple.second (List.head options)
+            Maybe.map Tuple.second (List.head trimmedOptions)
 
         optionsDict =
-            Dict.fromList options
+            Dict.fromList trimmedOptions
     in
     Story.map
         (\payload ->

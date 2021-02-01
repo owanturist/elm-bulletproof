@@ -32,7 +32,7 @@ import List
 import Palette
 import Range exposing (range)
 import String
-import Utils exposing (Viewport, orThen, px, textCode)
+import Utils exposing (Viewport, px, textCode)
 
 
 type Knob
@@ -147,7 +147,12 @@ getChoice : String -> Maybe option -> Dict String option -> State -> Maybe optio
 getChoice name defaultOption optionsDict state =
     case Dict.get name state of
         Just (StringValue key) ->
-            orThen defaultOption (Dict.get key optionsDict)
+            case Dict.get key optionsDict of
+                Nothing ->
+                    defaultOption
+
+                just ->
+                    just
 
         _ ->
             defaultOption

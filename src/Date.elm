@@ -11,7 +11,6 @@ import DateTime exposing (DateTime)
 import Dict exposing (Dict)
 import Html.Attributes exposing (datetime)
 import Time
-import Utils exposing (orThen)
 
 
 
@@ -108,9 +107,11 @@ parseStringToDateTimeHelp str delimiter =
                 month =
                     Dict.get monthIndex indexToMonthTable
             in
-            orThen
-                (Maybe.andThen (makeDateTime dayOrYear yearOrDay) month)
-                (Maybe.andThen (makeDateTime yearOrDay dayOrYear) month)
+            [ Maybe.andThen (makeDateTime yearOrDay dayOrYear) month
+            , Maybe.andThen (makeDateTime dayOrYear yearOrDay) month
+            ]
+                |> List.filterMap identity
+                |> List.head
 
         _ ->
             Nothing

@@ -61,7 +61,7 @@ type alias Model =
     }
 
 
-init : List (Story Never Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init : List (Story Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories settingsJSON url key =
     let
         initialSettings =
@@ -118,7 +118,7 @@ type Msg
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
-    | MenuMsg (List (Story Never Renderer)) Menu.Msg
+    | MenuMsg (List (Story Renderer)) Menu.Msg
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
 
@@ -306,7 +306,7 @@ update onSettingsChange msg { settings, state, knobs } =
 -- S U B S C R I P T I O N S
 
 
-subscriptions : List (Story Never Renderer) -> Model -> Sub Msg
+subscriptions : List (Story Renderer) -> Model -> Sub Msg
 subscriptions stories { state } =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
@@ -543,7 +543,7 @@ styledWorkspace settings { viewport, dragging } =
 
 
 viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
-viewWorkspace renderer settings state knobs =
+viewWorkspace storyPayload settings state knobs =
     let
         viewport =
             calcViewport settings state.viewport
@@ -558,12 +558,17 @@ viewWorkspace renderer settings state knobs =
             viewport
             (state.dragging /= NoDragging)
             [ styledStoryContainer settings
-                [ Html.map (always NoOp) (Renderer.unwrap (renderer.view knobs storyViewport))
+                [ case storyPayload.view knobs storyViewport of
+                    Nothing ->
+                        div [] []
+
+                    Just renderer ->
+                        Html.map (always NoOp) (Renderer.unwrap renderer)
                 ]
             ]
 
         --
-        , Knob.view storyViewport renderer.knobs knobs
+        , Knob.view storyViewport storyPayload.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -664,7 +669,7 @@ viewRoot settings dragging children =
         (styledGlobal settings dragging :: children)
 
 
-viewBulletproof : List (Story Never Renderer) -> Model -> Browser.Document Msg
+viewBulletproof : List (Story Renderer) -> Model -> Browser.Document Msg
 viewBulletproof stories { settings, state, knobs } =
     let
         ( actualSettings, workspaceView ) =
@@ -678,12 +683,12 @@ viewBulletproof stories { settings, state, knobs } =
                         ]
                     )
 
-                Just renderer ->
+                Just storyPayload ->
                     ( settings
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace renderer settings state
+                        |> viewWorkspace storyPayload settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
@@ -745,25 +750,21 @@ type alias Program =
     Platform.Program (Maybe String) Model Msg
 
 
-run : (String -> Cmd msg) -> List (Story Error.Reason Renderer) -> Program
-run onSettingsChange dangerousStories =
+run : (String -> Cmd msg) -> List (Story Renderer) -> Program
+run onSettingsChange stories =
     let
-        ( stories, document ) =
-            case Error.validateStories dangerousStories of
-                Err errors ->
-                    ( []
-                    , always (viewError errors)
-                    )
+        errors =
+            Error.validateStories stories
 
-                Ok [] ->
-                    ( []
-                    , always viewEmpty
-                    )
+        document =
+            if List.isEmpty stories then
+                always viewEmpty
 
-                Ok safeStories ->
-                    ( safeStories
-                    , viewBulletproof safeStories
-                    )
+            else if List.isEmpty errors then
+                viewBulletproof stories
+
+            else
+                always (viewError errors)
     in
     Browser.application
         { init = init stories

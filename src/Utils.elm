@@ -1,14 +1,4 @@
-module Utils exposing
-    ( Viewport
-    , ifelse
-    , nonBlank
-    , notClosest
-    , onSpaceOrEnter
-    , orThen
-    , plural
-    , px
-    , textCode
-    )
+module Utils exposing (Viewport, ifelse, notClosest, onSpaceOrEnter, px, textCode)
 
 import Css
 import DOM
@@ -71,25 +61,6 @@ onSpaceOrEnter =
     Events.preventDefaultOn "keypress" << keyDecoder [ 13, 32 ]
 
 
-nonBlank : String -> Maybe String
-nonBlank str =
-    case String.trim str of
-        "" ->
-            Nothing
-
-        trimmed ->
-            Just trimmed
-
-
-plural : String -> Int -> String
-plural word n =
-    if n == 1 then
-        word
-
-    else
-        word ++ "s"
-
-
 containsClass : String -> String -> Bool
 containsClass className classList =
     List.member className (String.split " " classList)
@@ -124,13 +95,3 @@ notClosest className msg =
             ]
         )
         |> DOM.target
-
-
-orThen : Maybe a -> Maybe a -> Maybe a
-orThen defaultMaybe maybe =
-    case maybe of
-        Nothing ->
-            defaultMaybe
-
-        just ->
-            just
