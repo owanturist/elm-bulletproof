@@ -7,6 +7,7 @@ module Date exposing
     , timeToString
     )
 
+import Calendar
 import DateTime exposing (DateTime)
 import Dict exposing (Dict)
 import Html.Attributes exposing (datetime)
@@ -43,75 +44,48 @@ indexToMonthTable =
         |> Dict.fromList
 
 
-monthToIndex : Time.Month -> Int
-monthToIndex month =
-    case month of
-        Time.Jan ->
-            1
-
-        Time.Feb ->
-            2
-
-        Time.Mar ->
-            3
-
-        Time.Apr ->
-            4
-
-        Time.May ->
-            5
-
-        Time.Jun ->
-            6
-
-        Time.Jul ->
-            7
-
-        Time.Aug ->
-            8
-
-        Time.Sep ->
-            9
-
-        Time.Oct ->
-            10
-
-        Time.Nov ->
-            11
-
-        Time.Dec ->
-            12
-
-
 dateFromDateTime : DateTime -> Date
 dateFromDateTime datetime =
     Date
         (DateTime.toPosix datetime)
         (DateTime.getYear datetime)
-        (monthToIndex (DateTime.getMonth datetime))
+        (Calendar.monthToInt (DateTime.getMonth datetime))
         (DateTime.getDay datetime)
 
 
-makeDateTime : Int -> Int -> Int -> Maybe DateTime
-makeDateTime day monthIndex year =
+charsToInt : List Char -> Maybe Int
+charsToInt =
+    String.toInt << String.fromList
+
+
+charsToMonth : List Char -> Maybe Time.Month
+charsToMonth =
+    Maybe.andThen (\monthIndex -> Dict.get monthIndex indexToMonthTable) << charsToInt
+
+
+makeDateTime : List Char -> List Char -> List Char -> Maybe DateTime
+makeDateTime day month year =
     Maybe.andThen
-        (\month ->
+        (\rawDate ->
             DateTime.fromRawParts
-                { day = day, month = month, year = year }
+                rawDate
                 { hours = 0, minutes = 0, seconds = 0, milliseconds = 0 }
         )
-        (Dict.get monthIndex indexToMonthTable)
+        (Maybe.map3 Calendar.RawDate
+            (charsToInt year)
+            (charsToMonth month)
+            (charsToInt day)
+        )
 
 
 parseStringToDateTimeHelp : String -> Char -> Maybe DateTime
 parseStringToDateTimeHelp str delimiter =
-    case List.map String.toInt (String.split (String.fromChar delimiter) str) of
-        [ Just yearOrDay, Just monthIndex, Just dayOrYear ] ->
-            [ makeDateTime dayOrYear monthIndex yearOrDay
-            , makeDateTime yearOrDay monthIndex dayOrYear
-            ]
-                |> List.filterMap identity
-                |> List.head
+    case List.map String.toList (String.split (String.fromChar delimiter) str) of
+        [ [ _, _, _, _ ] as yyyy, [ _, _ ] as mm, [ _, _ ] as dd ] ->
+            makeDateTime dd mm yyyy
+
+        [ [ _, _ ] as dd, [ _, _ ] as mm, [ _, _, _, _ ] as yyyy ] ->
+            makeDateTime dd mm yyyy
 
         _ ->
             Nothing
@@ -154,15 +128,24 @@ type alias Time =
     }
 
 
+validateTime : Time -> Maybe Time
+validateTime time =
+    if time.hours >= 0 && time.hours < 24 && time.minutes >= 0 && time.minutes < 60 then
+        Just time
+
+    else
+        Nothing
+
+
 timeFromString : String -> Maybe Time
 timeFromString str =
-    case List.map String.toInt (String.split ":" str) of
-        [ Just hours, Just minutes ] ->
-            if hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 then
-                Just (Time hours minutes)
-
-            else
-                Nothing
+    case String.toList str of
+        [ h0, h1, ':', m0, m1 ] ->
+            Maybe.map2
+                Time
+                (charsToInt [ h0, h1 ])
+                (charsToInt [ m0, m1 ])
+                |> Maybe.andThen validateTime
 
         _ ->
             Nothing
