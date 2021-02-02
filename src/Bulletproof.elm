@@ -24,7 +24,6 @@ module Bulletproof exposing
 -}
 
 import Element exposing (Element)
-import Error
 import Html
 import Html.Styled
 import Main
@@ -71,7 +70,7 @@ fromElmUI options attributes element =
 Stories helps you to organize UI components and describe different states.
 -}
 type alias Story =
-    Story.Story Error.Reason Renderer
+    Story.Story Renderer
 
 
 {-| Story represents a component according inputs.
@@ -87,11 +86,11 @@ To dynamically change the inputs please take a look into knobs.
             )
 
 -}
-story : String -> view -> Story.Story Error.Reason view
+story : String -> view -> Story.Story view
 story title view =
-    Story.Single title
+    Story.Single (String.trim title)
         { knobs = []
-        , view = \_ _ -> view
+        , view = \_ _ -> Just view
         }
 
 
@@ -120,7 +119,7 @@ A folder might includes stories, todos, labels and other folders
 -}
 folder : String -> List Story -> Story
 folder title stories =
-    Story.Batch title stories
+    Story.Batch (String.trim title) stories
 
 
 {-| Each todo is a story which has not started yet...
@@ -137,14 +136,14 @@ Helps to remember components' states you want to make as a story.
 -}
 todo : String -> Story
 todo title =
-    Story.Todo title
+    Story.Todo (String.trim title)
 
 
 {-| Labels helps to visually split stories by blocks. Does not affect on story path.
 -}
 label : String -> Story
 label title =
-    Story.Label title
+    Story.Label (String.trim title)
 
 
 {-| Specific Bulletproof program to return as main.

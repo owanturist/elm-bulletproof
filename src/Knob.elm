@@ -1,11 +1,18 @@
 module Knob exposing
-    ( Choice(..)
-    , Knob(..)
-    , KnobValue(..)
+    ( Knob(..)
     , Limits
     , Msg
     , State
-    , extract
+    , applyBool
+    , applyChoice
+    , applyColor
+    , applyDate
+    , applyFiles
+    , applyFloat
+    , applyInt
+    , applyString
+    , applyTime
+    , applyViewport
     , initial
     , update
     , view
@@ -13,7 +20,7 @@ module Knob exposing
 
 import Color exposing (Color)
 import Css
-import Date exposing (Time)
+import Date exposing (Date, Time)
 import Dict exposing (Dict)
 import File exposing (File)
 import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, td, text, textarea, tr)
@@ -25,7 +32,6 @@ import List
 import Palette
 import Range exposing (range)
 import String
-import Time
 import Utils exposing (Viewport, px, textCode)
 
 
@@ -34,10 +40,11 @@ type Knob
     | String String
     | Int Bool Int (Limits Int)
     | Float Bool Float (Limits Float)
-    | Choice Choice String (List String)
-    | Color Color
-    | Date Time.Posix
-    | Time Time
+    | Radio (List String)
+    | Select (List String)
+    | Color String
+    | Date String
+    | Time String
     | Files
     | StoryViewport
 
@@ -49,9 +56,8 @@ type alias Limits x =
     }
 
 
-type Choice
-    = Radio
-    | Select
+
+-- K N O B   V A L U E
 
 
 type KnobValue
@@ -60,9 +66,186 @@ type KnobValue
     | IntValue (Maybe Int)
     | FloatValue (Maybe Float)
     | ColorValue (Maybe Color)
-    | DateValue (Maybe Time.Posix)
+    | DateValue (Maybe Date)
     | TimeValue (Maybe Time)
-    | FileValue (List File)
+    | FilesValue (List File)
+
+
+type alias StoryView value view =
+    State -> Viewport -> Maybe (value -> view)
+
+
+getBool : String -> Bool -> State -> Bool
+getBool name defaultBool state =
+    case Dict.get name state of
+        Just (BoolValue bool) ->
+            bool
+
+        _ ->
+            defaultBool
+
+
+applyBool : String -> Bool -> StoryView Bool view -> State -> Viewport -> Maybe view
+applyBool name defaultBool storyView state viewport =
+    Maybe.map
+        ((|>) (getBool name defaultBool state))
+        (storyView state viewport)
+
+
+getString : String -> String -> State -> String
+getString name defaultString state =
+    case Dict.get name state of
+        Just (StringValue string) ->
+            string
+
+        _ ->
+            defaultString
+
+
+applyString : String -> String -> StoryView String view -> State -> Viewport -> Maybe view
+applyString name defaultString storyView state viewport =
+    Maybe.map
+        ((|>) (getString name defaultString state))
+        (storyView state viewport)
+
+
+getInt : String -> Int -> State -> Int
+getInt name defaultInt state =
+    case Dict.get name state of
+        Just (IntValue int) ->
+            Maybe.withDefault defaultInt int
+
+        _ ->
+            defaultInt
+
+
+applyInt : String -> Int -> StoryView Int view -> State -> Viewport -> Maybe view
+applyInt name defaultInt storyView state viewport =
+    Maybe.map
+        ((|>) (getInt name defaultInt state))
+        (storyView state viewport)
+
+
+getFloat : String -> Float -> State -> Float
+getFloat name defaultFloat state =
+    case Dict.get name state of
+        Just (FloatValue float) ->
+            Maybe.withDefault defaultFloat float
+
+        _ ->
+            defaultFloat
+
+
+applyFloat : String -> Float -> StoryView Float view -> State -> Viewport -> Maybe view
+applyFloat name defaultFloat storyView state viewport =
+    Maybe.map
+        ((|>) (getFloat name defaultFloat state))
+        (storyView state viewport)
+
+
+getChoice : String -> Maybe option -> Dict String option -> State -> Maybe option
+getChoice name defaultOption optionsDict state =
+    case Dict.get name state of
+        Just (StringValue key) ->
+            case Dict.get key optionsDict of
+                Nothing ->
+                    defaultOption
+
+                just ->
+                    just
+
+        _ ->
+            defaultOption
+
+
+applyChoice : String -> Maybe option -> Dict String option -> StoryView option view -> State -> Viewport -> Maybe view
+applyChoice name defaultOption optionsDict storyView state viewport =
+    Maybe.map2
+        (|>)
+        (getChoice name defaultOption optionsDict state)
+        (storyView state viewport)
+
+
+getColor : String -> String -> State -> Maybe Color
+getColor name defaultColor state =
+    case Dict.get name state of
+        Just (ColorValue (Just color)) ->
+            Just color
+
+        _ ->
+            Color.fromString defaultColor
+
+
+applyColor : String -> String -> StoryView Color view -> State -> Viewport -> Maybe view
+applyColor name defaultColor storyView state viewport =
+    Maybe.map2
+        (|>)
+        (getColor name defaultColor state)
+        (storyView state viewport)
+
+
+getDate : String -> String -> State -> Maybe Date
+getDate name defaultDate state =
+    case Dict.get name state of
+        Just (DateValue (Just date)) ->
+            Just date
+
+        _ ->
+            Date.dateFromString defaultDate
+
+
+applyDate : String -> String -> StoryView Date view -> State -> Viewport -> Maybe view
+applyDate name defaultDate storyView state viewport =
+    Maybe.map2
+        (|>)
+        (getDate name defaultDate state)
+        (storyView state viewport)
+
+
+getTime : String -> String -> State -> Maybe Time
+getTime name defaultTime state =
+    case Dict.get name state of
+        Just (TimeValue (Just time)) ->
+            Just time
+
+        _ ->
+            Date.timeFromString defaultTime
+
+
+applyTime : String -> String -> StoryView Time view -> State -> Viewport -> Maybe view
+applyTime name defaultTime storyView state viewport =
+    Maybe.map2
+        (|>)
+        (getTime name defaultTime state)
+        (storyView state viewport)
+
+
+getFiles : String -> State -> List File
+getFiles name state =
+    case Dict.get name state of
+        Just (FilesValue files) ->
+            files
+
+        _ ->
+            []
+
+
+applyFiles : String -> StoryView (List File) view -> State -> Viewport -> Maybe view
+applyFiles name storyView state viewport =
+    Maybe.map
+        ((|>) (getFiles name state))
+        (storyView state viewport)
+
+
+applyViewport : StoryView Viewport view -> State -> Viewport -> Maybe view
+applyViewport storyView state viewport =
+    Maybe.map
+        ((|>) viewport)
+        (storyView state viewport)
+
+
+
+-- S T A T E
 
 
 type alias State =
@@ -72,11 +255,6 @@ type alias State =
 initial : State
 initial =
     Dict.empty
-
-
-extract : String -> State -> Maybe KnobValue
-extract =
-    Dict.get
 
 
 
@@ -140,7 +318,7 @@ update msg state =
             Dict.insert name (DateValue Nothing) state
 
         UpdateDate name str ->
-            case Date.posixFromString str of
+            case Date.dateFromString str of
                 Nothing ->
                     state
 
@@ -159,7 +337,7 @@ update msg state =
                     Dict.insert name (TimeValue (Just time)) state
 
         UpdateFiles name files ->
-            Dict.insert name (FileValue files) state
+            Dict.insert name (FilesValue files) state
 
 
 
@@ -289,8 +467,8 @@ styledRadio attributes =
         []
 
 
-viewKnobRadio : String -> List String -> String -> Html Msg
-viewKnobRadio name options current =
+viewKnobRadio : String -> Maybe String -> List String -> Html Msg
+viewKnobRadio name selected options =
     Keyed.node "div"
         [ Attributes.css cssRadioGroup
         ]
@@ -302,7 +480,7 @@ viewKnobRadio name options current =
                         [ Attributes.name name
                         , Attributes.value value
                         , Attributes.tabindex 0
-                        , Attributes.checked (value == current)
+                        , Attributes.checked (Just value == selected)
                         , Events.onCheck (\_ -> UpdateString name value)
                         ]
                     , styledRadioText value
@@ -313,8 +491,8 @@ viewKnobRadio name options current =
         )
 
 
-viewKnobSelect : String -> List String -> String -> Html Msg
-viewKnobSelect name options current =
+viewKnobSelect : String -> Maybe String -> List String -> Html Msg
+viewKnobSelect name selected options =
     Keyed.node "select"
         [ Attributes.css cssInput
         , Attributes.css [ Css.property "-webkit-appearance" "menulist" ]
@@ -328,7 +506,7 @@ viewKnobSelect name options current =
                 , option
                     [ Attributes.value value
                     , Attributes.tabindex 0
-                    , Attributes.selected (value == current)
+                    , Attributes.selected (Just value == selected)
                     ]
                     [ text value
                     ]
@@ -338,39 +516,39 @@ viewKnobSelect name options current =
         )
 
 
-viewKnobColor : String -> String -> Html Msg
+viewKnobColor : String -> Maybe Color -> Html Msg
 viewKnobColor name color =
     input
         [ Attributes.css cssInput
         , Attributes.type_ "color"
         , Attributes.name name
-        , Attributes.value color
+        , Attributes.value (Maybe.withDefault "" (Maybe.map .hex color))
         , Attributes.tabindex 0
         , Events.onInput (UpdateColor name)
         ]
         []
 
 
-viewKnobDate : String -> String -> Html Msg
-viewKnobDate name value =
+viewKnobDate : String -> Maybe Date -> Html Msg
+viewKnobDate name date =
     input
         [ Attributes.css cssInput
         , Attributes.type_ "date"
         , Attributes.name name
-        , Attributes.value value
+        , Attributes.value (Maybe.withDefault "" (Maybe.map Date.dateToString date))
         , Attributes.tabindex 0
         , Events.onInput (UpdateDate name)
         ]
         []
 
 
-viewKnobTime : String -> String -> Html Msg
-viewKnobTime name value =
+viewKnobTime : String -> Maybe Time -> Html Msg
+viewKnobTime name time =
     input
         [ Attributes.css cssInput
         , Attributes.type_ "time"
         , Attributes.name name
-        , Attributes.value value
+        , Attributes.value (Maybe.withDefault "" (Maybe.map Date.timeToString time))
         , Attributes.tabindex 0
         , Events.onInput (UpdateTime name)
         ]
@@ -512,44 +690,35 @@ viewKnob globalViewport name knob value =
                 , value = defaultFloat
                 }
 
-        ( Choice Radio _ options, Just (StringValue string) ) ->
-            viewKnobRadio name options string
+        ( Radio options, Just (StringValue selected) ) ->
+            viewKnobRadio name (Just selected) options
 
-        ( Choice Radio defaultString options, _ ) ->
-            viewKnobRadio name options defaultString
+        ( Radio options, _ ) ->
+            viewKnobRadio name (List.head options) options
 
-        ( Choice Select _ options, Just (StringValue string) ) ->
-            viewKnobSelect name options string
+        ( Select options, Just (StringValue selected) ) ->
+            viewKnobSelect name (Just selected) options
 
-        ( Choice Select defaultValue options, _ ) ->
-            viewKnobSelect name options defaultValue
-
-        ( Color _, Just (ColorValue Nothing) ) ->
-            viewKnobColor name ""
+        ( Select options, _ ) ->
+            viewKnobSelect name (List.head options) options
 
         ( Color _, Just (ColorValue (Just color)) ) ->
-            viewKnobColor name color.hex
+            viewKnobColor name (Just color)
 
         ( Color defaultColor, _ ) ->
-            viewKnobColor name defaultColor.hex
-
-        ( Date _, Just (DateValue Nothing) ) ->
-            viewKnobDate name ""
+            viewKnobColor name (Color.fromString defaultColor)
 
         ( Date _, Just (DateValue (Just date)) ) ->
-            viewKnobDate name (Date.posixToString date)
+            viewKnobDate name (Just date)
 
-        ( Date defaultPosix, _ ) ->
-            viewKnobDate name (Date.posixToString defaultPosix)
-
-        ( Time _, Just (TimeValue Nothing) ) ->
-            viewKnobTime name ""
+        ( Date defaultDate, _ ) ->
+            viewKnobDate name (Date.dateFromString defaultDate)
 
         ( Time _, Just (TimeValue (Just time)) ) ->
-            viewKnobTime name (Date.timeToString time)
+            viewKnobTime name (Just time)
 
         ( Time defaultTime, _ ) ->
-            viewKnobTime name (Date.timeToString defaultTime)
+            viewKnobTime name (Date.timeFromString defaultTime)
 
         ( Files, _ ) ->
             viewKnobFile name
@@ -591,7 +760,7 @@ viewRoot : Viewport -> List ( String, Knob ) -> State -> Html Msg
 viewRoot globalViewport knobs state =
     knobs
         |> List.map
-            (\( name, knob ) -> viewKnobRow globalViewport name knob (extract name state))
+            (\( name, knob ) -> viewKnobRow globalViewport name knob (Dict.get name state))
         |> List.reverse
         |> Keyed.node "table" [ Attributes.css cssRoot ]
 

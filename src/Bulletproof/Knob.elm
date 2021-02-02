@@ -33,17 +33,11 @@ module Bulletproof.Knob exposing
 
 -}
 
-import Date
 import Dict
-import Error
 import File
-import Knob exposing (Choice(..), KnobValue(..), Limits)
-import Story
+import Knob exposing (Knob, Limits)
+import Story exposing (Story)
 import Time
-
-
-type alias Story view =
-    Story.Story Error.Reason view
 
 
 {-| Knob of a `Bool` value.
@@ -61,38 +55,18 @@ type alias Story view =
 
 -}
 bool : String -> Bool -> Story (Bool -> a) -> Story a
-bool name defaultValue story =
-    case ( Error.validateBool name, story ) of
-        ( Err reason, Story.Fail title reasons ) ->
-            Story.Fail title (reason :: reasons)
-
-        ( Err reason, Story.Single title _ ) ->
-            Story.Fail title [ reason ]
-
-        ( Ok validName, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( validName, Knob.Bool defaultValue ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract validName knobs of
-                            Just (BoolValue value) ->
-                                payload.view knobs storyViewport value
-
-                            _ ->
-                                payload.view knobs storyViewport defaultValue
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+bool name defaultBool story =
+    let
+        trimmedName =
+            String.trim name
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Bool defaultBool ) :: payload.knobs
+            , view = Knob.applyBool trimmedName defaultBool payload.view
+            }
+        )
+        story
 
 
 {-| Knob of a `String` value.
@@ -110,38 +84,18 @@ bool name defaultValue story =
 
 -}
 string : String -> String -> Story (String -> a) -> Story a
-string name defaultValue story =
-    case ( Error.validateString name, story ) of
-        ( Err reason, Story.Fail title reasons ) ->
-            Story.Fail title (reason :: reasons)
-
-        ( Err reason, Story.Single title _ ) ->
-            Story.Fail title [ reason ]
-
-        ( Ok validName, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( validName, Knob.String defaultValue ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract validName knobs of
-                            Just (StringValue value) ->
-                                payload.view knobs storyViewport value
-
-                            _ ->
-                                payload.view knobs storyViewport defaultValue
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+string name defaultString story =
+    let
+        trimmedName =
+            String.trim name
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.String defaultString ) :: payload.knobs
+            , view = Knob.applyString trimmedName defaultString payload.view
+            }
+        )
+        story
 
 
 {-| Specific property to configurate numeric knobs.
@@ -310,42 +264,21 @@ propertiesToNumberPayload =
 
 -}
 int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
-int name defaultValue properties story =
+int name defaultInt properties story =
     let
+        trimmedName =
+            String.trim name
+
         ( asRange, limits ) =
             propertiesToNumberPayload properties
     in
-    case ( Error.validateInt name defaultValue limits, story ) of
-        ( Err reasons_, Story.Fail title reasons ) ->
-            Story.Fail title (reasons_ ++ reasons)
-
-        ( Err reasons, Story.Single title _ ) ->
-            Story.Fail title reasons
-
-        ( Ok validName, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( validName, Knob.Int asRange defaultValue limits ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract validName knobs of
-                            Just (IntValue val) ->
-                                payload.view knobs storyViewport (Maybe.withDefault defaultValue val)
-
-                            _ ->
-                                payload.view knobs storyViewport defaultValue
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Int asRange defaultInt limits ) :: payload.knobs
+            , view = Knob.applyInt trimmedName defaultInt payload.view
+            }
+        )
+        story
 
 
 {-| Knob of a `Float` value.
@@ -364,85 +297,48 @@ int name defaultValue properties story =
 
 -}
 float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
-float name defaultValue properties story =
+float name defaultFloat properties story =
     let
+        trimmedName =
+            String.trim name
+
         ( asRange, limits ) =
             propertiesToNumberPayload properties
     in
-    case ( Error.validateFloat name defaultValue limits, story ) of
-        ( Err reasons_, Story.Fail title reasons ) ->
-            Story.Fail title (reasons_ ++ reasons)
-
-        ( Err reasons, Story.Single title _ ) ->
-            Story.Fail title reasons
-
-        ( Ok validName, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( validName, Knob.Float asRange defaultValue limits ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract validName knobs of
-                            Just (FloatValue val) ->
-                                payload.view knobs storyViewport (Maybe.withDefault defaultValue val)
-
-                            _ ->
-                                payload.view knobs storyViewport defaultValue
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Float asRange defaultFloat limits ) :: payload.knobs
+            , view = Knob.applyFloat trimmedName defaultFloat payload.view
+            }
+        )
+        story
 
 
-makeChoice : Choice -> String -> List ( String, option ) -> Story (option -> a) -> Story a
-makeChoice choice name options story =
-    case ( Error.validateChoice choice name options, story ) of
-        ( Err reasons, Story.Fail title reasons_ ) ->
-            Story.Fail title (reasons ++ reasons_)
+makeChoice : (List String -> Knob) -> String -> List ( String, option ) -> Story (option -> a) -> Story a
+makeChoice makeKnob name options story =
+    let
+        trimmedName =
+            String.trim name
 
-        ( Err reasons, Story.Single title _ ) ->
-            Story.Fail title reasons
+        trimmedOptions =
+            List.map (Tuple.mapFirst String.trim) options
 
-        ( Ok config, Story.Single title payload ) ->
-            let
-                optionsDict =
-                    Dict.fromList options
-            in
-            Story.Single title
-                { knobs = ( config.name, Knob.Choice choice config.selected (List.map Tuple.first options) ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        let
-                            value =
-                                case Knob.extract config.name knobs of
-                                    Just (StringValue key) ->
-                                        Maybe.withDefault config.option (Dict.get key optionsDict)
+        keys =
+            List.map Tuple.first trimmedOptions
 
-                                    _ ->
-                                        config.option
-                        in
-                        payload.view knobs storyViewport value
-                }
+        defaultOption =
+            Maybe.map Tuple.second (List.head trimmedOptions)
 
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+        optionsDict =
+            Dict.fromList trimmedOptions
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, makeKnob keys ) :: payload.knobs
+            , view = Knob.applyChoice trimmedName defaultOption optionsDict payload.view
+            }
+        )
+        story
 
 
 {-| Knob of a custom value represented as radio group.
@@ -466,8 +362,8 @@ The first option is selected by default.
 
 -}
 radio : String -> List ( String, option ) -> Story (option -> a) -> Story a
-radio =
-    makeChoice Radio
+radio name options story =
+    makeChoice Knob.Radio name options story
 
 
 {-| Knob of a custom value represented as select element.
@@ -491,8 +387,8 @@ The first option is selected by default.
 
 -}
 select : String -> List ( String, option ) -> Story (option -> a) -> Story a
-select =
-    makeChoice Select
+select name options story =
+    makeChoice Knob.Select name options story
 
 
 {-| Shape contains both hex and rgb components.
@@ -523,38 +419,18 @@ type alias Color =
 
 -}
 color : String -> String -> Story (Color -> a) -> Story a
-color name defaultValue story =
-    case ( Error.validateColor name defaultValue, story ) of
-        ( Err reason, Story.Fail title reasons ) ->
-            Story.Fail title (reason :: reasons)
-
-        ( Err reason, Story.Single title _ ) ->
-            Story.Fail title [ reason ]
-
-        ( Ok config, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( config.name, Knob.Color config.color ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract config.name knobs of
-                            Just (ColorValue (Just value)) ->
-                                payload.view knobs storyViewport value
-
-                            _ ->
-                                payload.view knobs storyViewport config.color
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+color name defaultHex story =
+    let
+        trimmedName =
+            String.trim name
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Color defaultHex ) :: payload.knobs
+            , view = Knob.applyColor trimmedName defaultHex payload.view
+            }
+        )
+        story
 
 
 {-| Shape contains year, month, day and `Time.Posix` values.
@@ -568,6 +444,8 @@ type alias Date =
 
 
 {-| Knob of a `Date` value.
+Valid delimiters are `/`, `-` and `.`.
+Valid date patterns are `dd/mm/yyyy` and `yyyy/mm/dd`.
 
     storyToday : Bulletproof.Story
     storyToday =
@@ -586,38 +464,18 @@ type alias Date =
 
 -}
 date : String -> String -> Story (Date -> a) -> Story a
-date name defaultValue story =
-    case ( Error.validateDate name defaultValue, story ) of
-        ( Err reason, Story.Fail title reasons ) ->
-            Story.Fail title (reason :: reasons)
-
-        ( Err reason, Story.Single title _ ) ->
-            Story.Fail title [ reason ]
-
-        ( Ok config, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( config.name, Knob.Date config.date ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract config.name knobs of
-                            Just (DateValue (Just value)) ->
-                                payload.view knobs storyViewport (Date.dateFromPosix value)
-
-                            _ ->
-                                payload.view knobs storyViewport (Date.dateFromPosix config.date)
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+date name defaultDate story =
+    let
+        trimmedName =
+            String.trim name
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Date defaultDate ) :: payload.knobs
+            , view = Knob.applyDate trimmedName defaultDate payload.view
+            }
+        )
+        story
 
 
 {-| Shape contains hours and minutes.
@@ -646,38 +504,18 @@ type alias Time =
 
 -}
 time : String -> String -> Story (Time -> a) -> Story a
-time name defaultValue story =
-    case ( Error.validateTime name defaultValue, story ) of
-        ( Err reason, Story.Fail title reasons ) ->
-            Story.Fail title (reason :: reasons)
-
-        ( Err reason, Story.Single title _ ) ->
-            Story.Fail title [ reason ]
-
-        ( Ok config, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( config.name, Knob.Time config.time ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract config.name knobs of
-                            Just (TimeValue (Just value)) ->
-                                payload.view knobs storyViewport value
-
-                            _ ->
-                                payload.view knobs storyViewport config.time
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+time name defaultTime story =
+    let
+        trimmedName =
+            String.trim name
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Time defaultTime ) :: payload.knobs
+            , view = Knob.applyTime trimmedName defaultTime payload.view
+            }
+        )
+        story
 
 
 {-| Alias for Elm `File` representation.
@@ -700,37 +538,17 @@ type alias File =
 -}
 files : String -> Story (List File -> a) -> Story a
 files name story =
-    case ( Error.validateFile name, story ) of
-        ( Err reason, Story.Fail title reasons ) ->
-            Story.Fail title (reason :: reasons)
-
-        ( Err reason, Story.Single title _ ) ->
-            Story.Fail title [ reason ]
-
-        ( Ok validName, Story.Single title payload ) ->
-            Story.Single title
-                { knobs = ( validName, Knob.Files ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        case Knob.extract validName knobs of
-                            Just (FileValue value) ->
-                                payload.view knobs storyViewport value
-
-                            _ ->
-                                payload.view knobs storyViewport []
-                }
-
-        ( _, Story.Label title ) ->
-            Story.Label title
-
-        ( _, Story.Todo title ) ->
-            Story.Todo title
-
-        ( _, Story.Batch title stories ) ->
-            Story.Batch title stories
-
-        ( _, Story.Fail title reasons ) ->
-            Story.Fail title reasons
+    let
+        trimmedName =
+            String.trim name
+    in
+    Story.map
+        (\payload ->
+            { knobs = ( trimmedName, Knob.Files ) :: payload.knobs
+            , view = Knob.applyFiles trimmedName payload.view
+            }
+        )
+        story
 
 
 {-| Shape of story viewport dimension.
@@ -764,23 +582,10 @@ Creates a knob with `"Viewport"` name.
 -}
 viewport : Story (Viewport -> a) -> Story a
 viewport story =
-    case story of
-        Story.Fail title reasons ->
-            Story.Fail title reasons
-
-        Story.Single title payload ->
-            Story.Single title
-                { knobs = ( "Viewport", Knob.StoryViewport ) :: payload.knobs
-                , view =
-                    \knobs storyViewport ->
-                        payload.view knobs storyViewport storyViewport
-                }
-
-        Story.Label title ->
-            Story.Label title
-
-        Story.Todo title ->
-            Story.Todo title
-
-        Story.Batch title stories ->
-            Story.Batch title stories
+    Story.map
+        (\payload ->
+            { knobs = ( "Viewport", Knob.StoryViewport ) :: payload.knobs
+            , view = Knob.applyViewport payload.view
+            }
+        )
+        story
