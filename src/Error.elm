@@ -102,7 +102,7 @@ validateChoice choice name options =
     else
         List.map
             (\( option, n ) -> DuplicateChoiceOptions choice name option n)
-            (countList identity options)
+            (countList options)
 
 
 validateColor : String -> String -> List Reason
@@ -171,9 +171,9 @@ validateKnobs knobs =
                 |> Tuple.mapFirst List.length
 
         duplicatedKnobsReasons =
-            List.map
-                (\( name, n ) -> DuplicateKnobs name n)
-                (countList Tuple.first restKnobs)
+            List.map Tuple.first restKnobs
+                |> countList
+                |> List.map (\( name, n ) -> DuplicateKnobs name n)
 
         invalidKnobsReasons =
             List.concatMap
@@ -197,46 +197,35 @@ validateKnobs knobs =
 -- V A L I D A T E   S T O R Y
 
 
-type alias Counter key =
-    { counts : Dict key Int
-    , duplicates : List key
-    }
+type alias Counter =
+    Dict String Int
 
 
-initialCounter : Counter comparable
-initialCounter =
-    Counter Dict.empty []
+count : String -> Counter -> Counter
+count key counter =
+    let
+        n =
+            Maybe.withDefault 0 (Dict.get key counter)
+    in
+    Dict.insert key (n + 1) counter
 
 
-count : comparable -> Counter comparable -> Counter comparable
-count key { counts, duplicates } =
-    case Dict.get key counts of
-        Nothing ->
-            Counter (Dict.insert key 1 counts) duplicates
-
-        Just 1 ->
-            Counter (Dict.insert key 2 counts) (key :: duplicates)
-
-        Just n ->
-            Counter (Dict.insert key (n + 1) counts) duplicates
+incount : Counter -> List ( String, Int )
+incount counter =
+    counter
+        |> Dict.toList
+        |> List.filter ((<) 1 << Tuple.second)
 
 
-incount : Counter comparable -> List ( comparable, Int )
-incount { counts, duplicates } =
-    List.filterMap
-        (\key -> Maybe.map (Tuple.pair key) (Dict.get key counts))
-        duplicates
-
-
-countList : (a -> comparable) -> List a -> List ( comparable, Int )
-countList toKey list =
-    incount (List.foldr (count << toKey) initialCounter list)
+countList : List String -> List ( String, Int )
+countList list =
+    incount (List.foldr count Dict.empty list)
 
 
 type alias FolderCounters =
-    { labels : Counter String
-    , stories : Counter String
-    , folders : Counter String
+    { labels : Counter
+    , stories : Counter
+    , folders : Counter
     }
 
 
@@ -252,7 +241,7 @@ incountFolder path { labels, stories, folders } =
 
 initialFolderCounters : FolderCounters
 initialFolderCounters =
-    FolderCounters initialCounter initialCounter initialCounter
+    FolderCounters Dict.empty Dict.empty Dict.empty
 
 
 validateStory : Story.Path -> Story view -> FolderCounters -> ( List Error, FolderCounters )
