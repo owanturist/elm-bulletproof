@@ -444,6 +444,8 @@ type alias Date =
 
 
 {-| Knob of a `Date` value.
+Valid delimiters are `/`, `-` and `.`.
+Valid date patterns are `dd/mm/yyyy` and `yyyy/mm/dd`.
 
     storyToday : Bulletproof.Story
     storyToday =

@@ -973,8 +973,10 @@ explanationInvalidDate name date =
         ]
         [ text "Please make sure provided value is following one of the "
         , textCode "dd-mm-yyyy"
-        , text " or "
+        , text ", "
         , textCode "dd/mm/yyyy"
+        , text " or "
+        , textCode "dd.mm.yyyy"
         , text " date patterns."
         ]
         """

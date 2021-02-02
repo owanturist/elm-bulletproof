@@ -516,39 +516,39 @@ viewKnobSelect name current options =
         )
 
 
-viewKnobColor : String -> String -> Html Msg
+viewKnobColor : String -> Maybe Color -> Html Msg
 viewKnobColor name color =
     input
         [ Attributes.css cssInput
         , Attributes.type_ "color"
         , Attributes.name name
-        , Attributes.value color
+        , Attributes.value (Maybe.withDefault "" (Maybe.map .hex color))
         , Attributes.tabindex 0
         , Events.onInput (UpdateColor name)
         ]
         []
 
 
-viewKnobDate : String -> String -> Html Msg
+viewKnobDate : String -> Maybe Date -> Html Msg
 viewKnobDate name date =
     input
         [ Attributes.css cssInput
         , Attributes.type_ "date"
         , Attributes.name name
-        , Attributes.value date
+        , Attributes.value (Maybe.withDefault "" (Maybe.map Date.dateToString date))
         , Attributes.tabindex 0
         , Events.onInput (UpdateDate name)
         ]
         []
 
 
-viewKnobTime : String -> String -> Html Msg
+viewKnobTime : String -> Maybe Time -> Html Msg
 viewKnobTime name time =
     input
         [ Attributes.css cssInput
         , Attributes.type_ "time"
         , Attributes.name name
-        , Attributes.value time
+        , Attributes.value (Maybe.withDefault "" (Maybe.map Date.timeToString time))
         , Attributes.tabindex 0
         , Events.onInput (UpdateTime name)
         ]
@@ -703,22 +703,22 @@ viewKnob globalViewport name knob value =
             viewKnobSelect name (List.head keys) keys
 
         ( Color _, Just (ColorValue (Just color)) ) ->
-            viewKnobColor name color.hex
+            viewKnobColor name (Just color)
 
         ( Color defaultColor, _ ) ->
-            viewKnobColor name defaultColor
+            viewKnobColor name (Color.fromString defaultColor)
 
         ( Date _, Just (DateValue (Just date)) ) ->
-            viewKnobDate name (Date.dateToString date)
+            viewKnobDate name (Just date)
 
         ( Date defaultDate, _ ) ->
-            viewKnobDate name defaultDate
+            viewKnobDate name (Date.dateFromString defaultDate)
 
         ( Time _, Just (TimeValue (Just time)) ) ->
-            viewKnobTime name (Date.timeToString time)
+            viewKnobTime name (Just time)
 
         ( Time defaultTime, _ ) ->
-            viewKnobTime name defaultTime
+            viewKnobTime name (Date.timeFromString defaultTime)
 
         ( Files, _ ) ->
             viewKnobFile name

@@ -119,7 +119,7 @@ parseStringToDateTimeHelp str delimiter =
 
 parseStringToDateTime : String -> Maybe DateTime
 parseStringToDateTime str =
-    [ '-', '/' ]
+    [ '-', '/', '.' ]
         |> List.filterMap (parseStringToDateTimeHelp str)
         |> List.head
 
