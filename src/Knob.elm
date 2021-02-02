@@ -468,7 +468,7 @@ styledRadio attributes =
 
 
 viewKnobRadio : String -> Maybe String -> List String -> Html Msg
-viewKnobRadio name current keys =
+viewKnobRadio name selected options =
     Keyed.node "div"
         [ Attributes.css cssRadioGroup
         ]
@@ -480,19 +480,19 @@ viewKnobRadio name current keys =
                         [ Attributes.name name
                         , Attributes.value value
                         , Attributes.tabindex 0
-                        , Attributes.checked (Just value == current)
+                        , Attributes.checked (Just value == selected)
                         , Events.onCheck (\_ -> UpdateString name value)
                         ]
                     , styledRadioText value
                     ]
                 )
             )
-            keys
+            options
         )
 
 
 viewKnobSelect : String -> Maybe String -> List String -> Html Msg
-viewKnobSelect name current options =
+viewKnobSelect name selected options =
     Keyed.node "select"
         [ Attributes.css cssInput
         , Attributes.css [ Css.property "-webkit-appearance" "menulist" ]
@@ -506,7 +506,7 @@ viewKnobSelect name current options =
                 , option
                     [ Attributes.value value
                     , Attributes.tabindex 0
-                    , Attributes.selected (Just value == current)
+                    , Attributes.selected (Just value == selected)
                     ]
                     [ text value
                     ]
@@ -690,17 +690,17 @@ viewKnob globalViewport name knob value =
                 , value = defaultFloat
                 }
 
-        ( Radio keys, Just (StringValue key) ) ->
-            viewKnobRadio name (Just key) keys
+        ( Radio options, Just (StringValue selected) ) ->
+            viewKnobRadio name (Just selected) options
 
-        ( Radio keys, _ ) ->
-            viewKnobRadio name (List.head keys) keys
+        ( Radio options, _ ) ->
+            viewKnobRadio name (List.head options) options
 
-        ( Select keys, Just (StringValue key) ) ->
-            viewKnobSelect name (Just key) keys
+        ( Select options, Just (StringValue selected) ) ->
+            viewKnobSelect name (Just selected) options
 
-        ( Select keys, _ ) ->
-            viewKnobSelect name (List.head keys) keys
+        ( Select options, _ ) ->
+            viewKnobSelect name (List.head options) options
 
         ( Color _, Just (ColorValue (Just color)) ) ->
             viewKnobColor name (Just color)
