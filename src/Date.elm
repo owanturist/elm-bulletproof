@@ -92,23 +92,23 @@ dateFromDateTime datetime =
         (DateTime.getDay datetime)
 
 
-makeDateTime : Int -> Int -> Time.Month -> Maybe DateTime
-makeDateTime day year month =
-    DateTime.fromRawParts
-        { day = day, month = month, year = year }
-        { hours = 0, minutes = 0, seconds = 0, milliseconds = 0 }
+makeDateTime : Int -> Int -> Int -> Maybe DateTime
+makeDateTime day monthIndex year =
+    Maybe.andThen
+        (\month ->
+            DateTime.fromRawParts
+                { day = day, month = month, year = year }
+                { hours = 0, minutes = 0, seconds = 0, milliseconds = 0 }
+        )
+        (Dict.get monthIndex indexToMonthTable)
 
 
 parseStringToDateTimeHelp : String -> Char -> Maybe DateTime
 parseStringToDateTimeHelp str delimiter =
     case List.map String.toInt (String.split (String.fromChar delimiter) str) of
         [ Just yearOrDay, Just monthIndex, Just dayOrYear ] ->
-            let
-                month =
-                    Dict.get monthIndex indexToMonthTable
-            in
-            [ Maybe.andThen (makeDateTime dayOrYear yearOrDay) month
-            , Maybe.andThen (makeDateTime yearOrDay dayOrYear) month
+            [ makeDateTime dayOrYear monthIndex yearOrDay
+            , makeDateTime yearOrDay monthIndex dayOrYear
             ]
                 |> List.filterMap identity
                 |> List.head
