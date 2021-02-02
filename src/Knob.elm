@@ -21,7 +21,7 @@ module Knob exposing
 import Color exposing (Color)
 import Css
 import Date exposing (Date, Time)
-import Dict exposing (Dict, keys)
+import Dict exposing (Dict)
 import File exposing (File)
 import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
