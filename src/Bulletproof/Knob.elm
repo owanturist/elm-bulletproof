@@ -1,6 +1,6 @@
 module Bulletproof.Knob exposing
     ( bool, string
-    , Property, min, max, step, range, int, float
+    , NumericProperty, min, max, step, range, int, float
     , radio, select
     , Color, color
     , Date, date
@@ -15,7 +15,7 @@ module Bulletproof.Knob exposing
 # Primitives
 
 @docs bool, string
-@docs Property, min, max, step, range, int, float
+@docs NumericProperty, min, max, step, range, int, float
 
 
 # Customs
@@ -100,7 +100,7 @@ string name defaultString story =
 
 {-| Specific property to configurate numeric knobs.
 -}
-type Property num
+type NumericProperty num
     = Range
     | Min num
     | Max num
@@ -130,7 +130,7 @@ type Property num
                 ]
 
 -}
-range : Property num
+range : NumericProperty num
 range =
     Range
 
@@ -160,7 +160,7 @@ range =
                 ]
 
 -}
-min : number -> Property number
+min : number -> NumericProperty number
 min =
     Min
 
@@ -190,7 +190,7 @@ min =
                 ]
 
 -}
-max : number -> Property number
+max : number -> NumericProperty number
 max =
     Max
 
@@ -220,12 +220,12 @@ max =
                 ]
 
 -}
-step : number -> Property number
+step : number -> NumericProperty number
 step =
     Step
 
 
-propertyToNumberPayload : Property number -> ( Bool, Limits number ) -> ( Bool, Limits number )
+propertyToNumberPayload : NumericProperty number -> ( Bool, Limits number ) -> ( Bool, Limits number )
 propertyToNumberPayload property ( asRange, limits ) =
     case property of
         Range ->
@@ -241,7 +241,7 @@ propertyToNumberPayload property ( asRange, limits ) =
             ( asRange, { limits | step = Just num } )
 
 
-propertiesToNumberPayload : List (Property number) -> ( Bool, Limits number )
+propertiesToNumberPayload : List (NumericProperty number) -> ( Bool, Limits number )
 propertiesToNumberPayload =
     List.foldl
         propertyToNumberPayload
@@ -263,7 +263,7 @@ propertiesToNumberPayload =
             |> Bulletproof.Knob.int "Size" 10 []
 
 -}
-int : String -> Int -> List (Property Int) -> Story (Int -> a) -> Story a
+int : String -> Int -> List (NumericProperty Int) -> Story (Int -> a) -> Story a
 int name defaultInt properties story =
     let
         trimmedName =
@@ -296,7 +296,7 @@ int name defaultInt properties story =
             |> Bulletproof.Knob.float "Width" 0.5 []
 
 -}
-float : String -> Float -> List (Property Float) -> Story (Float -> a) -> Story a
+float : String -> Float -> List (NumericProperty Float) -> Story (Float -> a) -> Story a
 float name defaultFloat properties story =
     let
         trimmedName =
