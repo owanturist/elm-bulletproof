@@ -3,12 +3,11 @@ module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPr
 import Dict exposing (Dict)
 import Html.Styled exposing (Html)
 import Knob exposing (Knob)
-import Utils exposing (Viewport)
 
 
 type alias Workspace view =
     { knobs : List ( String, Knob )
-    , view : Knob.State -> Viewport -> Maybe view
+    , view : Knob.Payload -> Maybe view
     }
 
 

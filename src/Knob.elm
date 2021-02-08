@@ -2,6 +2,7 @@ module Knob exposing
     ( Knob(..)
     , Limits
     , Msg
+    , Payload
     , State
     , applyBool
     , applyChoice
@@ -71,8 +72,14 @@ type KnobValue
     | FilesValue (List File)
 
 
+type alias Payload =
+    { state : State
+    , viewport : Viewport
+    }
+
+
 type alias StoryView value view =
-    State -> Viewport -> Maybe (value -> view)
+    Payload -> Maybe (value -> view)
 
 
 getBool : String -> Bool -> State -> Bool
@@ -85,11 +92,11 @@ getBool name defaultBool state =
             defaultBool
 
 
-applyBool : String -> Bool -> StoryView Bool view -> State -> Viewport -> Maybe view
-applyBool name defaultBool storyView state viewport =
+applyBool : String -> Bool -> StoryView Bool view -> Payload -> Maybe view
+applyBool name defaultBool storyView payload =
     Maybe.map
-        ((|>) (getBool name defaultBool state))
-        (storyView state viewport)
+        ((|>) (getBool name defaultBool payload.state))
+        (storyView payload)
 
 
 getString : String -> String -> State -> String
@@ -102,11 +109,11 @@ getString name defaultString state =
             defaultString
 
 
-applyString : String -> String -> StoryView String view -> State -> Viewport -> Maybe view
-applyString name defaultString storyView state viewport =
+applyString : String -> String -> StoryView String view -> Payload -> Maybe view
+applyString name defaultString storyView payload =
     Maybe.map
-        ((|>) (getString name defaultString state))
-        (storyView state viewport)
+        ((|>) (getString name defaultString payload.state))
+        (storyView payload)
 
 
 getInt : String -> Int -> State -> Int
@@ -119,11 +126,11 @@ getInt name defaultInt state =
             defaultInt
 
 
-applyInt : String -> Int -> StoryView Int view -> State -> Viewport -> Maybe view
-applyInt name defaultInt storyView state viewport =
+applyInt : String -> Int -> StoryView Int view -> Payload -> Maybe view
+applyInt name defaultInt storyView payload =
     Maybe.map
-        ((|>) (getInt name defaultInt state))
-        (storyView state viewport)
+        ((|>) (getInt name defaultInt payload.state))
+        (storyView payload)
 
 
 getFloat : String -> Float -> State -> Float
@@ -136,11 +143,11 @@ getFloat name defaultFloat state =
             defaultFloat
 
 
-applyFloat : String -> Float -> StoryView Float view -> State -> Viewport -> Maybe view
-applyFloat name defaultFloat storyView state viewport =
+applyFloat : String -> Float -> StoryView Float view -> Payload -> Maybe view
+applyFloat name defaultFloat storyView payload =
     Maybe.map
-        ((|>) (getFloat name defaultFloat state))
-        (storyView state viewport)
+        ((|>) (getFloat name defaultFloat payload.state))
+        (storyView payload)
 
 
 getChoice : String -> Maybe option -> Dict String option -> State -> Maybe option
@@ -158,12 +165,12 @@ getChoice name defaultOption optionsDict state =
             defaultOption
 
 
-applyChoice : String -> Maybe option -> Dict String option -> StoryView option view -> State -> Viewport -> Maybe view
-applyChoice name defaultOption optionsDict storyView state viewport =
+applyChoice : String -> Maybe option -> Dict String option -> StoryView option view -> Payload -> Maybe view
+applyChoice name defaultOption optionsDict storyView payload =
     Maybe.map2
         (|>)
-        (getChoice name defaultOption optionsDict state)
-        (storyView state viewport)
+        (getChoice name defaultOption optionsDict payload.state)
+        (storyView payload)
 
 
 getColor : String -> String -> State -> Maybe Color
@@ -176,12 +183,12 @@ getColor name defaultColor state =
             Color.fromString defaultColor
 
 
-applyColor : String -> String -> StoryView Color view -> State -> Viewport -> Maybe view
-applyColor name defaultColor storyView state viewport =
+applyColor : String -> String -> StoryView Color view -> Payload -> Maybe view
+applyColor name defaultColor storyView payload =
     Maybe.map2
         (|>)
-        (getColor name defaultColor state)
-        (storyView state viewport)
+        (getColor name defaultColor payload.state)
+        (storyView payload)
 
 
 getDate : String -> String -> State -> Maybe Date
@@ -194,12 +201,12 @@ getDate name defaultDate state =
             Date.dateFromString defaultDate
 
 
-applyDate : String -> String -> StoryView Date view -> State -> Viewport -> Maybe view
-applyDate name defaultDate storyView state viewport =
+applyDate : String -> String -> StoryView Date view -> Payload -> Maybe view
+applyDate name defaultDate storyView payload =
     Maybe.map2
         (|>)
-        (getDate name defaultDate state)
-        (storyView state viewport)
+        (getDate name defaultDate payload.state)
+        (storyView payload)
 
 
 getTime : String -> String -> State -> Maybe Time
@@ -212,12 +219,12 @@ getTime name defaultTime state =
             Date.timeFromString defaultTime
 
 
-applyTime : String -> String -> StoryView Time view -> State -> Viewport -> Maybe view
-applyTime name defaultTime storyView state viewport =
+applyTime : String -> String -> StoryView Time view -> Payload -> Maybe view
+applyTime name defaultTime storyView payload =
     Maybe.map2
         (|>)
-        (getTime name defaultTime state)
-        (storyView state viewport)
+        (getTime name defaultTime payload.state)
+        (storyView payload)
 
 
 getFiles : String -> State -> List File
@@ -230,18 +237,18 @@ getFiles name state =
             []
 
 
-applyFiles : String -> StoryView (List File) view -> State -> Viewport -> Maybe view
-applyFiles name storyView state viewport =
+applyFiles : String -> StoryView (List File) view -> Payload -> Maybe view
+applyFiles name storyView payload =
     Maybe.map
-        ((|>) (getFiles name state))
-        (storyView state viewport)
+        ((|>) (getFiles name payload.state))
+        (storyView payload)
 
 
-applyViewport : StoryView Viewport view -> State -> Viewport -> Maybe view
-applyViewport storyView state viewport =
+applyViewport : StoryView Viewport view -> Payload -> Maybe view
+applyViewport storyView payload =
     Maybe.map
-        ((|>) viewport)
-        (storyView state viewport)
+        ((|>) payload.viewport)
+        (storyView payload)
 
 
 

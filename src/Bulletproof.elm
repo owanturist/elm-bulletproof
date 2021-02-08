@@ -44,7 +44,7 @@ htmlFrom toHtml dynamic =
     Story.map
         (\workspace ->
             { knobs = workspace.knobs
-            , view = \state viewport -> Maybe.map (Html.map (always ()) << toHtml) (workspace.view state viewport)
+            , view = Maybe.map (Html.map (always ()) << toHtml) << workspace.view
             }
         )
         dynamic
@@ -67,7 +67,7 @@ story : String -> view -> Story.Story view
 story title view =
     Story.Single (String.trim title)
         { knobs = []
-        , view = \_ _ -> Just view
+        , view = always (Just view)
         }
 
 
@@ -134,7 +134,7 @@ fromUnstyled =
     Story.map
         (\workspace ->
             { knobs = workspace.knobs
-            , view = \state viewport -> Maybe.map Html.Styled.fromUnstyled (workspace.view state viewport)
+            , view = Maybe.map Html.Styled.fromUnstyled << workspace.view
             }
         )
 

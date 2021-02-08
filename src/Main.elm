@@ -557,7 +557,8 @@ viewWorkspace workspace settings state knobs =
             viewport
             (state.dragging /= NoDragging)
             [ styledStoryContainer settings
-                [ workspace.view knobs storyViewport
+                [ Knob.Payload knobs storyViewport
+                    |> workspace.view
                     |> Maybe.withDefault (Html.text "")
                     |> Html.map (always NoOp)
                 ]
