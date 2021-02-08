@@ -7,7 +7,6 @@ import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Icon
 import Palette
-import Renderer exposing (Renderer(..))
 import Router
 import Set exposing (Set)
 import Story exposing (Story(..))
@@ -201,7 +200,7 @@ styledFolder active =
     styled div (Css.cursor Css.pointer :: cssItem active)
 
 
-viewFolderTree : Model -> Story.Path -> Story.Path -> String -> List (Story Renderer) -> List ( String, Html Msg )
+viewFolderTree : Model -> Story.Path -> Story.Path -> String -> List (Story (Html ())) -> List ( String, Html Msg )
 viewFolderTree model current path title stories =
     let
         folderPath =
@@ -244,7 +243,7 @@ viewFolderTree model current path title stories =
         :: List.concatMap (viewItem model nextCurrent folderPath) (ifelse opened stories [])
 
 
-viewItem : Model -> Story.Path -> Story.Path -> Story Renderer -> List ( String, Html Msg )
+viewItem : Model -> Story.Path -> Story.Path -> Story (Html ()) -> List ( String, Html Msg )
 viewItem model current path story =
     case story of
         Story.Label title ->
@@ -323,7 +322,7 @@ styledRoot =
         []
 
 
-view : Story.Path -> List (Story Renderer) -> Model -> Html Msg
+view : Story.Path -> List (Story (Html ())) -> Model -> Html Msg
 view current stories model =
     styledRoot
         [ styledHeader

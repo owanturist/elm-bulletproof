@@ -1,6 +1,5 @@
 module Bulletproof exposing
     ( Story, story, folder, todo, label
-    , Renderer, fromHtml, fromElmCss, fromElmUI
     , Program, program
     )
 
@@ -14,8 +13,6 @@ module Bulletproof exposing
 
 # Render a component into a story
 
-@docs Renderer, fromHtml, fromElmCss, fromElmUI
-
 
 # Run a programm
 
@@ -23,54 +20,27 @@ module Bulletproof exposing
 
 -}
 
-import Element exposing (Element)
-import Html
+import Html exposing (Html)
 import Html.Styled
 import Main
-import Renderer
 import Story
 
 
-{-| Specific custom type incapsulates work with generic messages of components.
--}
-type alias Renderer =
-    Renderer.Renderer
-
-
-{-| Allows your `Html.Styled` component to be rendered in Bulletproof.
-
-> **Note:** In case of `elm-css` compatibility issues
-> please convert `Html.Styled` to plain `Html` and use `fromHtml` then.
-
--}
-fromElmCss : Html.Styled.Html msg -> Renderer
-fromElmCss layout =
-    Renderer.Renderer (Html.Styled.map (always ()) layout)
-
-
-{-| Allows your `Html` component to be rendered in Bulletproof.
--}
-fromHtml : Html.Html msg -> Renderer
-fromHtml layout =
-    fromElmCss (Html.Styled.fromUnstyled layout)
-
-
-{-| Allows your `Element` component to be rendered in Bulletproof.
-
-> **Note:** In case of `elm-ui` compatibility issues
-> please convert `Element` to plain `Html` and use `fromHtml` then.
-
--}
-fromElmUI : List Element.Option -> List (Element.Attribute msg) -> Element msg -> Renderer
-fromElmUI options attributes element =
-    fromHtml (Element.layoutWith { options = options } attributes element)
+fromUnstyled : Story.Story (Html a) -> Story.Story (Html.Styled.Html a)
+fromUnstyled =
+    Story.map
+        (\{ knobs, view } ->
+            { knobs = knobs
+            , view = \state viewport -> Maybe.map Html.Styled.fromUnstyled (view state viewport)
+            }
+        )
 
 
 {-| Bulletproof is made of stories.
 Stories helps you to organize UI components and describe different states.
 -}
 type alias Story =
-    Story.Story Renderer
+    Story.Story (Html ())
 
 
 {-| Story represents a component according inputs.
@@ -119,7 +89,7 @@ A folder might includes stories, todos, labels and other folders
 -}
 folder : String -> List Story -> Story
 folder title stories =
-    Story.Batch (String.trim title) stories
+    Story.Batch (String.trim title) (List.map fromUnstyled stories)
 
 
 {-| Each todo is a story which has not started yet...
@@ -159,4 +129,4 @@ type alias Program =
 -}
 program : (String -> Cmd msg) -> List Story -> Program
 program onSettingsChange stories =
-    Main.run onSettingsChange stories
+    Main.run onSettingsChange (List.map fromUnstyled stories)

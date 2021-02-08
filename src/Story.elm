@@ -1,8 +1,8 @@
 module Story exposing (Path, Payload, Story(..), get, getFirst, getNext, getPrev, map)
 
 import Dict exposing (Dict)
+import Html.Styled exposing (Html)
 import Knob exposing (Knob)
-import Renderer exposing (Renderer)
 import Utils exposing (Viewport)
 
 
@@ -16,7 +16,7 @@ type Story view
     = Label String
     | Todo String
     | Single String (Payload view)
-    | Batch String (List (Story Renderer))
+    | Batch String (List (Story (Html ())))
 
 
 map : (Payload a -> Payload b) -> Story a -> Story b
@@ -42,7 +42,7 @@ type alias Path =
 type alias Connection =
     { prev : Path
     , next : Path
-    , payload : Payload Renderer
+    , payload : Payload (Html ())
     }
 
 
@@ -58,7 +58,7 @@ emptyStore =
     Store Nothing Nothing Dict.empty
 
 
-makeStore : List (Story Renderer) -> Store
+makeStore : List (Story (Html ())) -> Store
 makeStore stories =
     let
         ( _, storeL ) =
@@ -83,7 +83,7 @@ makeStore stories =
                         |> Store first last
 
 
-makeStoreL : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreL : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreL path story ( prevStory, store ) =
     case story of
         Single storyID payload ->
@@ -113,7 +113,7 @@ makeStoreL path story ( prevStory, store ) =
             ( prevStory, store )
 
 
-makeStoreR : Path -> Story Renderer -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreR : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreR path story ( nextStory, store ) =
     case story of
         Single storyID _ ->
@@ -148,7 +148,7 @@ makeStoreR path story ( nextStory, store ) =
             ( nextStory, store )
 
 
-get : Path -> List (Story Renderer) -> Maybe (Payload Renderer)
+get : Path -> List (Story (Html ())) -> Maybe (Payload (Html ()))
 get path stories =
     let
         store =
@@ -157,7 +157,7 @@ get path stories =
     Maybe.map .payload (Dict.get path store.connections)
 
 
-getNext : Path -> List (Story Renderer) -> Maybe Path
+getNext : Path -> List (Story (Html ())) -> Maybe Path
 getNext path stories =
     let
         store =
@@ -174,7 +174,7 @@ getNext path stories =
         (Dict.get path store.connections)
 
 
-getPrev : Path -> List (Story Renderer) -> Maybe Path
+getPrev : Path -> List (Story (Html ())) -> Maybe Path
 getPrev path stories =
     let
         store =
@@ -191,7 +191,7 @@ getPrev path stories =
         (Dict.get path store.connections)
 
 
-getFirst : List (Story Renderer) -> Maybe Path
+getFirst : List (Story (Html ())) -> Maybe Path
 getFirst stories =
     makeStore stories
         |> .first
