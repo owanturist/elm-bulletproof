@@ -1,4 +1,4 @@
-module Story exposing (Path, Payload, Story(..), get, getFirst, getNext, getPrev, map)
+module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPrev, map)
 
 import Dict exposing (Dict)
 import Html.Styled exposing (Html)
@@ -6,7 +6,7 @@ import Knob exposing (Knob)
 import Utils exposing (Viewport)
 
 
-type alias Payload view =
+type alias Workspace view =
     { knobs : List ( String, Knob )
     , view : Knob.State -> Viewport -> Maybe view
     }
@@ -15,11 +15,11 @@ type alias Payload view =
 type Story view
     = Label String
     | Todo String
-    | Single String (Payload view)
+    | Single String (Workspace view)
     | Batch String (List (Story view))
 
 
-map : (Payload a -> Payload b) -> Story a -> Story b
+map : (Workspace a -> Workspace b) -> Story a -> Story b
 map tagger story =
     case story of
         Label title ->
@@ -31,8 +31,8 @@ map tagger story =
         Batch title stories ->
             Batch title (List.map (map tagger) stories)
 
-        Single title payload ->
-            Single title (tagger payload)
+        Single title workspace ->
+            Single title (tagger workspace)
 
 
 type alias Path =
@@ -42,7 +42,7 @@ type alias Path =
 type alias Connection =
     { prev : Path
     , next : Path
-    , payload : Payload (Html ())
+    , workspace : Workspace (Html ())
     }
 
 
@@ -86,7 +86,7 @@ makeStore stories =
 makeStoreL : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
 makeStoreL path story ( prevStory, store ) =
     case story of
-        Single storyID payload ->
+        Single storyID workspace ->
             let
                 storyPath =
                     List.reverse (storyID :: path)
@@ -96,13 +96,13 @@ makeStoreL path story ( prevStory, store ) =
                 Nothing ->
                     { first = Just storyPath
                     , last = store.last
-                    , connections = Dict.insert storyPath (Connection [] [] payload) store.connections
+                    , connections = Dict.insert storyPath (Connection [] [] workspace) store.connections
                     }
 
                 Just prevPath ->
                     { first = store.first
                     , last = store.last
-                    , connections = Dict.insert storyPath (Connection prevPath [] payload) store.connections
+                    , connections = Dict.insert storyPath (Connection prevPath [] workspace) store.connections
                     }
             )
 
@@ -148,13 +148,13 @@ makeStoreR path story ( nextStory, store ) =
             ( nextStory, store )
 
 
-get : Path -> List (Story (Html ())) -> Maybe (Payload (Html ()))
+get : Path -> List (Story (Html ())) -> Maybe (Workspace (Html ()))
 get path stories =
     let
         store =
             makeStore stories
     in
-    Maybe.map .payload (Dict.get path store.connections)
+    Maybe.map .workspace (Dict.get path store.connections)
 
 
 getNext : Path -> List (Story (Html ())) -> Maybe Path

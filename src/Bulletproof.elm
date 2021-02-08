@@ -42,9 +42,9 @@ html dynamic =
 htmlFrom : (view -> Html msg) -> Story.Story view -> Story
 htmlFrom toHtml dynamic =
     Story.map
-        (\payload ->
-            { knobs = payload.knobs
-            , view = \state viewport -> Maybe.map (Html.map (always ()) << toHtml) (payload.view state viewport)
+        (\workspace ->
+            { knobs = workspace.knobs
+            , view = \state viewport -> Maybe.map (Html.map (always ()) << toHtml) (workspace.view state viewport)
             }
         )
         dynamic
@@ -132,9 +132,9 @@ type alias Program =
 fromUnstyled : Story.Story (Html msg) -> Story.Story (Html.Styled.Html msg)
 fromUnstyled =
     Story.map
-        (\payload ->
-            { knobs = payload.knobs
-            , view = \state viewport -> Maybe.map Html.Styled.fromUnstyled (payload.view state viewport)
+        (\workspace ->
+            { knobs = workspace.knobs
+            , view = \state viewport -> Maybe.map Html.Styled.fromUnstyled (workspace.view state viewport)
             }
         )
 

@@ -541,8 +541,8 @@ styledWorkspace settings { viewport, dragging } =
         ]
 
 
-viewWorkspace : Story.Payload (Html ()) -> Settings -> State -> Knob.State -> Html Msg
-viewWorkspace storyPayload settings state knobs =
+viewWorkspace : Story.Workspace (Html ()) -> Settings -> State -> Knob.State -> Html Msg
+viewWorkspace workspace settings state knobs =
     let
         viewport =
             calcViewport settings state.viewport
@@ -557,14 +557,14 @@ viewWorkspace storyPayload settings state knobs =
             viewport
             (state.dragging /= NoDragging)
             [ styledStoryContainer settings
-                [ storyPayload.view knobs storyViewport
+                [ workspace.view knobs storyViewport
                     |> Maybe.withDefault (Html.text "")
                     |> Html.map (always NoOp)
                 ]
             ]
 
         --
-        , Knob.view storyViewport storyPayload.knobs knobs
+        , Knob.view storyViewport workspace.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -679,12 +679,12 @@ viewBulletproof stories { settings, state, knobs } =
                         ]
                     )
 
-                Just storyPayload ->
+                Just workspace ->
                     ( settings
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace storyPayload settings state
+                        |> viewWorkspace workspace settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
