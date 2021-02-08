@@ -26,7 +26,6 @@ story =
                 [ h1 [] [ text storyTitle ]
                 , p [] [ text storyText ]
                 ]
-                |> Bulletproof.fromHtml
         )
         |> Bulletproof.Knob.string "Story title" "Hello World"
         |> Bulletproof.Knob.radio "Story text"

@@ -1,15 +1,20 @@
 module Bulletproof exposing
     ( Story, story, folder, todo, label
-    , Program, program
     , html, htmlFrom
+    , Program, program
     )
 
 {-| Basic API to create and organize static stories.
 
 
-# Tell a story
+# Describe a story
 
 @docs Story, story, folder, todo, label
+
+
+# Transform Html
+
+@docs html, htmlFrom
 
 
 # Render a component into a story
@@ -34,33 +39,112 @@ type alias Story =
     Story.Story (Html ())
 
 
+{-| Transform stories `Html msg` content to `Html ()`.
+We should unify message of `Html` components so we can put
+them next to each other without extra mapping.
+
+That's why it should hardcode `()` as a message for `Html`.
+
+    buttonStory : Bulletproof.Story
+    buttonStory =
+        Bulletproof.story "Static funny button"
+            (button
+                []
+                [ text "Funny Button" ]
+            )
+            |> Bulletproof.html
+
+    buttonStories : Bulletproof.Story
+    buttonStories =
+        Bulletproof.folder "Button"
+            [ Bulletproof.story "default"
+                (button
+                    []
+                    [ text "Button Label" ]
+                )
+
+            --
+            , Bulletproof.story "disabled"
+                (button
+                    [ disabled True ]
+                    [ text "Button Label" ]
+                )
+            ]
+            |> Bulletproof.html
+
+    stories : Bulletproof.Story
+    stories =
+        Bulletproof.folder "Button"
+            [ -- Navigation.view : Html Navigation.Msg
+              Bulletproof.story "Navigation" Navigation.view
+                |> Bulletproof.html
+
+            -- Profile.view : Html Profile.Msg
+            , Bulletproof.story "Profile" Profile.view
+                |> Bulletproof.html
+
+            -- Header.view : Html msg
+            , Bulletproof.story "Header" Header.view
+            ]
+
+-}
 html : Story.Story (Html msg) -> Story
-html dynamic =
-    htmlFrom identity dynamic
+html view =
+    htmlFrom identity view
 
 
+{-| Transforms stories content to `Html ()`.
+
+    buttonStory : Bulletproof.Story
+    buttonStory =
+        Bulletproof.story "Static funny button"
+            (Html.Styled.button
+                []
+                [ Html.Styled.text "Funny Button" ]
+            )
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+
+    buttonStories : Bulletproof.Story
+    buttonStories =
+        Bulletproof.folder "Button"
+            [ Bulletproof.story "default"
+                (Html.Styled.button
+                    []
+                    [ Html.Styled.text "Button Label" ]
+                )
+
+            --
+            , Bulletproof.story "disabled"
+                (Html.Styled.button
+                    [ disabled True ]
+                    [ Html.Styled.text "Button Label" ]
+                )
+            ]
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+
+-}
 htmlFrom : (view -> Html msg) -> Story.Story view -> Story
-htmlFrom toHtml dynamic =
+htmlFrom toHtml view =
     Story.map
         (\workspace ->
             { knobs = workspace.knobs
             , view = Maybe.map (Html.map (always ()) << toHtml) << workspace.view
             }
         )
-        dynamic
+        view
 
 
-{-| Story represents a component according inputs.
-To dynamically change the inputs please take a look into knobs.
+{-| Stories represent a component according inputs.
+You can use `Bulletproof.Knob` to dynamically change the input.
 
-    staticStory : Bulletproof.Story
-    staticStory =
-        Bulletproof.story "Simple static story"
+    buttonStory : Bulletproof.Story
+    buttonStory =
+        Bulletproof.story "Static funny button"
             (button
                 []
                 [ text "Funny Button" ]
-                |> Bulletproof.fromHtml
             )
+            |> Bulletproof.html
 
 -}
 story : String -> view -> Story.Story view
@@ -71,18 +155,20 @@ story title view =
         }
 
 
-{-| Folder organizes your stories.
-A folder might includes stories, todos, labels and other folders
+{-| Folders organize your stories.
+A folder might include stories, todos, labels and other folders.
 
-    someFolder : Bulletproof.Story
-    someFolder =
+    buttonStories : Bulletproof.Story
+    buttonStories =
         Bulletproof.folder "Button"
             [ Bulletproof.story "default"
                 (button
                     []
                     [ text "Button Label" ]
                 )
-                |> Bulletproof.fromHtml
+
+            --
+            , Bulletproof.todo "hover"
 
             --
             , Bulletproof.story "disabled"
@@ -90,8 +176,8 @@ A folder might includes stories, todos, labels and other folders
                     [ disabled True ]
                     [ text "Button Label" ]
                 )
-                |> Bulletproof.fromHtml
             ]
+            |> Bulletproof.html
 
 -}
 folder : String -> List (Story.Story view) -> Story.Story view
@@ -99,16 +185,16 @@ folder title stories =
     Story.Batch (String.trim title) stories
 
 
-{-| Each todo is a story which has not started yet...
-Helps to remember components' states you want to make as a story.
+{-| Todos hold names for stories so you won't forget to describe it later.
 
-    newComponent : Bulletproof.Story
-    newComponent =
-        Bulletproof.folder "New component even without a name"
-            [ Bulletproof.todo "disabled"
-            , Bulletproof.todo "loading"
-            , Bulletproof.todo "failed"
+    buttonStories : Bulletproof.Story
+    buttonStories =
+        Bulletproof.folder "Button"
+            [ Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
             ]
+            |> Bulletproof.html
 
 -}
 todo : String -> Story.Story view
@@ -144,6 +230,6 @@ fromUnstyled =
 > **Note:** To run a program you have to pass port to work with localStorage.
 
 -}
-program : (String -> Cmd msg) -> List Story -> Program
+program : (String -> Cmd Never) -> List (Story.Story (Html msg)) -> Program
 program onSettingsChange stories =
-    Main.run onSettingsChange (List.map fromUnstyled stories)
+    Main.run onSettingsChange (List.map (fromUnstyled << html) stories)
