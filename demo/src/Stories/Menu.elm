@@ -2,6 +2,7 @@ module Stories.Menu exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
+import Html.Styled
 import Menu
 import Settings exposing (default)
 
@@ -10,15 +11,12 @@ story : Bulletproof.Story
 story =
     Bulletproof.folder "Menu"
         [ Bulletproof.story "Closed"
-            (Menu.view False Settings.default
-                |> Bulletproof.fromElmCss
-            )
+            (Menu.view False Settings.default)
 
         --
         , Bulletproof.story "Opened"
             (\opened ->
                 Menu.view opened Settings.default
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Show menu" True
 
@@ -34,7 +32,6 @@ story =
                     , showGrid = showGrid
                 }
                     |> Menu.view True
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Navigation Visible" False
             |> Bulletproof.Knob.bool "Dock Visible" False
@@ -46,3 +43,4 @@ story =
             |> Bulletproof.Knob.bool "Add Paddings" True
             |> Bulletproof.Knob.bool "Dark Background" True
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

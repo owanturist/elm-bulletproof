@@ -1,6 +1,7 @@
 module Bulletproof exposing
     ( Story, story, folder, todo, label
     , Program, program
+    , html, htmlFrom
     )
 
 {-| Basic API to create and organize static stories.
@@ -26,21 +27,27 @@ import Main
 import Story
 
 
-fromUnstyled : Story.Story (Html a) -> Story.Story (Html.Styled.Html a)
-fromUnstyled =
-    Story.map
-        (\{ knobs, view } ->
-            { knobs = knobs
-            , view = \state viewport -> Maybe.map Html.Styled.fromUnstyled (view state viewport)
-            }
-        )
-
-
 {-| Bulletproof is made of stories.
 Stories helps you to organize UI components and describe different states.
 -}
 type alias Story =
     Story.Story (Html ())
+
+
+html : Story.Story (Html msg) -> Story
+html dynamic =
+    htmlFrom identity dynamic
+
+
+htmlFrom : (view -> Html msg) -> Story.Story view -> Story
+htmlFrom toHtml dynamic =
+    Story.map
+        (\payload ->
+            { knobs = payload.knobs
+            , view = \state viewport -> Maybe.map (Html.map (always ()) << toHtml) (payload.view state viewport)
+            }
+        )
+        dynamic
 
 
 {-| Story represents a component according inputs.
@@ -87,9 +94,9 @@ A folder might includes stories, todos, labels and other folders
             ]
 
 -}
-folder : String -> List Story -> Story
+folder : String -> List (Story.Story view) -> Story.Story view
 folder title stories =
-    Story.Batch (String.trim title) (List.map fromUnstyled stories)
+    Story.Batch (String.trim title) stories
 
 
 {-| Each todo is a story which has not started yet...
@@ -104,14 +111,14 @@ Helps to remember components' states you want to make as a story.
             ]
 
 -}
-todo : String -> Story
+todo : String -> Story.Story view
 todo title =
     Story.Todo (String.trim title)
 
 
 {-| Labels helps to visually split stories by blocks. Does not affect on story path.
 -}
-label : String -> Story
+label : String -> Story.Story view
 label title =
     Story.Label (String.trim title)
 
@@ -120,6 +127,16 @@ label title =
 -}
 type alias Program =
     Main.Program
+
+
+fromUnstyled : Story.Story (Html msg) -> Story.Story (Html.Styled.Html msg)
+fromUnstyled =
+    Story.map
+        (\payload ->
+            { knobs = payload.knobs
+            , view = \state viewport -> Maybe.map Html.Styled.fromUnstyled (payload.view state viewport)
+            }
+        )
 
 
 {-| Program to represent your stories.

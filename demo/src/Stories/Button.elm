@@ -3,6 +3,7 @@ module Stories.Button exposing (story)
 import Bulletproof
 import Bulletproof.Knob
 import Button exposing (button)
+import Html.Styled
 import Icon
 
 
@@ -13,9 +14,9 @@ story =
             button ()
                 []
                 [ icon ]
-                |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.select "Icon"
             [ ( "folder", Icon.folder )
             , ( "folderOpen", Icon.folderOpen )
             ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

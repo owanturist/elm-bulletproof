@@ -2,6 +2,7 @@ module Stories.Range exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
+import Html.Styled
 import Range exposing (range)
 
 
@@ -18,7 +19,6 @@ story =
                     , step = step
                     , value = value
                     }
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Min" 10 []
             |> Bulletproof.Knob.int "Max" 20 []
@@ -36,10 +36,10 @@ story =
                     , step = step
                     , value = value
                     }
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.float "Min" 1 []
             |> Bulletproof.Knob.float "Max" 5 []
             |> Bulletproof.Knob.float "Step" 0.05 []
             |> Bulletproof.Knob.float "Value" 3 []
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

@@ -16,7 +16,7 @@ type Story view
     = Label String
     | Todo String
     | Single String (Payload view)
-    | Batch String (List (Story (Html ())))
+    | Batch String (List (Story view))
 
 
 map : (Payload a -> Payload b) -> Story a -> Story b
@@ -29,7 +29,7 @@ map tagger story =
             Todo title
 
         Batch title stories ->
-            Batch title stories
+            Batch title (List.map (map tagger) stories)
 
         Single title payload ->
             Single title (tagger payload)

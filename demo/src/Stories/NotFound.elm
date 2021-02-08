@@ -2,6 +2,7 @@ module Stories.NotFound exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
+import Html.Styled
 import NotFound
 
 
@@ -13,6 +14,6 @@ story =
                 |> String.split "/"
                 |> List.map String.trim
                 |> NotFound.view
-                |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.string "Path" "Folder 1 / Folder 2 / Folder 3 / Story"
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
