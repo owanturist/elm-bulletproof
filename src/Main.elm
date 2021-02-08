@@ -20,7 +20,6 @@ import Menu
 import Navigation
 import NotFound
 import Palette
-import Renderer exposing (Renderer(..))
 import Router
 import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
@@ -61,7 +60,7 @@ type alias Model =
     }
 
 
-init : List (Story Renderer) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init : List (Story (Html ())) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init stories settingsJSON url key =
     let
         initialSettings =
@@ -118,7 +117,7 @@ type Msg
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
-    | MenuMsg (List (Story Renderer)) Menu.Msg
+    | MenuMsg (List (Story (Html ()))) Menu.Msg
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
 
@@ -306,7 +305,7 @@ update onSettingsChange msg { settings, state, knobs } =
 -- S U B S C R I P T I O N S
 
 
-subscriptions : List (Story Renderer) -> Model -> Sub Msg
+subscriptions : List (Story (Html ())) -> Model -> Sub Msg
 subscriptions stories { state } =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
@@ -542,8 +541,8 @@ styledWorkspace settings { viewport, dragging } =
         ]
 
 
-viewWorkspace : Story.Payload Renderer -> Settings -> State -> Knob.State -> Html Msg
-viewWorkspace storyPayload settings state knobs =
+viewWorkspace : Story.Workspace (Html ()) -> Settings -> State -> Knob.State -> Html Msg
+viewWorkspace workspace settings state knobs =
     let
         viewport =
             calcViewport settings state.viewport
@@ -558,17 +557,15 @@ viewWorkspace storyPayload settings state knobs =
             viewport
             (state.dragging /= NoDragging)
             [ styledStoryContainer settings
-                [ case storyPayload.view knobs storyViewport of
-                    Nothing ->
-                        div [] []
-
-                    Just renderer ->
-                        Html.map (always NoOp) (Renderer.unwrap renderer)
+                [ Knob.Payload knobs storyViewport
+                    |> workspace.view
+                    |> Maybe.withDefault (Html.text "")
+                    |> Html.map (always NoOp)
                 ]
             ]
 
         --
-        , Knob.view storyViewport storyPayload.knobs knobs
+        , Knob.view storyViewport workspace.knobs knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]
@@ -669,7 +666,7 @@ viewRoot settings dragging children =
         (styledGlobal settings dragging :: children)
 
 
-viewBulletproof : List (Story Renderer) -> Model -> Browser.Document Msg
+viewBulletproof : List (Story (Html ())) -> Model -> Browser.Document Msg
 viewBulletproof stories { settings, state, knobs } =
     let
         ( actualSettings, workspaceView ) =
@@ -683,12 +680,12 @@ viewBulletproof stories { settings, state, knobs } =
                         ]
                     )
 
-                Just storyPayload ->
+                Just workspace ->
                     ( settings
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace storyPayload settings state
+                        |> viewWorkspace workspace settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
@@ -750,7 +747,7 @@ type alias Program =
     Platform.Program (Maybe String) Model Msg
 
 
-run : (String -> Cmd msg) -> List (Story Renderer) -> Program
+run : (String -> Cmd msg) -> List (Story (Html ())) -> Program
 run onSettingsChange stories =
     let
         errors =

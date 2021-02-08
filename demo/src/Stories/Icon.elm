@@ -54,6 +54,6 @@ story =
             ]
                 |> List.map viewBlock
                 |> viewContainer (Css.hex color.hex)
-                |> Bulletproof.fromElmCss
         )
         |> Bulletproof.Knob.color "Color" "#000"
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

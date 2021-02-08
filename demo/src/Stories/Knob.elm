@@ -20,7 +20,6 @@ storyString =
                 [ ( "String", Knob.String "" )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -29,7 +28,6 @@ storyString =
                 [ ( "String", Knob.String "A single line" )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -39,7 +37,6 @@ storyString =
                     [ ( "String", Knob.String (String.repeat n "ASingleLongLine") )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Repeat String"
                 100
@@ -60,7 +57,6 @@ storyString =
                       )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Repeat String"
                 100
@@ -69,6 +65,7 @@ storyString =
                 , Bulletproof.Knob.max 200
                 ]
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyBool : Bulletproof.Story
@@ -79,7 +76,6 @@ storyBool =
                 [ ( "Bool", Knob.Bool False )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -88,9 +84,9 @@ storyBool =
                 [ ( "Bool", Knob.Bool True )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyInt : Bulletproof.Story
@@ -101,7 +97,6 @@ storyInt =
                 [ ( "Int", Knob.Int False 0 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -110,9 +105,9 @@ storyInt =
                 [ ( "Int", Knob.Int True 0 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyFloat : Bulletproof.Story
@@ -123,7 +118,6 @@ storyFloat =
                 [ ( "Float", Knob.Float False 0.21 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -132,9 +126,9 @@ storyFloat =
                 [ ( "Float", Knob.Float True 0.21 { min = Nothing, max = Nothing, step = Nothing } )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyRadio : Bulletproof.Story
@@ -147,7 +141,6 @@ storyRadio =
                   )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -158,7 +151,6 @@ storyRadio =
                   )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -180,7 +172,6 @@ storyRadio =
                         ]
                         Knob.initial
                     ]
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Container Width"
                 300
@@ -204,7 +195,6 @@ storyRadio =
                       )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Amount of Options"
                 5
@@ -213,6 +203,7 @@ storyRadio =
                 , Bulletproof.Knob.max 20
                 ]
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storySelect : Bulletproof.Story
@@ -225,7 +216,6 @@ storySelect =
                   )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -236,7 +226,6 @@ storySelect =
                   )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -258,7 +247,6 @@ storySelect =
                         ]
                         Knob.initial
                     ]
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Container Width"
                 300
@@ -282,7 +270,6 @@ storySelect =
                       )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Amount of Options"
                 5
@@ -291,15 +278,15 @@ storySelect =
                 , Bulletproof.Knob.max 20
                 ]
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 story : Bulletproof.Story
 story =
     Bulletproof.folder "Knob"
         [ Bulletproof.story "Empty"
-            (Knob.view viewport [] Knob.initial
-                |> Bulletproof.fromElmCss
-            )
+            (Knob.view viewport [] Knob.initial)
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Single"
@@ -308,9 +295,9 @@ story =
                     [ ( name, Knob.Bool True )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Knob Name" "Something"
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Multiple"
@@ -323,7 +310,6 @@ story =
                         (List.reverse (List.range 1 n))
                     )
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Amount of Knobs"
                 10
@@ -331,6 +317,7 @@ story =
                 , Bulletproof.Knob.min 1
                 , Bulletproof.Knob.max 50
                 ]
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Color"
@@ -340,9 +327,9 @@ story =
                     [ ( "Color", Knob.Color hex )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Color (hex)" "#1ea5fd"
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Date"
@@ -352,9 +339,9 @@ story =
                     [ ( "Date", Knob.Date date )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Date" "2021-02-20"
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Time"
@@ -364,9 +351,9 @@ story =
                     [ ( "Time", Knob.Time time )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Time" "16:38"
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Files"
@@ -375,8 +362,8 @@ story =
                 [ ( "Files", Knob.Files )
                 ]
                 Knob.initial
-                |> Bulletproof.fromElmCss
             )
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , Bulletproof.story "Viewport"
@@ -391,12 +378,12 @@ story =
                     [ ( "Viewport", Knob.StoryViewport )
                     ]
                     Knob.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Use custom viewport" False
             |> Bulletproof.Knob.int "Width" viewport.width []
             |> Bulletproof.Knob.int "Height" viewport.height []
             |> Bulletproof.Knob.viewport
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
         --
         , storyString

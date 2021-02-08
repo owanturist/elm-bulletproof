@@ -1,34 +1,34 @@
 module Stories.Navigation exposing (story)
 
-import Set
 import Bulletproof
 import Bulletproof.Knob
 import Css
-import Html exposing (text)
-import Html.Styled exposing (div, styled)
+import Html.Styled exposing (Html, div, styled, text)
 import Navigation
+import Set
 
 
-dummy : Bulletproof.Renderer
+dummy : Html msg
 dummy =
-    Bulletproof.fromHtml (text "")
+    text ""
 
 
 story : Bulletproof.Story
 story =
     Bulletproof.folder "Navigation"
         [ Bulletproof.story "Empty"
-            (Navigation.view [] [] Navigation.initial
-                |> Bulletproof.fromElmCss
-            )
+            (Navigation.view [] [] Navigation.initial)
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+
+        --
         , Bulletproof.story "Overflow"
             (\title count ->
                 Navigation.view []
-                    (List.range 1 count
-                        |> List.map
-                            (\i ->
-                                Bulletproof.story (title ++ " #" ++ String.fromInt i) dummy
-                            )
+                    (List.map
+                        (\i ->
+                            Bulletproof.story (title ++ " #" ++ String.fromInt i) dummy
+                        )
+                        (List.range 1 count)
                     )
                     Navigation.initial
                     |> List.singleton
@@ -39,7 +39,6 @@ story =
                         , Css.overflow Css.auto
                         ]
                         []
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Stories prefix" "SuperLongStoryTitle"
             |> Bulletproof.Knob.int "Amount of Stories"
@@ -48,6 +47,9 @@ story =
                 , Bulletproof.Knob.min 1
                 , Bulletproof.Knob.max 100
                 ]
+            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+
+        --
         , storyStories
         , storyFolders
         , storyTodo
@@ -65,7 +67,6 @@ storyStories =
                     [ Bulletproof.story str dummy
                     ]
                     Navigation.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Story Tilte" "single story title"
 
@@ -81,7 +82,6 @@ storyStories =
                         (List.range 1 n)
                     )
                     Navigation.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Amount of Stories"
                 3
@@ -90,6 +90,7 @@ storyStories =
                 , Bulletproof.Knob.max 50
                 ]
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyFolders : Bulletproof.Story
@@ -107,7 +108,6 @@ storyFolders =
                      else
                         Navigation.initial
                     )
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Folder opened" True
             |> Bulletproof.Knob.string "Folder Title" "Folder"
@@ -129,7 +129,6 @@ storyFolders =
                      else
                         Navigation.initial
                     )
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Folder opened" True
             |> Bulletproof.Knob.radio "Active Story"
@@ -153,7 +152,6 @@ storyFolders =
                         (List.range 1 n)
                     )
                     Navigation.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.int "Amount of Folders"
                 3
@@ -189,7 +187,6 @@ storyFolders =
                                 ]
                             ]
                         ]
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Open First" True
             |> Bulletproof.Knob.bool "Open Second" True
@@ -201,6 +198,7 @@ storyFolders =
                 , ( "Inactive", -1 )
                 ]
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyTodo : Bulletproof.Story
@@ -212,7 +210,6 @@ storyTodo =
                     [ Bulletproof.todo title
                     ]
                     Navigation.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Todo Title" "Standalone"
 
@@ -229,7 +226,6 @@ storyTodo =
                     ]
                 ]
                 Navigation.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -265,10 +261,10 @@ storyTodo =
                             []
                         ]
                     )
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Open Folder #5" False
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyLabels : Bulletproof.Story
@@ -280,7 +276,6 @@ storyLabels =
                     [ Bulletproof.label title
                     ]
                     Navigation.initial
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.string "Label Title" "Standalone"
 
@@ -297,7 +292,6 @@ storyLabels =
                     ]
                 ]
                 Navigation.initial
-                |> Bulletproof.fromElmCss
             )
 
         --
@@ -333,7 +327,7 @@ storyLabels =
                             []
                         ]
                     )
-                    |> Bulletproof.fromElmCss
             )
             |> Bulletproof.Knob.bool "Open Folder #5" False
         ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

@@ -272,10 +272,10 @@ validateStory path story counters =
             , counters
             )
 
-        Story.Single title payload ->
+        Story.Single title workspace ->
             ( List.map
                 (Error (List.reverse (title :: path)))
-                (validateKnobs payload.knobs)
+                (validateKnobs workspace.knobs)
             , { counters | stories = count title counters.stories }
             )
 

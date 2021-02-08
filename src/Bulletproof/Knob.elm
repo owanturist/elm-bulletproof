@@ -61,9 +61,9 @@ bool name defaultBool story =
             String.trim name
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Bool defaultBool ) :: payload.knobs
-            , view = Knob.applyBool trimmedName defaultBool payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Bool defaultBool ) :: workspace.knobs
+            , view = Knob.applyBool trimmedName defaultBool workspace.view
             }
         )
         story
@@ -90,9 +90,9 @@ string name defaultString story =
             String.trim name
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.String defaultString ) :: payload.knobs
-            , view = Knob.applyString trimmedName defaultString payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.String defaultString ) :: workspace.knobs
+            , view = Knob.applyString trimmedName defaultString workspace.view
             }
         )
         story
@@ -273,9 +273,9 @@ int name defaultInt properties story =
             propertiesToNumberPayload properties
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Int asRange defaultInt limits ) :: payload.knobs
-            , view = Knob.applyInt trimmedName defaultInt payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Int asRange defaultInt limits ) :: workspace.knobs
+            , view = Knob.applyInt trimmedName defaultInt workspace.view
             }
         )
         story
@@ -306,9 +306,9 @@ float name defaultFloat properties story =
             propertiesToNumberPayload properties
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Float asRange defaultFloat limits ) :: payload.knobs
-            , view = Knob.applyFloat trimmedName defaultFloat payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Float asRange defaultFloat limits ) :: workspace.knobs
+            , view = Knob.applyFloat trimmedName defaultFloat workspace.view
             }
         )
         story
@@ -333,9 +333,9 @@ makeChoice makeKnob name options story =
             Dict.fromList trimmedOptions
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, makeKnob keys ) :: payload.knobs
-            , view = Knob.applyChoice trimmedName defaultOption optionsDict payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, makeKnob keys ) :: workspace.knobs
+            , view = Knob.applyChoice trimmedName defaultOption optionsDict workspace.view
             }
         )
         story
@@ -425,9 +425,9 @@ color name defaultHex story =
             String.trim name
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Color defaultHex ) :: payload.knobs
-            , view = Knob.applyColor trimmedName defaultHex payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Color defaultHex ) :: workspace.knobs
+            , view = Knob.applyColor trimmedName defaultHex workspace.view
             }
         )
         story
@@ -470,9 +470,9 @@ date name defaultDate story =
             String.trim name
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Date defaultDate ) :: payload.knobs
-            , view = Knob.applyDate trimmedName defaultDate payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Date defaultDate ) :: workspace.knobs
+            , view = Knob.applyDate trimmedName defaultDate workspace.view
             }
         )
         story
@@ -510,9 +510,9 @@ time name defaultTime story =
             String.trim name
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Time defaultTime ) :: payload.knobs
-            , view = Knob.applyTime trimmedName defaultTime payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Time defaultTime ) :: workspace.knobs
+            , view = Knob.applyTime trimmedName defaultTime workspace.view
             }
         )
         story
@@ -543,9 +543,9 @@ files name story =
             String.trim name
     in
     Story.map
-        (\payload ->
-            { knobs = ( trimmedName, Knob.Files ) :: payload.knobs
-            , view = Knob.applyFiles trimmedName payload.view
+        (\workspace ->
+            { knobs = ( trimmedName, Knob.Files ) :: workspace.knobs
+            , view = Knob.applyFiles trimmedName workspace.view
             }
         )
         story
@@ -583,9 +583,9 @@ Creates a knob with `"Viewport"` name.
 viewport : Story (Viewport -> a) -> Story a
 viewport story =
     Story.map
-        (\payload ->
-            { knobs = ( "Viewport", Knob.StoryViewport ) :: payload.knobs
-            , view = Knob.applyViewport payload.view
+        (\workspace ->
+            { knobs = ( "Viewport", Knob.StoryViewport ) :: workspace.knobs
+            , view = Knob.applyViewport workspace.view
             }
         )
         story
