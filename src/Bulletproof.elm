@@ -28,7 +28,7 @@ import Html
 import Html.Styled
 import Main
 import Renderer
-import Story exposing (Story)
+import Story
 
 
 {-| Specific custom type incapsulates work with generic messages of components.
@@ -155,7 +155,6 @@ type alias Program =
 {-| Program to represent your stories.
 
 > **Note:** To run a program you have to pass port to work with localStorage.
-> I'm sorry you have to do so but it's not forever.
 
 -}
 program : (String -> Cmd msg) -> List Story -> Program
