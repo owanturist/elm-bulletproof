@@ -279,12 +279,12 @@ validateStory path story counters =
             , { counters | stories = count title counters.stories }
             )
 
-        Story.Batch "" _ ->
+        Story.Folder "" _ ->
             ( [ Error (List.reverse path) EmptyFolderTitle ]
             , counters
             )
 
-        Story.Batch title substories ->
+        Story.Folder title substories ->
             ( validateStoriesHelp (title :: path) substories
             , { counters | folders = count title counters.folders }
             )

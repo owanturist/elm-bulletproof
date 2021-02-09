@@ -15,7 +15,7 @@ type Story view
     = Label String
     | Todo String
     | Single String (Workspace view)
-    | Batch String (List (Story view))
+    | Folder String (List (Story view))
 
 
 map : (Workspace a -> Workspace b) -> Story a -> Story b
@@ -27,8 +27,8 @@ map tagger story =
         Todo title ->
             Todo title
 
-        Batch title stories ->
-            Batch title (List.map (map tagger) stories)
+        Folder title stories ->
+            Folder title (List.map (map tagger) stories)
 
         Single title workspace ->
             Single title (tagger workspace)
@@ -105,7 +105,7 @@ makeStoreL path story ( prevStory, store ) =
                     }
             )
 
-        Batch folderID substories ->
+        Folder folderID substories ->
             List.foldl (makeStoreL (folderID :: path)) ( prevStory, store ) substories
 
         _ ->
@@ -140,7 +140,7 @@ makeStoreR path story ( nextStory, store ) =
                             }
                     )
 
-        Batch folderID substories ->
+        Folder folderID substories ->
             List.foldr (makeStoreR (folderID :: path)) ( nextStory, store ) substories
 
         _ ->

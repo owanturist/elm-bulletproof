@@ -182,7 +182,7 @@ A folder might include stories, todos, labels and other folders.
 -}
 folder : String -> List (Story.Story view) -> Story.Story view
 folder title stories =
-    Story.Batch (String.trim title) stories
+    Story.Folder (String.trim title) stories
 
 
 {-| Todos hold names for stories so you won't forget to describe it later.

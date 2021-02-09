@@ -264,7 +264,7 @@ viewItem model current path story =
               )
             ]
 
-        Story.Batch title stories ->
+        Story.Folder title stories ->
             viewFolderTree model current path title stories
 
 
