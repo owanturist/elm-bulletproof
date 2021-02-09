@@ -12,6 +12,105 @@ viewport =
     Bulletproof.Knob.Viewport 1024 768
 
 
+storyGeneral : Bulletproof.Story
+storyGeneral =
+    Bulletproof.batch
+        [ Bulletproof.story "Empty"
+            (Knob.view viewport [] Knob.initial)
+
+        --
+        , Bulletproof.story "Single"
+            (\name ->
+                Knob.view viewport
+                    [ ( name, Knob.Bool True )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.string "Knob Name" "Something"
+
+        --
+        , Bulletproof.story "Multiple"
+            (\n ->
+                Knob.view viewport
+                    (List.map
+                        (\i ->
+                            ( "Knob #" ++ String.fromInt i, Knob.Bool True )
+                        )
+                        (List.reverse (List.range 1 n))
+                    )
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.int "Amount of Knobs"
+                10
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 50
+                ]
+
+        --
+        , Bulletproof.story "Color"
+            (\hex ->
+                Knob.view
+                    viewport
+                    [ ( "Color", Knob.Color hex )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.string "Color (hex)" "#1ea5fd"
+
+        --
+        , Bulletproof.story "Date"
+            (\date ->
+                Knob.view
+                    viewport
+                    [ ( "Date", Knob.Date date )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.string "Date" "2021-02-20"
+
+        --
+        , Bulletproof.story "Time"
+            (\time ->
+                Knob.view
+                    viewport
+                    [ ( "Time", Knob.Time time )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.string "Time" "16:38"
+
+        --
+        , Bulletproof.story "Files"
+            (Knob.view
+                viewport
+                [ ( "Files", Knob.Files )
+                ]
+                Knob.initial
+            )
+
+        --
+        , Bulletproof.story "Viewport"
+            (\useCustomViewport width height storyViewport ->
+                Knob.view
+                    (if useCustomViewport then
+                        { width = width, height = height }
+
+                     else
+                        storyViewport
+                    )
+                    [ ( "Viewport", Knob.StoryViewport )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.bool "Use custom viewport" False
+            |> Bulletproof.Knob.int "Width" viewport.width []
+            |> Bulletproof.Knob.int "Height" viewport.height []
+            |> Bulletproof.Knob.viewport
+        ]
+        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+
+
 storyString : Bulletproof.Story
 storyString =
     Bulletproof.folder "String"
@@ -284,106 +383,7 @@ storySelect =
 story : Bulletproof.Story
 story =
     Bulletproof.folder "Knob"
-        [ Bulletproof.story "Empty"
-            (Knob.view viewport [] Knob.initial)
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Single"
-            (\name ->
-                Knob.view viewport
-                    [ ( name, Knob.Bool True )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.string "Knob Name" "Something"
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Multiple"
-            (\n ->
-                Knob.view viewport
-                    (List.map
-                        (\i ->
-                            ( "Knob #" ++ String.fromInt i, Knob.Bool True )
-                        )
-                        (List.reverse (List.range 1 n))
-                    )
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.int "Amount of Knobs"
-                10
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 1
-                , Bulletproof.Knob.max 50
-                ]
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Color"
-            (\hex ->
-                Knob.view
-                    viewport
-                    [ ( "Color", Knob.Color hex )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.string "Color (hex)" "#1ea5fd"
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Date"
-            (\date ->
-                Knob.view
-                    viewport
-                    [ ( "Date", Knob.Date date )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.string "Date" "2021-02-20"
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Time"
-            (\time ->
-                Knob.view
-                    viewport
-                    [ ( "Time", Knob.Time time )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.string "Time" "16:38"
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Files"
-            (Knob.view
-                viewport
-                [ ( "Files", Knob.Files )
-                ]
-                Knob.initial
-            )
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
-
-        --
-        , Bulletproof.story "Viewport"
-            (\useCustomViewport width height storyViewport ->
-                Knob.view
-                    (if useCustomViewport then
-                        { width = width, height = height }
-
-                     else
-                        storyViewport
-                    )
-                    [ ( "Viewport", Knob.StoryViewport )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.bool "Use custom viewport" False
-            |> Bulletproof.Knob.int "Width" viewport.width []
-            |> Bulletproof.Knob.int "Height" viewport.height []
-            |> Bulletproof.Knob.viewport
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        [ storyGeneral
 
         --
         , storyString

@@ -279,34 +279,37 @@ validateStory path story counters =
             , { counters | stories = count title counters.stories }
             )
 
-        Story.Batch "" _ ->
+        Story.Folder "" _ ->
             ( [ Error (List.reverse path) EmptyFolderTitle ]
             , counters
             )
 
-        Story.Batch title substories ->
+        Story.Folder title substories ->
             ( validateStoriesHelp (title :: path) substories
             , { counters | folders = count title counters.folders }
             )
 
-
-validateStoriesHelp : Story.Path -> List (Story view) -> List Error
-validateStoriesHelp path stories =
-    let
-        ( errors, counters ) =
+        Story.Batch stories ->
             List.foldr
-                (\story ( allErrors, folderCounters ) ->
+                (\substory ( allErrors, folderCounters ) ->
                     Tuple.mapFirst
                         (\newErrors -> newErrors ++ allErrors)
-                        (validateStory path story folderCounters)
+                        (validateStory path substory folderCounters)
                 )
-                ( [], initialFolderCounters )
+                ( [], counters )
                 stories
+
+
+validateStoriesHelp : Story.Path -> Story view -> List Error
+validateStoriesHelp path story =
+    let
+        ( errors, counters ) =
+            validateStory path story initialFolderCounters
     in
     errors ++ incountFolder (List.reverse path) counters
 
 
-validateStories : List (Story view) -> List Error
+validateStories : Story view -> List Error
 validateStories =
     validateStoriesHelp []
 

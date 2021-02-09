@@ -1,5 +1,5 @@
 module Bulletproof exposing
-    ( Story, story, folder, todo, label
+    ( Story, story, folder, batch, todo, label
     , html, htmlFrom
     , Program, program
     )
@@ -9,7 +9,7 @@ module Bulletproof exposing
 
 # Describe a story
 
-@docs Story, story, folder, todo, label
+@docs Story, story, folder, batch, todo, label
 
 
 # Transform Html
@@ -182,7 +182,48 @@ A folder might include stories, todos, labels and other folders.
 -}
 folder : String -> List (Story.Story view) -> Story.Story view
 folder title stories =
-    Story.Batch (String.trim title) stories
+    Story.Folder (String.trim title) (batch stories)
+
+
+{-| Batchs help to keep list of stories together
+without putting them into a folder.
+
+    roundButtonStories : Bulletproof.Story
+    roundButtonStories =
+        Bulletproof.batch
+            [ Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
+            ]
+            |> Bulletproof.html
+
+    squareButtonStories : Bulletproof.Story
+    squareButtonStories =
+        Bulletproof.batch
+            [ Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
+            ]
+            |> Bulletproof.html
+
+    buttonStories : Bulletproof.Story
+    buttonStories =
+        Bulletproof.folder "Button"
+            [ Bulletproof.label "ROUND"
+            , roundButtonStories
+            , Bulletproof.label "SQUARE"
+            , squareButtonStories
+            ]
+
+-}
+batch : List (Story.Story view) -> Story.Story view
+batch stories =
+    case stories of
+        [ single ] ->
+            single
+
+        many ->
+            Story.Batch many
 
 
 {-| Todos hold names for stories so you won't forget to describe it later.
@@ -232,4 +273,7 @@ fromUnstyled =
 -}
 program : (String -> Cmd Never) -> List (Story.Story (Html msg)) -> Program
 program onSettingsChange stories =
-    Main.run onSettingsChange (List.map (fromUnstyled << html) stories)
+    batch stories
+        |> html
+        |> fromUnstyled
+        |> Main.run onSettingsChange
