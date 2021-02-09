@@ -200,8 +200,8 @@ styledFolder active =
     styled div (Css.cursor Css.pointer :: cssItem active)
 
 
-viewFolderTree : Model -> Story.Path -> Story.Path -> String -> List (Story (Html ())) -> List ( String, Html Msg )
-viewFolderTree model current path title stories =
+viewFolderTree : Model -> Story.Path -> Story.Path -> String -> Story (Html ()) -> List ( String, Html Msg )
+viewFolderTree model current path title story =
     let
         folderPath =
             title :: path
@@ -220,6 +220,13 @@ viewFolderTree model current path title stories =
 
                     else
                         ( False, [] )
+
+        stories =
+            if opened then
+                viewItem model nextCurrent folderPath story
+
+            else
+                []
     in
     ( toKey ("FOLDER" :: folderPath)
     , styledFolder active
@@ -232,15 +239,15 @@ viewFolderTree model current path title stories =
         [ viewSpacer (List.length path)
         , styledIconHolder
             [ if opened then
-                ifelse (List.isEmpty stories) Icon.folderEmptyOpen Icon.folderOpen
+                ifelse (Story.isEmpty story) Icon.folderEmptyOpen Icon.folderOpen
 
               else
-                ifelse (List.isEmpty stories) Icon.folderEmpty Icon.folder
+                ifelse (Story.isEmpty story) Icon.folderEmpty Icon.folder
             ]
         , text title
         ]
     )
-        :: List.concatMap (viewItem model nextCurrent folderPath) (ifelse opened stories [])
+        :: stories
 
 
 viewItem : Model -> Story.Path -> Story.Path -> Story (Html ()) -> List ( String, Html Msg )
@@ -264,8 +271,8 @@ viewItem model current path story =
               )
             ]
 
-        Story.Folder title stories ->
-            viewFolderTree model current path title stories
+        Story.Folder title substory ->
+            viewFolderTree model current path title substory
 
         Story.Batch stories ->
             List.concatMap (viewItem model current path) stories
@@ -325,8 +332,8 @@ styledRoot =
         []
 
 
-view : Story.Path -> List (Story (Html ())) -> Model -> Html Msg
-view current stories model =
+view : Story.Path -> Story (Html ()) -> Model -> Html Msg
+view current story model =
     styledRoot
         [ styledHeader
             [ text "BULLETPROOF"
@@ -335,6 +342,6 @@ view current stories model =
             [ Keyed.node "div"
                 [ css cssContainer
                 ]
-                (List.concatMap (viewItem model current []) stories)
+                (viewItem model current [] story)
             ]
         ]

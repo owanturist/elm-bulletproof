@@ -60,8 +60,8 @@ type alias Model =
     }
 
 
-init : List (Story (Html ())) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init stories settingsJSON url key =
+init : Story (Html ()) -> Maybe String -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init story settingsJSON url key =
     let
         initialSettings =
             settingsJSON
@@ -83,7 +83,7 @@ init stories settingsJSON url key =
         Dict.empty
     , Cmd.batch
         [ if List.isEmpty initialStoryPath then
-            case Story.getFirst stories of
+            case Story.getFirst story of
                 Nothing ->
                     Cmd.none
 
@@ -117,7 +117,7 @@ type Msg
     | StartDockResizing Int Int
     | Drag Int
     | DragEnd
-    | MenuMsg (List (Story (Html ()))) Menu.Msg
+    | MenuMsg (Story (Html ())) Menu.Msg
     | NavigationMsg Navigation.Msg
     | KnobMsg Story.Path Knob.Msg
 
@@ -239,7 +239,7 @@ update onSettingsChange msg { settings, state, knobs } =
             , saveSettings onSettingsChange settings
             )
 
-        MenuMsg stories msgOfMenu ->
+        MenuMsg story msgOfMenu ->
             case Menu.update msgOfMenu settings of
                 Menu.Opened ->
                     ( Model settings { state | menuOpened = True } knobs
@@ -252,7 +252,7 @@ update onSettingsChange msg { settings, state, knobs } =
                     )
 
                 Menu.PrevStory ->
-                    case Story.getPrev state.current stories of
+                    case Story.getPrev state.current story of
                         Nothing ->
                             ( Model settings state knobs
                             , Cmd.none
@@ -264,7 +264,7 @@ update onSettingsChange msg { settings, state, knobs } =
                             )
 
                 Menu.NextStory ->
-                    case Story.getNext state.current stories of
+                    case Story.getNext state.current story of
                         Nothing ->
                             ( Model settings state knobs
                             , Cmd.none
@@ -305,11 +305,11 @@ update onSettingsChange msg { settings, state, knobs } =
 -- S U B S C R I P T I O N S
 
 
-subscriptions : List (Story (Html ())) -> Model -> Sub Msg
-subscriptions stories { state } =
+subscriptions : Story (Html ()) -> Model -> Sub Msg
+subscriptions story { state } =
     Sub.batch
         [ Browser.Events.onResize ViewportChanged
-        , Sub.map (MenuMsg stories) (Menu.subscriptions state.menuOpened)
+        , Sub.map (MenuMsg story) (Menu.subscriptions state.menuOpened)
         ]
 
 
@@ -666,11 +666,11 @@ viewRoot settings dragging children =
         (styledGlobal settings dragging :: children)
 
 
-viewBulletproof : List (Story (Html ())) -> Model -> Browser.Document Msg
-viewBulletproof stories { settings, state, knobs } =
+viewBulletproof : Story (Html ()) -> Model -> Browser.Document Msg
+viewBulletproof story { settings, state, knobs } =
     let
         ( actualSettings, workspaceView ) =
-            case Story.get state.current stories of
+            case Story.get state.current story of
                 Nothing ->
                     ( { settings | navigationVisible = True }
                     , styledWorkspace
@@ -694,7 +694,7 @@ viewBulletproof stories { settings, state, knobs } =
             state.dragging
             [ styledMenu
                 [ Html.map
-                    (MenuMsg stories)
+                    (MenuMsg story)
                     (Menu.view state.menuOpened actualSettings)
                 ]
 
@@ -709,7 +709,7 @@ viewBulletproof stories { settings, state, knobs } =
                     ]
                 , Html.map
                     NavigationMsg
-                    (Navigation.view state.current stories state.navigation)
+                    (Navigation.view state.current story state.navigation)
                 ]
 
             --
@@ -747,27 +747,27 @@ type alias Program =
     Platform.Program (Maybe String) Model Msg
 
 
-run : (String -> Cmd msg) -> List (Story (Html ())) -> Program
-run onSettingsChange stories =
+run : (String -> Cmd msg) -> Story (Html ()) -> Program
+run onSettingsChange story =
     let
         errors =
-            Error.validateStories stories
+            Error.validateStories story
 
         document =
-            if List.isEmpty stories then
+            if Story.isEmpty story then
                 always viewEmpty
 
             else if List.isEmpty errors then
-                viewBulletproof stories
+                viewBulletproof story
 
             else
                 always (viewError errors)
     in
     Browser.application
-        { init = init stories
+        { init = init story
         , update = update onSettingsChange
         , view = document
-        , subscriptions = subscriptions stories
+        , subscriptions = subscriptions story
         , onUrlRequest = UrlRequested
         , onUrlChange = UrlChanged
         }

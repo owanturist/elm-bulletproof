@@ -296,27 +296,20 @@ validateStory path story counters =
                         (\newErrors -> newErrors ++ allErrors)
                         (validateStory path substory folderCounters)
                 )
-                ( [], initialFolderCounters )
+                ( [], counters )
                 stories
 
 
-validateStoriesHelp : Story.Path -> List (Story view) -> List Error
-validateStoriesHelp path stories =
+validateStoriesHelp : Story.Path -> Story view -> List Error
+validateStoriesHelp path story =
     let
         ( errors, counters ) =
-            List.foldr
-                (\story ( allErrors, folderCounters ) ->
-                    Tuple.mapFirst
-                        (\newErrors -> newErrors ++ allErrors)
-                        (validateStory path story folderCounters)
-                )
-                ( [], initialFolderCounters )
-                stories
+            validateStory path story initialFolderCounters
     in
     errors ++ incountFolder (List.reverse path) counters
 
 
-validateStories : List (Story view) -> List Error
+validateStories : Story view -> List Error
 validateStories =
     validateStoriesHelp []
 

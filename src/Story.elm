@@ -1,4 +1,4 @@
-module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPrev, map)
+module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPrev, isEmpty, map)
 
 import Dict exposing (Dict)
 import Html.Styled exposing (Html)
@@ -15,8 +15,27 @@ type Story view
     = Label String
     | Todo String
     | Single String (Workspace view)
-    | Folder String (List (Story view))
+    | Folder String (Story view)
     | Batch (List (Story view))
+
+
+isEmpty : Story view -> Bool
+isEmpty story =
+    case story of
+        Label _ ->
+            False
+
+        Todo _ ->
+            False
+
+        Single _ _ ->
+            False
+
+        Folder _ substory ->
+            isEmpty substory
+
+        Batch stories ->
+            List.all isEmpty stories
 
 
 map : (Workspace a -> Workspace b) -> Story a -> Story b
@@ -31,8 +50,8 @@ map tagger story =
         Single title workspace ->
             Single title (tagger workspace)
 
-        Folder title stories ->
-            Folder title (List.map (map tagger) stories)
+        Folder title substory ->
+            Folder title (map tagger substory)
 
         Batch stories ->
             Batch (List.map (map tagger) stories)
@@ -61,14 +80,14 @@ emptyStore =
     Store Nothing Nothing Dict.empty
 
 
-makeStore : List (Story (Html ())) -> Store
-makeStore stories =
+makeStore : Story (Html ()) -> Store
+makeStore story =
     let
         ( _, storeL ) =
-            List.foldl (makeStoreL []) ( Nothing, emptyStore ) stories
+            makeStoreL [] story ( Nothing, emptyStore )
 
         ( _, { first, last, connections } ) =
-            List.foldr (makeStoreR []) ( Nothing, storeL ) stories
+            makeStoreR [] story ( Nothing, storeL )
     in
     case Maybe.map2 Tuple.pair first last of
         Nothing ->
@@ -109,8 +128,11 @@ makeStoreL path story ( prevStory, store ) =
                     }
             )
 
-        Folder folderID substories ->
-            List.foldl (makeStoreL (folderID :: path)) ( prevStory, store ) substories
+        Folder folderID substory ->
+            makeStoreL (folderID :: path) substory ( prevStory, store )
+
+        Batch stories ->
+            List.foldl (makeStoreL path) ( prevStory, store ) stories
 
         _ ->
             ( prevStory, store )
@@ -144,27 +166,30 @@ makeStoreR path story ( nextStory, store ) =
                             }
                     )
 
-        Folder folderID substories ->
-            List.foldr (makeStoreR (folderID :: path)) ( nextStory, store ) substories
+        Folder folderID substory ->
+            makeStoreR (folderID :: path) substory ( nextStory, store )
+
+        Batch stories ->
+            List.foldr (makeStoreR path) ( nextStory, store ) stories
 
         _ ->
             ( nextStory, store )
 
 
-get : Path -> List (Story (Html ())) -> Maybe (Workspace (Html ()))
-get path stories =
+get : Path -> Story (Html ()) -> Maybe (Workspace (Html ()))
+get path story =
     let
         store =
-            makeStore stories
+            makeStore story
     in
     Maybe.map .workspace (Dict.get path store.connections)
 
 
-getNext : Path -> List (Story (Html ())) -> Maybe Path
-getNext path stories =
+getNext : Path -> Story (Html ()) -> Maybe Path
+getNext path story =
     let
         store =
-            makeStore stories
+            makeStore story
     in
     Maybe.andThen
         (\connection ->
@@ -177,11 +202,11 @@ getNext path stories =
         (Dict.get path store.connections)
 
 
-getPrev : Path -> List (Story (Html ())) -> Maybe Path
-getPrev path stories =
+getPrev : Path -> Story (Html ()) -> Maybe Path
+getPrev path story =
     let
         store =
-            makeStore stories
+            makeStore story
     in
     Maybe.andThen
         (\connection ->
@@ -194,7 +219,7 @@ getPrev path stories =
         (Dict.get path store.connections)
 
 
-getFirst : List (Story (Html ())) -> Maybe Path
-getFirst stories =
-    makeStore stories
+getFirst : Story (Html ()) -> Maybe Path
+getFirst story =
+    makeStore story
         |> .first
