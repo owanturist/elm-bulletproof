@@ -1,7 +1,6 @@
 module Utils exposing (Viewport, ifelse, notClosest, onSpaceOrEnter, px, textCode)
 
 import Css
-import DOM
 import Html.Styled as Html exposing (Html, code, styled, text)
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder)
@@ -74,9 +73,9 @@ closest className decoder =
                 decoder
 
             else
-                DOM.parentElement (closest className decoder)
+                Decode.field "parentElement" (closest className decoder)
         )
-        DOM.className
+        (Decode.field "className" Decode.string)
 
 
 notClosest : String -> msg -> Decoder msg
@@ -94,4 +93,4 @@ notClosest className msg =
             , Decode.succeed False
             ]
         )
-        |> DOM.target
+        |> Decode.field "target"
