@@ -16,6 +16,7 @@ type Story view
     | Todo String
     | Single String (Workspace view)
     | Folder String (List (Story view))
+    | Batch (List (Story view))
 
 
 map : (Workspace a -> Workspace b) -> Story a -> Story b
@@ -27,11 +28,14 @@ map tagger story =
         Todo title ->
             Todo title
 
+        Single title workspace ->
+            Single title (tagger workspace)
+
         Folder title stories ->
             Folder title (List.map (map tagger) stories)
 
-        Single title workspace ->
-            Single title (tagger workspace)
+        Batch stories ->
+            Batch (List.map (map tagger) stories)
 
 
 type alias Path =

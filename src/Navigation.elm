@@ -267,6 +267,9 @@ viewItem model current path story =
         Story.Folder title stories ->
             viewFolderTree model current path title stories
 
+        Story.Batch stories ->
+            List.concatMap (viewItem model current path) stories
+
 
 styledHeader : List (Html msg) -> Html msg
 styledHeader =

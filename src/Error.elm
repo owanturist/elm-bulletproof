@@ -289,6 +289,16 @@ validateStory path story counters =
             , { counters | folders = count title counters.folders }
             )
 
+        Story.Batch stories ->
+            List.foldr
+                (\substory ( allErrors, folderCounters ) ->
+                    Tuple.mapFirst
+                        (\newErrors -> newErrors ++ allErrors)
+                        (validateStory path substory folderCounters)
+                )
+                ( [], initialFolderCounters )
+                stories
+
 
 validateStoriesHelp : Story.Path -> List (Story view) -> List Error
 validateStoriesHelp path stories =
