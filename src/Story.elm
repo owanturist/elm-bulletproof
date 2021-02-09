@@ -22,20 +22,14 @@ type Story view
 isEmpty : Story view -> Bool
 isEmpty story =
     case story of
-        Label _ ->
-            False
-
-        Todo _ ->
-            False
-
-        Single _ _ ->
-            False
-
         Folder _ substory ->
             isEmpty substory
 
         Batch stories ->
             List.all isEmpty stories
+
+        _ ->
+            False
 
 
 map : (Workspace a -> Workspace b) -> Story a -> Story b
