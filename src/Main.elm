@@ -743,8 +743,8 @@ viewEmpty =
         ]
 
 
-type alias Program =
-    Platform.Program (Maybe String) Model Msg
+type alias Program flags =
+    Platform.Program flags Model Msg
 
 
 document : Story (Html ()) -> Model -> Browser.Document Msg
@@ -763,10 +763,15 @@ document story model =
         viewError errors
 
 
-run : (String -> Cmd msg) -> Story (Html ()) -> Program
-run onSettingsChange story =
+run :
+    { settingsFromFlags : flags -> Maybe String
+    , onSettingsChange : String -> Cmd msg
+    }
+    -> Story (Html ())
+    -> Program flags
+run { settingsFromFlags, onSettingsChange } story =
     Browser.application
-        { init = init story
+        { init = init story << settingsFromFlags
         , update = update onSettingsChange
         , view = document story
         , subscriptions = subscriptions story
