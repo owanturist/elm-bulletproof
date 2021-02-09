@@ -185,6 +185,37 @@ folder title stories =
     Story.Folder (String.trim title) (batch stories)
 
 
+{-| Batchs help to keep list of stories together
+without putting them into a folder.
+
+    roundButtonStories : Bulletproof.Story
+    roundButtonStories =
+        Bulletproof.batch
+            [ Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
+            ]
+            |> Bulletproof.html
+
+    squareButtonStories : Bulletproof.Story
+    squareButtonStories =
+        Bulletproof.batch
+            [ Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
+            ]
+            |> Bulletproof.html
+
+    buttonStories : Bulletproof.Story
+    buttonStories =
+        Bulletproof.folder "Button"
+            [ Bulletproof.label "ROUND"
+            , roundButtonStories
+            , Bulletproof.label "SQUARE"
+            , squareButtonStories
+            ]
+
+-}
 batch : List (Story.Story view) -> Story.Story view
 batch stories =
     case stories of
