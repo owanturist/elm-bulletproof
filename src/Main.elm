@@ -747,26 +747,28 @@ type alias Program =
     Platform.Program (Maybe String) Model Msg
 
 
-run : (String -> Cmd msg) -> Story (Html ()) -> Program
-run onSettingsChange story =
+document : Story (Html ()) -> Model -> Browser.Document Msg
+document story model =
     let
         errors =
             Error.validateStories story
-
-        document =
-            if Story.isEmpty story then
-                always viewEmpty
-
-            else if List.isEmpty errors then
-                viewBulletproof story
-
-            else
-                always (viewError errors)
     in
+    if Story.isEmpty story then
+        viewEmpty
+
+    else if List.isEmpty errors then
+        viewBulletproof story model
+
+    else
+        viewError errors
+
+
+run : (String -> Cmd msg) -> Story (Html ()) -> Program
+run onSettingsChange story =
     Browser.application
         { init = init story
         , update = update onSettingsChange
-        , view = document
+        , view = document story
         , subscriptions = subscriptions story
         , onUrlRequest = UrlRequested
         , onUrlChange = UrlChanged
