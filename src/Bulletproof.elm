@@ -2,6 +2,7 @@ module Bulletproof exposing
     ( Story, story, folder, batch, todo, label
     , html, htmlFrom
     , Program, program
+    , ProgramWithSettings, programWithSettings
     )
 
 {-| Basic API to create and organize static stories.
@@ -23,6 +24,8 @@ module Bulletproof exposing
 # Run a programm
 
 @docs Program, program
+
+@docs ProgramWithSettings, programWithSettings
 
 -}
 
@@ -253,7 +256,7 @@ label title =
 {-| Specific Bulletproof program to return as main.
 -}
 type alias Program =
-    Main.Program
+    Main.Program ()
 
 
 fromUnstyled : Story.Story (Html msg) -> Story.Story (Html.Styled.Html msg)
@@ -268,12 +271,93 @@ fromUnstyled =
 
 {-| Program to represent your stories.
 
-> **Note:** To run a program you have to pass port to work with localStorage.
+> **Note:** If you want Bulletproof to keep settings
+> after page reload please use `programWithSettings`.
+
+    -- src/Stories.elm
+    main : Bulletproof.Program
+    main =
+        Bulletproof.program
+            [ Bulletproof.label "Button"
+            , Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
+            ]
+
+    -- src/index.js
+    import { Elm } from './Stories.elm';
+
+    Elm.Stories.init();
 
 -}
-program : (String -> Cmd Never) -> List (Story.Story (Html msg)) -> Program
-program onSettingsChange stories =
+program : List (Story.Story (Html msg)) -> Program
+program stories =
     batch stories
         |> html
         |> fromUnstyled
-        |> Main.run onSettingsChange
+        |> Main.run
+            { settingsFromFlags = always Nothing
+            , onSettingsChange = always Cmd.none
+            }
+
+
+{-| Specific Bulletproof program to return as main.
+
+It expects JSON string to be passed thru `settingsJson` flag
+so this way Bulletproof could keep settings after page refresh.
+
+-}
+type alias ProgramWithSettings =
+    Main.Program
+        { settingsJson : Maybe String
+        }
+
+
+{-| Program to represent your stories.
+
+It expects `onSettingsJsonChange` to save JSON string settings.
+It can use `localStorage` or HTTP request port as a way to store the value.
+
+    -- src/Stories.elm
+    port save_settings : String -> Cmd msg
+
+    main : Bulletproof.Program
+    main =
+        Bulletproof.programWithSettings
+            { onSettingsJsonChange = save_settings
+            }
+            [ Bulletproof.label "Button"
+            , Bulletproof.todo "default"
+            , Bulletproof.todo "hover"
+            , Bulletproof.todo "disabled"
+            ]
+
+    -- src/index.js
+    import { Elm } from './Stories.elm';
+
+    const SETTINGS_KEY = 'bf_settings'
+
+    const { ports } = Elm.Stories.init({
+        flags: {
+            settingsJson: localStorage.getItem(SETTINGS_KEY)
+        }
+    });
+
+    ports.save_settings.subscribe(settings => {
+        localStorage.setItem(SETTINGS_KEY, settings)
+    })
+
+-}
+programWithSettings :
+    { onSettingsJsonChange : String -> Cmd Never
+    }
+    -> List (Story.Story (Html msg))
+    -> ProgramWithSettings
+programWithSettings { onSettingsJsonChange } stories =
+    batch stories
+        |> html
+        |> fromUnstyled
+        |> Main.run
+            { settingsFromFlags = .settingsJson
+            , onSettingsChange = onSettingsJsonChange
+            }

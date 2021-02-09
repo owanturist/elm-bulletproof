@@ -15,9 +15,11 @@ import Stories.Range
 port save_settings : String -> Cmd msg
 
 
-main : Bulletproof.Program
+main : Bulletproof.ProgramWithSettings
 main =
-    Bulletproof.program save_settings
+    Bulletproof.programWithSettings
+        { onSettingsJsonChange = save_settings
+        }
         [ Stories.Icon.story
         , Stories.Button.story
         , Stories.Menu.story
