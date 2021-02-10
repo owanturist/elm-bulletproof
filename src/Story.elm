@@ -55,26 +55,26 @@ type alias Path =
     List String
 
 
-type alias Connection =
+type alias Connection view =
     { prev : Path
     , next : Path
-    , workspace : Workspace (Html ())
+    , workspace : Workspace view
     }
 
 
-type alias Store =
+type alias Store view =
     { first : Maybe Path
     , last : Maybe Path
-    , connections : Dict Path Connection
+    , connections : Dict Path (Connection view)
     }
 
 
-emptyStore : Store
+emptyStore : Store view
 emptyStore =
     Store Nothing Nothing Dict.empty
 
 
-makeStore : Story (Html ()) -> Store
+makeStore : Story view -> Store view
 makeStore story =
     let
         ( _, storeL ) =
@@ -99,7 +99,7 @@ makeStore story =
                         |> Store first last
 
 
-makeStoreL : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreL : Path -> Story view -> ( Maybe Path, Store view ) -> ( Maybe Path, Store view )
 makeStoreL path story ( prevStory, store ) =
     case story of
         Single storyID workspace ->
@@ -132,7 +132,7 @@ makeStoreL path story ( prevStory, store ) =
             ( prevStory, store )
 
 
-makeStoreR : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
+makeStoreR : Path -> Story view -> ( Maybe Path, Store view ) -> ( Maybe Path, Store view )
 makeStoreR path story ( nextStory, store ) =
     case story of
         Single storyID _ ->
@@ -213,7 +213,32 @@ getPrev path story =
         (Dict.get path store.connections)
 
 
-getFirst : Story (Html ()) -> Maybe Path
+getFirstHelp : List (Story view) -> Maybe Path
+getFirstHelp stories =
+    case stories of
+        [] ->
+            Nothing
+
+        head :: tail ->
+            case getFirst head of
+                Nothing ->
+                    getFirstHelp tail
+
+                just ->
+                    just
+
+
+getFirst : Story view -> Maybe Path
 getFirst story =
-    makeStore story
-        |> .first
+    case story of
+        Single title _ ->
+            Just [ title ]
+
+        Folder title substory ->
+            Maybe.map ((::) title) (getFirst substory)
+
+        Batch stories ->
+            getFirstHelp stories
+
+        _ ->
+            Nothing
