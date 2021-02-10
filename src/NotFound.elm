@@ -51,7 +51,7 @@ view path =
         [ styledMessage
             [ text "Ooops..."
             , br [] []
-            , text "There is not Story at this path:"
+            , text "There is no Story at this path:"
             , br [] []
             , styledPath [ text (String.join " / " ("" :: path)) ]
             , br [] []

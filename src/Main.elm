@@ -87,9 +87,6 @@ init story settingsJSON url key =
                 Nothing ->
                     Cmd.none
 
-                Just [] ->
-                    Cmd.none
-
                 Just firstStoryPath ->
                     Router.replace key firstStoryPath
 
