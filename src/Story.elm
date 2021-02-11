@@ -1,7 +1,6 @@
 module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPrev, isEmpty, map)
 
 import Dict exposing (Dict)
-import Html.Styled exposing (Html)
 import Knob exposing (Knob)
 
 
@@ -170,7 +169,7 @@ makeStoreR path story ( nextStory, store ) =
             ( nextStory, store )
 
 
-get : Path -> Story (Html ()) -> Maybe (Workspace (Html ()))
+get : Path -> Story view -> Maybe (Workspace view)
 get path story =
     let
         store =
@@ -179,7 +178,7 @@ get path story =
     Maybe.map .workspace (Dict.get path store.connections)
 
 
-getNext : Path -> Story (Html ()) -> Maybe Path
+getNext : Path -> Story view -> Maybe Path
 getNext path story =
     let
         store =
@@ -196,7 +195,7 @@ getNext path story =
         (Dict.get path store.connections)
 
 
-getPrev : Path -> Story (Html ()) -> Maybe Path
+getPrev : Path -> Story view -> Maybe Path
 getPrev path story =
     let
         store =
