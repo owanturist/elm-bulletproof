@@ -2,6 +2,7 @@ module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPr
 
 import Dict exposing (Dict)
 import Knob exposing (Knob)
+import Url.Parser exposing (fragment)
 
 
 type alias Workspace view =
@@ -169,13 +170,74 @@ makeStoreR path story ( nextStory, store ) =
             ( nextStory, store )
 
 
+getHelp : Path -> List (Story view) -> Maybe (Workspace view)
+getHelp path stories =
+    case stories of
+        [] ->
+            Nothing
+
+        head :: tail ->
+            case get path head of
+                Nothing ->
+                    getHelp path tail
+
+                just ->
+                    just
+
+
 get : Path -> Story view -> Maybe (Workspace view)
 get path story =
-    let
-        store =
-            makeStore story
-    in
-    Maybe.map .workspace (Dict.get path store.connections)
+    case ( path, story ) of
+        ( fragment :: [], Single title workspace ) ->
+            if fragment == title then
+                Just workspace
+
+            else
+                Nothing
+
+        ( fragment :: rest, Folder title substory ) ->
+            if fragment == title then
+                get rest substory
+
+            else
+                Nothing
+
+        ( _, Batch stories ) ->
+            getHelp path stories
+
+        _ ->
+            Nothing
+
+
+getFirstHelp : List (Story view) -> Maybe Path
+getFirstHelp stories =
+    case stories of
+        [] ->
+            Nothing
+
+        head :: tail ->
+            case getFirst head of
+                Nothing ->
+                    getFirstHelp tail
+
+                just ->
+                    just
+
+
+getFirst : Story view -> Maybe Path
+getFirst story =
+    case story of
+        Single title _ ->
+            Just [ title ]
+
+        Folder title substory ->
+            Maybe.map ((::) title) (getFirst substory)
+
+        Batch stories ->
+            getFirstHelp stories
+
+        _ ->
+            Nothing
 
 
 getNext : Path -> Story view -> Maybe Path
@@ -210,34 +272,3 @@ getPrev path story =
                 Just connection.prev
         )
         (Dict.get path store.connections)
-
-
-getFirstHelp : List (Story view) -> Maybe Path
-getFirstHelp stories =
-    case stories of
-        [] ->
-            Nothing
-
-        head :: tail ->
-            case getFirst head of
-                Nothing ->
-                    getFirstHelp tail
-
-                just ->
-                    just
-
-
-getFirst : Story view -> Maybe Path
-getFirst story =
-    case story of
-        Single title _ ->
-            Just [ title ]
-
-        Folder title substory ->
-            Maybe.map ((::) title) (getFirst substory)
-
-        Batch stories ->
-            getFirstHelp stories
-
-        _ ->
-            Nothing
