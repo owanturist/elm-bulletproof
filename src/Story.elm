@@ -1,4 +1,4 @@
-module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPrev, isEmpty, map)
+module Story exposing (Path, Story(..), Workspace, getFirstPath, getNextPath, getPrevPath, getWorkspace, isEmpty, map)
 
 import Knob exposing (Knob)
 
@@ -69,23 +69,23 @@ type alias Path =
     List String
 
 
-getHelp : Path -> List (Story view) -> Maybe (Workspace view)
-getHelp path stories =
+getWorkspaceHelp : Path -> List (Story view) -> Maybe (Workspace view)
+getWorkspaceHelp path stories =
     case stories of
         [] ->
             Nothing
 
         head :: tail ->
-            case get path head of
+            case getWorkspace path head of
                 Nothing ->
-                    getHelp path tail
+                    getWorkspaceHelp path tail
 
                 just ->
                     just
 
 
-get : Path -> Story view -> Maybe (Workspace view)
-get path story =
+getWorkspace : Path -> Story view -> Maybe (Workspace view)
+getWorkspace path story =
     case ( path, story ) of
         ( fragment :: [], Single title workspace ) ->
             if fragment == title then
@@ -96,44 +96,44 @@ get path story =
 
         ( fragment :: rest, Folder title substory ) ->
             if fragment == title then
-                get rest substory
+                getWorkspace rest substory
 
             else
                 Nothing
 
         ( _, Batch stories ) ->
-            getHelp path stories
+            getWorkspaceHelp path stories
 
         _ ->
             Nothing
 
 
-getFirstHelp : List (Story view) -> Maybe Path
-getFirstHelp stories =
+getFirstPathHelp : List (Story view) -> Maybe Path
+getFirstPathHelp stories =
     case stories of
         [] ->
             Nothing
 
         head :: tail ->
-            case getFirst head of
+            case getFirstPath head of
                 Nothing ->
-                    getFirstHelp tail
+                    getFirstPathHelp tail
 
                 just ->
                     just
 
 
-getFirst : Story view -> Maybe Path
-getFirst story =
+getFirstPath : Story view -> Maybe Path
+getFirstPath story =
     case story of
         Single title _ ->
             Just [ title ]
 
         Folder title substory ->
-            Maybe.map ((::) title) (getFirst substory)
+            Maybe.map ((::) title) (getFirstPath substory)
 
         Batch stories ->
-            getFirstHelp stories
+            getFirstPathHelp stories
 
         _ ->
             Nothing
@@ -144,19 +144,19 @@ type GetNextResult
     | FoundNextPath Path
 
 
-getNextStep : Path -> List (Story view) -> GetNextResult
-getNextStep path stories =
+getAfterStep : Path -> List (Story view) -> GetNextResult
+getAfterStep path stories =
     case stories of
         [] ->
             FoundCurrent False
 
         head :: tail ->
-            case getNextHelp path head of
+            case getAfter path head of
                 FoundCurrent False ->
-                    getNextStep path tail
+                    getAfterStep path tail
 
                 FoundCurrent True ->
-                    case getFirstHelp tail of
+                    case getFirstPathHelp tail of
                         Nothing ->
                             FoundCurrent True
 
@@ -167,15 +167,15 @@ getNextStep path stories =
                     foundPath
 
 
-getNextHelp : Path -> Story view -> GetNextResult
-getNextHelp path story =
+getAfter : Path -> Story view -> GetNextResult
+getAfter path story =
     case ( path, story ) of
         ( fragment :: [], Single title _ ) ->
             FoundCurrent (title == fragment)
 
         ( fragment :: rest, Folder title substory ) ->
             if title == fragment then
-                case getNextHelp rest substory of
+                case getAfter rest substory of
                     FoundNextPath nextPath ->
                         FoundNextPath (title :: nextPath)
 
@@ -186,15 +186,15 @@ getNextHelp path story =
                 FoundCurrent False
 
         ( _, Batch stories ) ->
-            getNextStep path stories
+            getAfterStep path stories
 
         _ ->
             FoundCurrent False
 
 
-getNext : Path -> Story view -> Maybe Path
-getNext path story =
-    case getNextHelp path story of
+getNextPath : Path -> Story view -> Maybe Path
+getNextPath path story =
+    case getAfter path story of
         FoundCurrent False ->
             Nothing
 
@@ -207,12 +207,12 @@ getNext path story =
                     else
                         Just firstPath
                 )
-                (getFirst story)
+                (getFirstPath story)
 
         FoundNextPath nextPath ->
             Just nextPath
 
 
-getPrev : Path -> Story view -> Maybe Path
-getPrev path story =
-    getNext path (reverse story)
+getPrevPath : Path -> Story view -> Maybe Path
+getPrevPath path story =
+    getNextPath path (reverse story)

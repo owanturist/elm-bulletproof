@@ -1,4 +1,4 @@
-module Tests.Story exposing (getFirstSuite, getNextSuite, getPrevSuite, getSuite)
+module Tests.Story exposing (getFirstPathSuite, getNextSuite, getPrevSuite, getWorkspaceSuite)
 
 import Bulletproof
 import Dict
@@ -7,13 +7,13 @@ import Story
 import Test exposing (Test, describe, test)
 
 
-getFirstSuite : Test
-getFirstSuite =
-    describe "Story.getFirst"
+getFirstPathSuite : Test
+getFirstPathSuite =
+    describe "Story.getFirstPath"
         [ test "Nothing for Bulletproof.label"
             (\_ ->
                 Bulletproof.label "label"
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal Nothing
             )
 
@@ -21,7 +21,7 @@ getFirstSuite =
         , test "Nothing for Bulletproof.todo"
             (\_ ->
                 Bulletproof.todo "todo"
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal Nothing
             )
 
@@ -29,7 +29,7 @@ getFirstSuite =
         , test "Just for Bulletproof.story"
             (\_ ->
                 Bulletproof.story "story" ()
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "story" ])
             )
 
@@ -37,7 +37,7 @@ getFirstSuite =
         , test "Nothing for empty Bulletproof.batch"
             (\_ ->
                 Bulletproof.batch []
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal Nothing
             )
 
@@ -47,7 +47,7 @@ getFirstSuite =
                 Bulletproof.batch
                     [ Bulletproof.story "story" ()
                     ]
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "story" ])
             )
 
@@ -64,7 +64,7 @@ getFirstSuite =
                     , Bulletproof.story "story #1" ()
                     , Bulletproof.story "story #2" ()
                     ]
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "story #1" ])
             )
 
@@ -82,7 +82,7 @@ getFirstSuite =
                     , Bulletproof.story "story #2" ()
                     , Bulletproof.story "story #3" ()
                     ]
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "story #1" ])
             )
 
@@ -90,7 +90,7 @@ getFirstSuite =
         , test "Nothing for empty Bulletproof.folder"
             (\_ ->
                 Bulletproof.folder "folder" []
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal Nothing
             )
 
@@ -100,7 +100,7 @@ getFirstSuite =
                 Bulletproof.folder "folder"
                     [ Bulletproof.story "story" ()
                     ]
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "folder", "story" ])
             )
 
@@ -117,7 +117,7 @@ getFirstSuite =
                     , Bulletproof.story "story #1" ()
                     , Bulletproof.story "story #2" ()
                     ]
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "folder #1", "story #1" ])
             )
 
@@ -135,7 +135,7 @@ getFirstSuite =
                     , Bulletproof.story "story #2" ()
                     , Bulletproof.story "story #3" ()
                     ]
-                    |> Story.getFirst
+                    |> Story.getFirstPath
                     |> Expect.equal (Just [ "folder #1", "folder #2", "story #1" ])
             )
         ]
@@ -143,15 +143,15 @@ getFirstSuite =
 
 getNextSuite : Test
 getNextSuite =
-    describe "Story.getNext"
+    describe "Story.getNextPath"
         [ test "Nothing for single Bulletproof.story"
             (\_ ->
                 Bulletproof.batch
                     [ Bulletproof.story "story #1" ()
                     ]
                     |> Expect.all
-                        [ Expect.equal Nothing << Story.getNext [ "story #1" ]
-                        , Expect.equal Nothing << Story.getNext [ "story #2" ]
+                        [ Expect.equal Nothing << Story.getNextPath [ "story #1" ]
+                        , Expect.equal Nothing << Story.getNextPath [ "story #2" ]
                         ]
             )
 
@@ -163,9 +163,9 @@ getNextSuite =
                     , Bulletproof.story "story #2" ()
                     ]
                     |> Expect.all
-                        [ Expect.equal Nothing << Story.getNext [ "story #3" ]
-                        , Expect.equal (Just [ "story #2" ]) << Story.getNext [ "story #1" ]
-                        , Expect.equal (Just [ "story #1" ]) << Story.getNext [ "story #2" ]
+                        [ Expect.equal Nothing << Story.getNextPath [ "story #3" ]
+                        , Expect.equal (Just [ "story #2" ]) << Story.getNextPath [ "story #1" ]
+                        , Expect.equal (Just [ "story #1" ]) << Story.getNextPath [ "story #2" ]
                         ]
             )
 
@@ -184,13 +184,13 @@ getNextSuite =
                     , Bulletproof.todo "todo #2"
                     ]
                     |> Expect.all
-                        [ Expect.equal Nothing << Story.getNext [ "label #1" ]
-                        , Expect.equal Nothing << Story.getNext [ "label #2" ]
-                        , Expect.equal Nothing << Story.getNext [ "todo #1" ]
-                        , Expect.equal Nothing << Story.getNext [ "todo #2" ]
-                        , Expect.equal (Just [ "story #2" ]) << Story.getNext [ "story #1" ]
-                        , Expect.equal (Just [ "story #3" ]) << Story.getNext [ "story #2" ]
-                        , Expect.equal (Just [ "story #1" ]) << Story.getNext [ "story #3" ]
+                        [ Expect.equal Nothing << Story.getNextPath [ "label #1" ]
+                        , Expect.equal Nothing << Story.getNextPath [ "label #2" ]
+                        , Expect.equal Nothing << Story.getNextPath [ "todo #1" ]
+                        , Expect.equal Nothing << Story.getNextPath [ "todo #2" ]
+                        , Expect.equal (Just [ "story #2" ]) << Story.getNextPath [ "story #1" ]
+                        , Expect.equal (Just [ "story #3" ]) << Story.getNextPath [ "story #2" ]
+                        , Expect.equal (Just [ "story #1" ]) << Story.getNextPath [ "story #3" ]
                         ]
             )
 
@@ -223,16 +223,16 @@ getNextSuite =
                     , Bulletproof.story "story #4" 10
                     ]
                     |> Expect.all
-                        [ Expect.equal (Just [ "story #2" ]) << Story.getNext [ "story #1" ]
-                        , Expect.equal (Just [ "story #3" ]) << Story.getNext [ "story #2" ]
-                        , Expect.equal (Just [ "folder #1", "story #1" ]) << Story.getNext [ "story #3" ]
-                        , Expect.equal (Just [ "folder #1", "story #2" ]) << Story.getNext [ "folder #1", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "folder #1", "folder #1", "story #1" ]) << Story.getNext [ "folder #1", "story #2" ]
-                        , Expect.equal (Just [ "folder #1", "folder #1", "story #1" ]) << Story.getNext [ "folder #1", "folder #1", "folder #1", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "story #3" ]) << Story.getNext [ "folder #1", "folder #1", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "folder #2", "story #1" ]) << Story.getNext [ "folder #1", "story #3" ]
-                        , Expect.equal (Just [ "story #4" ]) << Story.getNext [ "folder #1", "folder #2", "story #1" ]
-                        , Expect.equal (Just [ "story #1" ]) << Story.getNext [ "story #4" ]
+                        [ Expect.equal (Just [ "story #2" ]) << Story.getNextPath [ "story #1" ]
+                        , Expect.equal (Just [ "story #3" ]) << Story.getNextPath [ "story #2" ]
+                        , Expect.equal (Just [ "folder #1", "story #1" ]) << Story.getNextPath [ "story #3" ]
+                        , Expect.equal (Just [ "folder #1", "story #2" ]) << Story.getNextPath [ "folder #1", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "folder #1", "folder #1", "story #1" ]) << Story.getNextPath [ "folder #1", "story #2" ]
+                        , Expect.equal (Just [ "folder #1", "folder #1", "story #1" ]) << Story.getNextPath [ "folder #1", "folder #1", "folder #1", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "story #3" ]) << Story.getNextPath [ "folder #1", "folder #1", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "folder #2", "story #1" ]) << Story.getNextPath [ "folder #1", "story #3" ]
+                        , Expect.equal (Just [ "story #4" ]) << Story.getNextPath [ "folder #1", "folder #2", "story #1" ]
+                        , Expect.equal (Just [ "story #1" ]) << Story.getNextPath [ "story #4" ]
                         ]
             )
         ]
@@ -240,15 +240,15 @@ getNextSuite =
 
 getPrevSuite : Test
 getPrevSuite =
-    describe "Story.getPrev"
+    describe "Story.getPrevPath"
         [ test "Nothing for single Bulletproof.story"
             (\_ ->
                 Bulletproof.batch
                     [ Bulletproof.story "story #1" ()
                     ]
                     |> Expect.all
-                        [ Expect.equal Nothing << Story.getPrev [ "story #1" ]
-                        , Expect.equal Nothing << Story.getPrev [ "story #2" ]
+                        [ Expect.equal Nothing << Story.getPrevPath [ "story #1" ]
+                        , Expect.equal Nothing << Story.getPrevPath [ "story #2" ]
                         ]
             )
 
@@ -260,9 +260,9 @@ getPrevSuite =
                     , Bulletproof.story "story #2" ()
                     ]
                     |> Expect.all
-                        [ Expect.equal Nothing << Story.getPrev [ "story #3" ]
-                        , Expect.equal (Just [ "story #2" ]) << Story.getPrev [ "story #1" ]
-                        , Expect.equal (Just [ "story #1" ]) << Story.getPrev [ "story #2" ]
+                        [ Expect.equal Nothing << Story.getPrevPath [ "story #3" ]
+                        , Expect.equal (Just [ "story #2" ]) << Story.getPrevPath [ "story #1" ]
+                        , Expect.equal (Just [ "story #1" ]) << Story.getPrevPath [ "story #2" ]
                         ]
             )
 
@@ -281,13 +281,13 @@ getPrevSuite =
                     , Bulletproof.todo "todo #2"
                     ]
                     |> Expect.all
-                        [ Expect.equal Nothing << Story.getPrev [ "label #1" ]
-                        , Expect.equal Nothing << Story.getPrev [ "label #2" ]
-                        , Expect.equal Nothing << Story.getPrev [ "todo #1" ]
-                        , Expect.equal Nothing << Story.getPrev [ "todo #2" ]
-                        , Expect.equal (Just [ "story #3" ]) << Story.getPrev [ "story #1" ]
-                        , Expect.equal (Just [ "story #1" ]) << Story.getPrev [ "story #2" ]
-                        , Expect.equal (Just [ "story #2" ]) << Story.getPrev [ "story #3" ]
+                        [ Expect.equal Nothing << Story.getPrevPath [ "label #1" ]
+                        , Expect.equal Nothing << Story.getPrevPath [ "label #2" ]
+                        , Expect.equal Nothing << Story.getPrevPath [ "todo #1" ]
+                        , Expect.equal Nothing << Story.getPrevPath [ "todo #2" ]
+                        , Expect.equal (Just [ "story #3" ]) << Story.getPrevPath [ "story #1" ]
+                        , Expect.equal (Just [ "story #1" ]) << Story.getPrevPath [ "story #2" ]
+                        , Expect.equal (Just [ "story #2" ]) << Story.getPrevPath [ "story #3" ]
                         ]
             )
 
@@ -320,16 +320,16 @@ getPrevSuite =
                     , Bulletproof.story "story #4" 10
                     ]
                     |> Expect.all
-                        [ Expect.equal (Just [ "story #4" ]) << Story.getPrev [ "story #1" ]
-                        , Expect.equal (Just [ "story #1" ]) << Story.getPrev [ "story #2" ]
-                        , Expect.equal (Just [ "story #2" ]) << Story.getPrev [ "story #3" ]
-                        , Expect.equal (Just [ "story #3" ]) << Story.getPrev [ "folder #1", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "story #1" ]) << Story.getPrev [ "folder #1", "story #2" ]
-                        , Expect.equal (Just [ "folder #1", "story #2" ]) << Story.getPrev [ "folder #1", "folder #1", "folder #1", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "folder #1", "folder #1", "story #1" ]) << Story.getPrev [ "folder #1", "folder #1", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "folder #1", "story #1" ]) << Story.getPrev [ "folder #1", "story #3" ]
-                        , Expect.equal (Just [ "folder #1", "story #3" ]) << Story.getPrev [ "folder #1", "folder #2", "story #1" ]
-                        , Expect.equal (Just [ "folder #1", "folder #2", "story #1" ]) << Story.getPrev [ "story #4" ]
+                        [ Expect.equal (Just [ "story #4" ]) << Story.getPrevPath [ "story #1" ]
+                        , Expect.equal (Just [ "story #1" ]) << Story.getPrevPath [ "story #2" ]
+                        , Expect.equal (Just [ "story #2" ]) << Story.getPrevPath [ "story #3" ]
+                        , Expect.equal (Just [ "story #3" ]) << Story.getPrevPath [ "folder #1", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "story #1" ]) << Story.getPrevPath [ "folder #1", "story #2" ]
+                        , Expect.equal (Just [ "folder #1", "story #2" ]) << Story.getPrevPath [ "folder #1", "folder #1", "folder #1", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "folder #1", "folder #1", "story #1" ]) << Story.getPrevPath [ "folder #1", "folder #1", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "folder #1", "story #1" ]) << Story.getPrevPath [ "folder #1", "story #3" ]
+                        , Expect.equal (Just [ "folder #1", "story #3" ]) << Story.getPrevPath [ "folder #1", "folder #2", "story #1" ]
+                        , Expect.equal (Just [ "folder #1", "folder #2", "story #1" ]) << Story.getPrevPath [ "story #4" ]
                         ]
             )
         ]
@@ -343,13 +343,13 @@ expectStoryView expected actual =
         |> Expect.equal expected
 
 
-getSuite : Test
-getSuite =
-    describe "Story.get"
+getWorkspaceSuite : Test
+getWorkspaceSuite =
+    describe "Story.getWorkspace"
         [ test "Nothing for Bulletproof.label"
             (\_ ->
                 Bulletproof.label "label"
-                    |> Story.get [ "label" ]
+                    |> Story.getWorkspace [ "label" ]
                     |> expectStoryView Nothing
             )
 
@@ -357,7 +357,7 @@ getSuite =
         , test "Nothing for Bulletproof.todo"
             (\_ ->
                 Bulletproof.todo "todo"
-                    |> Story.get [ "todo" ]
+                    |> Story.getWorkspace [ "todo" ]
                     |> expectStoryView Nothing
             )
 
@@ -366,10 +366,10 @@ getSuite =
             (\_ ->
                 Bulletproof.story "story" 1
                     |> Expect.all
-                        [ expectStoryView Nothing << Story.get [ "story #1" ]
-                        , expectStoryView Nothing << Story.get [ "story", "folder" ]
-                        , expectStoryView Nothing << Story.get [ "folder", "story" ]
-                        , expectStoryView (Just 1) << Story.get [ "story" ]
+                        [ expectStoryView Nothing << Story.getWorkspace [ "story #1" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "story", "folder" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "folder", "story" ]
+                        , expectStoryView (Just 1) << Story.getWorkspace [ "story" ]
                         ]
             )
 
@@ -377,7 +377,7 @@ getSuite =
         , test "Empty Bulletproof.batch"
             (\_ ->
                 Bulletproof.batch []
-                    |> Story.get [ "story" ]
+                    |> Story.getWorkspace [ "story" ]
                     |> expectStoryView Nothing
             )
 
@@ -388,10 +388,10 @@ getSuite =
                     [ Bulletproof.story "story" 1
                     ]
                     |> Expect.all
-                        [ expectStoryView Nothing << Story.get [ "batch" ]
-                        , expectStoryView Nothing << Story.get [ "batch", "story" ]
-                        , expectStoryView Nothing << Story.get [ "story", "batch" ]
-                        , expectStoryView (Just 1) << Story.get [ "story" ]
+                        [ expectStoryView Nothing << Story.getWorkspace [ "batch" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "batch", "story" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "story", "batch" ]
+                        , expectStoryView (Just 1) << Story.getWorkspace [ "story" ]
                         ]
             )
 
@@ -405,13 +405,13 @@ getSuite =
                     , Bulletproof.story "story #4" 4
                     ]
                     |> Expect.all
-                        [ expectStoryView Nothing << Story.get [ "story #5" ]
-                        , expectStoryView Nothing << Story.get [ "story #1", "story #2" ]
-                        , expectStoryView Nothing << Story.get [ "folder", "story #3" ]
-                        , expectStoryView (Just 1) << Story.get [ "story #1" ]
-                        , expectStoryView (Just 2) << Story.get [ "story #2" ]
-                        , expectStoryView (Just 3) << Story.get [ "story #3" ]
-                        , expectStoryView (Just 4) << Story.get [ "story #4" ]
+                        [ expectStoryView Nothing << Story.getWorkspace [ "story #5" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "story #1", "story #2" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "folder", "story #3" ]
+                        , expectStoryView (Just 1) << Story.getWorkspace [ "story #1" ]
+                        , expectStoryView (Just 2) << Story.getWorkspace [ "story #2" ]
+                        , expectStoryView (Just 3) << Story.getWorkspace [ "story #3" ]
+                        , expectStoryView (Just 4) << Story.getWorkspace [ "story #4" ]
                         ]
             )
 
@@ -419,7 +419,7 @@ getSuite =
         , test "Empty Bulletproof.folder"
             (\_ ->
                 Bulletproof.folder "folder" []
-                    |> Story.get [ "folder" ]
+                    |> Story.getWorkspace [ "folder" ]
                     |> expectStoryView Nothing
             )
 
@@ -430,10 +430,10 @@ getSuite =
                     [ Bulletproof.story "story" 1
                     ]
                     |> Expect.all
-                        [ expectStoryView Nothing << Story.get [ "folder" ]
-                        , expectStoryView Nothing << Story.get [ "story" ]
-                        , expectStoryView Nothing << Story.get [ "story", "folder" ]
-                        , expectStoryView (Just 1) << Story.get [ "folder", "story" ]
+                        [ expectStoryView Nothing << Story.getWorkspace [ "folder" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "story" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "story", "folder" ]
+                        , expectStoryView (Just 1) << Story.getWorkspace [ "folder", "story" ]
                         ]
             )
 
@@ -447,13 +447,13 @@ getSuite =
                     , Bulletproof.story "story #4" 4
                     ]
                     |> Expect.all
-                        [ expectStoryView Nothing << Story.get [ "story #5" ]
-                        , expectStoryView Nothing << Story.get [ "story #1", "story #2" ]
-                        , expectStoryView Nothing << Story.get [ "folder", "story #5" ]
-                        , expectStoryView (Just 1) << Story.get [ "folder", "story #1" ]
-                        , expectStoryView (Just 2) << Story.get [ "folder", "story #2" ]
-                        , expectStoryView (Just 3) << Story.get [ "folder", "story #3" ]
-                        , expectStoryView (Just 4) << Story.get [ "folder", "story #4" ]
+                        [ expectStoryView Nothing << Story.getWorkspace [ "story #5" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "story #1", "story #2" ]
+                        , expectStoryView Nothing << Story.getWorkspace [ "folder", "story #5" ]
+                        , expectStoryView (Just 1) << Story.getWorkspace [ "folder", "story #1" ]
+                        , expectStoryView (Just 2) << Story.getWorkspace [ "folder", "story #2" ]
+                        , expectStoryView (Just 3) << Story.getWorkspace [ "folder", "story #3" ]
+                        , expectStoryView (Just 4) << Story.getWorkspace [ "folder", "story #4" ]
                         ]
             )
 
@@ -486,16 +486,16 @@ getSuite =
                     , Bulletproof.story "story #4" 10
                     ]
                     |> Expect.all
-                        [ expectStoryView (Just 1) << Story.get [ "story #1" ]
-                        , expectStoryView (Just 2) << Story.get [ "story #2" ]
-                        , expectStoryView (Just 3) << Story.get [ "story #3" ]
-                        , expectStoryView (Just 4) << Story.get [ "folder #1", "story #1" ]
-                        , expectStoryView (Just 5) << Story.get [ "folder #1", "story #2" ]
-                        , expectStoryView (Just 6) << Story.get [ "folder #1", "folder #1", "folder #1", "story #1" ]
-                        , expectStoryView (Just 7) << Story.get [ "folder #1", "folder #1", "story #1" ]
-                        , expectStoryView (Just 8) << Story.get [ "folder #1", "story #3" ]
-                        , expectStoryView (Just 9) << Story.get [ "folder #1", "folder #2", "story #1" ]
-                        , expectStoryView (Just 10) << Story.get [ "story #4" ]
+                        [ expectStoryView (Just 1) << Story.getWorkspace [ "story #1" ]
+                        , expectStoryView (Just 2) << Story.getWorkspace [ "story #2" ]
+                        , expectStoryView (Just 3) << Story.getWorkspace [ "story #3" ]
+                        , expectStoryView (Just 4) << Story.getWorkspace [ "folder #1", "story #1" ]
+                        , expectStoryView (Just 5) << Story.getWorkspace [ "folder #1", "story #2" ]
+                        , expectStoryView (Just 6) << Story.getWorkspace [ "folder #1", "folder #1", "folder #1", "story #1" ]
+                        , expectStoryView (Just 7) << Story.getWorkspace [ "folder #1", "folder #1", "story #1" ]
+                        , expectStoryView (Just 8) << Story.getWorkspace [ "folder #1", "story #3" ]
+                        , expectStoryView (Just 9) << Story.getWorkspace [ "folder #1", "folder #2", "story #1" ]
+                        , expectStoryView (Just 10) << Story.getWorkspace [ "story #4" ]
                         ]
             )
         ]

@@ -83,7 +83,7 @@ init story settingsJSON url key =
         Dict.empty
     , Cmd.batch
         [ if List.isEmpty initialStoryPath then
-            case Story.getFirst story of
+            case Story.getFirstPath story of
                 Nothing ->
                     Cmd.none
 
@@ -249,7 +249,7 @@ update onSettingsChange msg { settings, state, knobs } =
                     )
 
                 Menu.PrevStory ->
-                    case Story.getPrev state.current story of
+                    case Story.getPrevPath state.current story of
                         Nothing ->
                             ( Model settings state knobs
                             , Cmd.none
@@ -261,7 +261,7 @@ update onSettingsChange msg { settings, state, knobs } =
                             )
 
                 Menu.NextStory ->
-                    case Story.getNext state.current story of
+                    case Story.getNextPath state.current story of
                         Nothing ->
                             ( Model settings state knobs
                             , Cmd.none
@@ -667,7 +667,7 @@ viewBulletproof : Story (Html ()) -> Model -> Browser.Document Msg
 viewBulletproof story { settings, state, knobs } =
     let
         ( actualSettings, workspaceView ) =
-            case Story.get state.current story of
+            case Story.getWorkspace state.current story of
                 Nothing ->
                     ( { settings | navigationVisible = True }
                     , styledWorkspace
