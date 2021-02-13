@@ -14,11 +14,16 @@ type alias Color =
     }
 
 
+hexColorFraction : Int -> String
+hexColorFraction fraction =
+    String.padLeft 2 '0' (Hex.toString fraction)
+
+
 makeColor : Int -> Int -> Int -> Color
 makeColor r g b =
     let
         hex =
-            String.join "" ("#" :: List.map Hex.toString [ r, g, b ])
+            String.join "" ("#" :: List.map hexColorFraction [ r, g, b ])
     in
     Color hex r g b r g b
 
