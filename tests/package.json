@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "elm-test \"src/**/*.elm\"",
+    "test:watch": "npm run test -- --watch"
+  },
+  "devDependencies": {
+    "elm-test": "^0.19.1-revision6"
+  }
+}

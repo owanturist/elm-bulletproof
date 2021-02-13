@@ -1,7 +1,5 @@
-module Story exposing (Path, Story(..), Workspace, get, getFirst, getNext, getPrev, isEmpty, map)
+module Story exposing (Path, Story(..), Workspace, getFirstPath, getNextPath, getPrevPath, getWorkspace, isEmpty, map)
 
-import Dict exposing (Dict)
-import Html.Styled exposing (Html)
 import Knob exposing (Knob)
 
 
@@ -51,169 +49,180 @@ map tagger story =
             Batch (List.map (map tagger) stories)
 
 
+reverse : Story view -> Story view
+reverse story =
+    case story of
+        Batch stories ->
+            stories
+                |> List.map reverse
+                |> List.reverse
+                |> Batch
+
+        Folder title substory ->
+            Folder title (reverse substory)
+
+        single ->
+            single
+
+
 type alias Path =
     List String
 
 
-type alias Connection =
-    { prev : Path
-    , next : Path
-    , workspace : Workspace (Html ())
-    }
+getWorkspaceHelp : Path -> List (Story view) -> Maybe (Workspace view)
+getWorkspaceHelp path stories =
+    case stories of
+        [] ->
+            Nothing
 
-
-type alias Store =
-    { first : Maybe Path
-    , last : Maybe Path
-    , connections : Dict Path Connection
-    }
-
-
-emptyStore : Store
-emptyStore =
-    Store Nothing Nothing Dict.empty
-
-
-makeStore : Story (Html ()) -> Store
-makeStore story =
-    let
-        ( _, storeL ) =
-            makeStoreL [] story ( Nothing, emptyStore )
-
-        ( _, { first, last, connections } ) =
-            makeStoreR [] story ( Nothing, storeL )
-    in
-    case Maybe.map2 Tuple.pair first last of
-        Nothing ->
-            emptyStore
-
-        Just ( firstPath, lastPath ) ->
-            case Maybe.map2 Tuple.pair (Dict.get firstPath connections) (Dict.get lastPath connections) of
+        head :: tail ->
+            case getWorkspace path head of
                 Nothing ->
-                    emptyStore
+                    getWorkspaceHelp path tail
 
-                Just ( firstConnection, lastConnection ) ->
-                    connections
-                        |> Dict.insert firstPath { firstConnection | prev = lastPath }
-                        |> Dict.insert lastPath { lastConnection | next = firstPath }
-                        |> Store first last
+                just ->
+                    just
 
 
-makeStoreL : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
-makeStoreL path story ( prevStory, store ) =
-    case story of
-        Single storyID workspace ->
-            let
-                storyPath =
-                    List.reverse (storyID :: path)
-            in
-            ( Just storyPath
-            , case prevStory of
-                Nothing ->
-                    { first = Just storyPath
-                    , last = store.last
-                    , connections = Dict.insert storyPath (Connection [] [] workspace) store.connections
-                    }
+getWorkspace : Path -> Story view -> Maybe (Workspace view)
+getWorkspace path story =
+    case ( path, story ) of
+        ( fragment :: [], Single title workspace ) ->
+            if fragment == title then
+                Just workspace
 
-                Just prevPath ->
-                    { first = store.first
-                    , last = store.last
-                    , connections = Dict.insert storyPath (Connection prevPath [] workspace) store.connections
-                    }
-            )
+            else
+                Nothing
 
-        Folder folderID substory ->
-            makeStoreL (folderID :: path) substory ( prevStory, store )
+        ( fragment :: rest, Folder title substory ) ->
+            if fragment == title then
+                getWorkspace rest substory
 
-        Batch stories ->
-            List.foldl (makeStoreL path) ( prevStory, store ) stories
+            else
+                Nothing
+
+        ( _, Batch stories ) ->
+            getWorkspaceHelp path stories
 
         _ ->
-            ( prevStory, store )
+            Nothing
 
 
-makeStoreR : Path -> Story (Html ()) -> ( Maybe Path, Store ) -> ( Maybe Path, Store )
-makeStoreR path story ( nextStory, store ) =
-    case story of
-        Single storyID _ ->
-            let
-                storyPath =
-                    List.reverse (storyID :: path)
-            in
-            case Dict.get storyPath store.connections of
+getFirstPathHelp : List (Story view) -> Maybe Path
+getFirstPathHelp stories =
+    case stories of
+        [] ->
+            Nothing
+
+        head :: tail ->
+            case getFirstPath head of
                 Nothing ->
-                    ( nextStory, store )
+                    getFirstPathHelp tail
 
-                Just connection ->
-                    ( Just storyPath
-                    , case nextStory of
+                just ->
+                    just
+
+
+getFirstPath : Story view -> Maybe Path
+getFirstPath story =
+    case story of
+        Single title _ ->
+            Just [ title ]
+
+        Folder title substory ->
+            Maybe.map ((::) title) (getFirstPath substory)
+
+        Batch stories ->
+            getFirstPathHelp stories
+
+        _ ->
+            Nothing
+
+
+type GetNextResult
+    = FoundCurrent Bool
+    | FoundNextPath Path
+
+
+getAfterStep : Path -> List (Story view) -> GetNextResult
+getAfterStep path stories =
+    case stories of
+        [] ->
+            FoundCurrent False
+
+        head :: tail ->
+            case getAfter path head of
+                -- didn't find the next here - check the rest
+                FoundCurrent False ->
+                    getAfterStep path tail
+
+                -- found the next here - extract the first from the rest
+                FoundCurrent True ->
+                    -- indicate that current has been found if rest is empty
+                    case getFirstPathHelp tail of
                         Nothing ->
-                            { first = store.first
-                            , last = Just storyPath
-                            , connections = Dict.insert storyPath connection store.connections
-                            }
+                            FoundCurrent True
 
                         Just nextPath ->
-                            { first = store.first
-                            , last = store.last
-                            , connections = Dict.insert storyPath { connection | next = nextPath } store.connections
-                            }
-                    )
+                            FoundNextPath nextPath
 
-        Folder folderID substory ->
-            makeStoreR (folderID :: path) substory ( nextStory, store )
+                foundPath ->
+                    foundPath
 
-        Batch stories ->
-            List.foldr (makeStoreR path) ( nextStory, store ) stories
+
+getAfter : Path -> Story view -> GetNextResult
+getAfter path story =
+    case ( path, story ) of
+        ( fragment :: [], Single title _ ) ->
+            FoundCurrent (title == fragment)
+
+        ( fragment :: rest, Folder title substory ) ->
+            -- don't move further if path does not match
+            if title == fragment then
+                case getAfter rest substory of
+                    FoundNextPath nextPath ->
+                        FoundNextPath (title :: nextPath)
+
+                    foundcurrent ->
+                        foundcurrent
+
+            else
+                FoundCurrent False
+
+        ( _, Batch stories ) ->
+            -- actual searching for after happens here
+            getAfterStep path stories
 
         _ ->
-            ( nextStory, store )
+            FoundCurrent False
 
 
-get : Path -> Story (Html ()) -> Maybe (Workspace (Html ()))
-get path story =
-    let
-        store =
-            makeStore story
-    in
-    Maybe.map .workspace (Dict.get path store.connections)
+getNextPath : Path -> Story view -> Maybe Path
+getNextPath path story =
+    case getAfter path story of
+        -- not found current - nothing can be next
+        -- possible for empty stories or for not existing path
+        FoundCurrent False ->
+            Nothing
+
+        -- found current but didn't find next
+        -- possible when current is the last so get first as next
+        -- for single story nothing can be next
+        FoundCurrent True ->
+            Maybe.andThen
+                (\firstPath ->
+                    if firstPath == path then
+                        Nothing
+
+                    else
+                        Just firstPath
+                )
+                (getFirstPath story)
+
+        FoundNextPath nextPath ->
+            Just nextPath
 
 
-getNext : Path -> Story (Html ()) -> Maybe Path
-getNext path story =
-    let
-        store =
-            makeStore story
-    in
-    Maybe.andThen
-        (\connection ->
-            if connection.next == path then
-                Nothing
-
-            else
-                Just connection.next
-        )
-        (Dict.get path store.connections)
-
-
-getPrev : Path -> Story (Html ()) -> Maybe Path
-getPrev path story =
-    let
-        store =
-            makeStore story
-    in
-    Maybe.andThen
-        (\connection ->
-            if connection.prev == path then
-                Nothing
-
-            else
-                Just connection.prev
-        )
-        (Dict.get path store.connections)
-
-
-getFirst : Story (Html ()) -> Maybe Path
-getFirst story =
-    makeStore story
-        |> .first
+getPrevPath : Path -> Story view -> Maybe Path
+getPrevPath path story =
+    getNextPath path (reverse story)
