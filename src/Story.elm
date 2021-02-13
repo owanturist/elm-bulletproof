@@ -139,76 +139,66 @@ getFirst story =
             Nothing
 
 
-type Foo
-    = NotFound
-    | FoundCurrent
-    | FoundPath Path
+type GetNextResult
+    = FoundCurrent Bool
+    | FoundNextPath Path
 
 
-consFoo : String -> Foo -> Foo
-consFoo fragment foo =
-    case foo of
-        FoundPath path ->
-            FoundPath (fragment :: path)
-
-        rest ->
-            rest
-
-
-getNextHelpStep : Path -> List (Story view) -> Foo
-getNextHelpStep path stories =
+getNextStep : Path -> List (Story view) -> GetNextResult
+getNextStep path stories =
     case stories of
         [] ->
-            NotFound
+            FoundCurrent False
 
         head :: tail ->
             case getNextHelp path head of
-                NotFound ->
-                    getNextHelpStep path tail
+                FoundCurrent False ->
+                    getNextStep path tail
 
-                FoundCurrent ->
+                FoundCurrent True ->
                     case getFirstHelp tail of
                         Nothing ->
-                            FoundCurrent
+                            FoundCurrent True
 
                         Just nextPath ->
-                            FoundPath nextPath
+                            FoundNextPath nextPath
 
-                foundpath ->
-                    foundpath
+                foundPath ->
+                    foundPath
 
 
-getNextHelp : Path -> Story view -> Foo
+getNextHelp : Path -> Story view -> GetNextResult
 getNextHelp path story =
     case ( path, story ) of
         ( fragment :: [], Single title _ ) ->
-            if title == fragment then
-                FoundCurrent
-
-            else
-                NotFound
+            FoundCurrent (title == fragment)
 
         ( fragment :: rest, Folder title substory ) ->
             if title == fragment then
-                consFoo title (getNextHelp rest substory)
+                case getNextHelp rest substory of
+                    FoundNextPath nextPath ->
+                        FoundNextPath (title :: nextPath)
+
+                    foundcurrent ->
+                        foundcurrent
 
             else
-                NotFound
+                FoundCurrent False
 
         ( _, Batch stories ) ->
-            getNextHelpStep path stories
+            getNextStep path stories
 
         _ ->
-            NotFound
+            FoundCurrent False
 
 
 getNext : Path -> Story view -> Maybe Path
 getNext path story =
     case getNextHelp path story of
-        NotFound ->
+        FoundCurrent False ->
             Nothing
 
-        FoundCurrent ->
+        FoundCurrent True ->
             Maybe.andThen
                 (\firstPath ->
                     if firstPath == path then
@@ -219,7 +209,7 @@ getNext path story =
                 )
                 (getFirst story)
 
-        FoundPath nextPath ->
+        FoundNextPath nextPath ->
             Just nextPath
 
 
