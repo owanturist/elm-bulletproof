@@ -152,10 +152,13 @@ getAfterStep path stories =
 
         head :: tail ->
             case getAfter path head of
+                -- didn't find the next here - check the rest
                 FoundCurrent False ->
                     getAfterStep path tail
 
+                -- found the next here - extract the first from the rest
                 FoundCurrent True ->
+                    -- indicate that current has been found if rest is empty
                     case getFirstPathHelp tail of
                         Nothing ->
                             FoundCurrent True
@@ -174,6 +177,7 @@ getAfter path story =
             FoundCurrent (title == fragment)
 
         ( fragment :: rest, Folder title substory ) ->
+            -- don't move further if path does not match
             if title == fragment then
                 case getAfter rest substory of
                     FoundNextPath nextPath ->
@@ -186,6 +190,7 @@ getAfter path story =
                 FoundCurrent False
 
         ( _, Batch stories ) ->
+            -- actual searching for after happens here
             getAfterStep path stories
 
         _ ->
@@ -195,9 +200,14 @@ getAfter path story =
 getNextPath : Path -> Story view -> Maybe Path
 getNextPath path story =
     case getAfter path story of
+        -- not found current - nothing can be next
+        -- possible for empty stories or for not existing path
         FoundCurrent False ->
             Nothing
 
+        -- found current but didn't find next
+        -- possible when current is the last so get first as next
+        -- for single story nothing can be next
         FoundCurrent True ->
             Maybe.andThen
                 (\firstPath ->
