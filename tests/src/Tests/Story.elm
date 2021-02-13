@@ -156,7 +156,7 @@ getNextSuite =
             )
 
         --
-        , test "Return prev story path Bulletproof.story"
+        , test "Return next story path Bulletproof.story"
             (\_ ->
                 Bulletproof.batch
                     [ Bulletproof.story "story #1" ()
@@ -208,7 +208,9 @@ getNextSuite =
                             [ Bulletproof.label "label #1"
                             , Bulletproof.batch
                                 [ Bulletproof.folder "folder #1"
-                                    [ Bulletproof.story "story #1" 6
+                                    [ Bulletproof.todo "todo #1"
+                                    , Bulletproof.story "story #1" 6
+                                    , Bulletproof.label "label #1"
                                     ]
                                 , Bulletproof.story "story #1" 7
                                 ]
@@ -249,7 +251,6 @@ getPrevSuite =
                         , Expect.equal Nothing << Story.getPrev [ "story #2" ]
                         ]
             )
-            |> Test.skip
 
         --
         , test "Return prev story path Bulletproof.story"
@@ -304,7 +305,9 @@ getPrevSuite =
                             [ Bulletproof.label "label #1"
                             , Bulletproof.batch
                                 [ Bulletproof.folder "folder #1"
-                                    [ Bulletproof.story "story #1" 6
+                                    [ Bulletproof.todo "todo #1"
+                                    , Bulletproof.story "story #1" 6
+                                    , Bulletproof.label "label #1"
                                     ]
                                 , Bulletproof.story "story #1" 7
                                 ]
@@ -468,7 +471,9 @@ getSuite =
                             [ Bulletproof.label "label #1"
                             , Bulletproof.batch
                                 [ Bulletproof.folder "folder #1"
-                                    [ Bulletproof.story "story #1" 6
+                                    [ Bulletproof.todo "todo #1"
+                                    , Bulletproof.story "story #1" 6
+                                    , Bulletproof.label "label #1"
                                     ]
                                 , Bulletproof.story "story #1" 7
                                 ]
