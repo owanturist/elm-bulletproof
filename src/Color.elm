@@ -14,22 +14,34 @@ type alias Color =
     }
 
 
+colorFractionToHex : Int -> String
+colorFractionToHex fraction =
+    String.padLeft 2 '0' (Hex.toString fraction)
+
+
 makeColor : Int -> Int -> Int -> Color
 makeColor r g b =
     let
         hex =
-            String.join "" ("#" :: List.map Hex.toString [ r, g, b ])
+            String.join "" ("#" :: List.map colorFractionToHex [ r, g, b ])
     in
     Color hex r g b r g b
 
 
+colorFractionFromHex : Char -> Char -> Maybe Int
+colorFractionFromHex hex1 hex2 =
+    [ hex1, hex2 ]
+        |> String.fromList
+        |> Hex.fromString
+        |> Result.toMaybe
+
+
 parse : Char -> Char -> Char -> Char -> Char -> Char -> Maybe Color
 parse r1 r2 g1 g2 b1 b2 =
-    Result.map3 makeColor
-        (Hex.fromString (String.fromList [ r1, r2 ]))
-        (Hex.fromString (String.fromList [ g1, g2 ]))
-        (Hex.fromString (String.fromList [ b1, b2 ]))
-        |> Result.toMaybe
+    Maybe.map3 makeColor
+        (colorFractionFromHex r1 r2)
+        (colorFractionFromHex g1 g2)
+        (colorFractionFromHex b1 b2)
 
 
 dropHash : String -> String
