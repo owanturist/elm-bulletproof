@@ -4,6 +4,7 @@ import Bulletproof
 import Bulletproof.Knob
 import Css
 import Date
+import Dict
 import Html.Styled exposing (div, styled)
 import Knob
 
@@ -11,6 +12,11 @@ import Knob
 viewport : Bulletproof.Knob.Viewport
 viewport =
     Bulletproof.Knob.Viewport 1024 768
+
+
+replaceIndex : String -> Int -> String
+replaceIndex pattern index =
+    String.replace "${index}" (String.fromInt index) pattern
 
 
 storyGeneral : Bulletproof.Story
@@ -231,22 +237,35 @@ storyRadio : Bulletproof.Story
 storyRadio =
     Bulletproof.batch
         [ Bulletproof.story "Radio with options"
-            (\title optionNamePattern n ->
+            (\title optionNamePattern selectedRadioIndex n ->
+                let
+                    knobState =
+                        Dict.insert title
+                            (Knob.StringValue (replaceIndex optionNamePattern selectedRadioIndex))
+                            Knob.initial
+                in
                 ( title
                 , List.range 1 n
-                    |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
+                    |> List.map (replaceIndex optionNamePattern)
                     |> Knob.Radio
                 )
                     |> List.singleton
-                    |> Knob.view viewport Knob.initial
+                    |> Knob.view viewport knobState
             )
             |> Bulletproof.Knob.string "Title" "Radio"
-            |> Bulletproof.Knob.string "Option Name pattern" "Option #${index}"
-            |> Bulletproof.Knob.radio "Amount of Options"
-                [ ( "2", 2 )
+            |> Bulletproof.Knob.string "Radio name pattern" "Radio #${index}"
+            |> Bulletproof.Knob.radio "Selected radio by index"
+                [ ( "1", 1 )
+                , ( "2", 2 )
+                , ( "3", 3 )
+                , ( "4", 4 )
                 , ( "5", 5 )
-                , ( "10", 10 )
-                , ( "20", 20 )
+                ]
+            |> Bulletproof.Knob.int "Amount of Knobs"
+                3
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 5
                 ]
 
         --
@@ -288,22 +307,35 @@ storySelect : Bulletproof.Story
 storySelect =
     Bulletproof.batch
         [ Bulletproof.story "Select with options"
-            (\title optionNamePattern n ->
+            (\title optionNamePattern selectedRadioIndex n ->
+                let
+                    knobState =
+                        Dict.insert title
+                            (Knob.StringValue (replaceIndex optionNamePattern selectedRadioIndex))
+                            Knob.initial
+                in
                 ( title
                 , List.range 1 n
-                    |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
+                    |> List.map (replaceIndex optionNamePattern)
                     |> Knob.Select
                 )
                     |> List.singleton
-                    |> Knob.view viewport Knob.initial
+                    |> Knob.view viewport knobState
             )
             |> Bulletproof.Knob.string "Title" "Select"
-            |> Bulletproof.Knob.string "Option Name pattern" "Option #${index}"
-            |> Bulletproof.Knob.select "Amount of Options"
-                [ ( "2", 2 )
+            |> Bulletproof.Knob.string "Option name pattern" "Option #${index}"
+            |> Bulletproof.Knob.select "Selected option by index"
+                [ ( "1", 1 )
+                , ( "2", 2 )
+                , ( "3", 3 )
+                , ( "4", 4 )
                 , ( "5", 5 )
-                , ( "10", 10 )
-                , ( "20", 20 )
+                ]
+            |> Bulletproof.Knob.int "Amount of Knobs"
+                3
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 2
+                , Bulletproof.Knob.max 5
                 ]
 
         --

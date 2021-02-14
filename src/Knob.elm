@@ -1,5 +1,6 @@
 module Knob exposing
     ( Knob(..)
+    , KnobValue(..)
     , Limits
     , Msg
     , Payload
