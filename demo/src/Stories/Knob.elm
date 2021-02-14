@@ -433,7 +433,7 @@ storyTime =
                     |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Time"
-            |> Bulletproof.Knob.string "Value" "16:38"
+            |> Bulletproof.Knob.string "Value (hh:mm)" "16:38"
 
         --
         , Bulletproof.story "Time by time"
