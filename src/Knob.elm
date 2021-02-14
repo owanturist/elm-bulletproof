@@ -58,6 +58,22 @@ type alias Limits x =
     }
 
 
+applyLimits : Limits number -> number -> number
+applyLimits limits num =
+    case ( limits.min, limits.max ) of
+        ( Nothing, Nothing ) ->
+            num
+
+        ( Nothing, Just limitMax ) ->
+            min num limitMax
+
+        ( Just limitMin, Nothing ) ->
+            max num limitMin
+
+        ( Just limitMin, Just limitMax ) ->
+            clamp limitMin limitMax num
+
+
 
 -- K N O B   V A L U E
 
@@ -272,8 +288,8 @@ initial =
 type Msg
     = UpdateBool String Bool
     | UpdateString String String
-    | UpdateInt String String
-    | UpdateFloat String String
+    | UpdateInt String (Limits Int) String
+    | UpdateFloat String (Limits Float) String
     | UpdateColor String String
     | UpdateDate String String
     | UpdateTime String String
@@ -289,22 +305,22 @@ update msg state =
         UpdateString name string ->
             Dict.insert name (StringValue string) state
 
-        UpdateInt name "" ->
+        UpdateInt name _ "" ->
             Dict.insert name (IntValue Nothing) state
 
-        UpdateInt name str ->
-            case String.toInt str of
+        UpdateInt name limits str ->
+            case Maybe.map (applyLimits limits) (String.toInt str) of
                 Nothing ->
                     state
 
                 Just int ->
                     Dict.insert name (IntValue (Just int)) state
 
-        UpdateFloat name "" ->
+        UpdateFloat name _ "" ->
             Dict.insert name (FloatValue Nothing) state
 
-        UpdateFloat name str ->
-            case String.toFloat str of
+        UpdateFloat name limits str ->
+            case Maybe.map (applyLimits limits) (String.toFloat str) of
                 Nothing ->
                     state
 
@@ -413,7 +429,7 @@ viewKnobString name value =
 
 
 viewKnobNumber :
-    (String -> String -> msg)
+    (String -> msg)
     -> (number -> String)
     -> String
     -> Maybe number
@@ -426,7 +442,7 @@ viewKnobNumber msg numToString name number limits =
             :: Attributes.name name
             :: Attributes.value (Maybe.withDefault "" (Maybe.map numToString number))
             :: Attributes.tabindex 0
-            :: Events.onInput (msg name)
+            :: Events.onInput msg
             :: List.filterMap identity
                 [ Maybe.map (Attributes.min << numToString) limits.min
                 , Maybe.map (Attributes.max << numToString) limits.max
@@ -652,13 +668,13 @@ viewKnob globalViewport name knob value =
             viewKnobString name defaultString
 
         ( Int False _ limits, Just (IntValue int) ) ->
-            viewKnobNumber UpdateInt String.fromInt name int limits
+            viewKnobNumber (UpdateInt name limits) String.fromInt name int limits
 
         ( Int False defaultInt limits, _ ) ->
-            viewKnobNumber UpdateInt String.fromInt name (Just defaultInt) limits
+            viewKnobNumber (UpdateInt name limits) String.fromInt name (Just defaultInt) limits
 
         ( Int True defaultInt limits, Just (IntValue int) ) ->
-            range (UpdateInt name)
+            range (UpdateInt name limits)
                 name
                 String.fromInt
                 { min = Maybe.withDefault 0 limits.min
@@ -668,7 +684,7 @@ viewKnob globalViewport name knob value =
                 }
 
         ( Int True defaultInt limits, _ ) ->
-            range (UpdateInt name)
+            range (UpdateInt name limits)
                 name
                 String.fromInt
                 { min = Maybe.withDefault 0 limits.min
@@ -678,13 +694,13 @@ viewKnob globalViewport name knob value =
                 }
 
         ( Float False _ limits, Just (FloatValue float) ) ->
-            viewKnobNumber UpdateFloat String.fromFloat name float limits
+            viewKnobNumber (UpdateFloat name limits) String.fromFloat name float limits
 
         ( Float False defaultFloat limits, _ ) ->
-            viewKnobNumber UpdateFloat String.fromFloat name (Just defaultFloat) limits
+            viewKnobNumber (UpdateFloat name limits) String.fromFloat name (Just defaultFloat) limits
 
         ( Float True defaultFloat limits, Just (FloatValue float) ) ->
-            range (UpdateFloat name)
+            range (UpdateFloat name limits)
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 limits.min
@@ -694,7 +710,7 @@ viewKnob globalViewport name knob value =
                 }
 
         ( Float True defaultFloat limits, _ ) ->
-            range (UpdateFloat name)
+            range (UpdateFloat name limits)
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 limits.min
