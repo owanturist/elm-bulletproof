@@ -505,6 +505,12 @@ viewKnobSelect name selected options =
         , Attributes.css [ Css.property "-webkit-appearance" "menulist" ]
         , Attributes.name name
         , Attributes.tabindex 0
+        , case selected of
+            Nothing ->
+                Attributes.css []
+
+            Just value ->
+                Attributes.value value
         , Events.onInput (UpdateString name)
         ]
         (List.map
@@ -513,7 +519,6 @@ viewKnobSelect name selected options =
                 , option
                     [ Attributes.value value
                     , Attributes.tabindex 0
-                    , Attributes.selected (Just value == selected)
                     ]
                     [ text value
                     ]

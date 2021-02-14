@@ -19,16 +19,6 @@ storyGeneral =
             (Knob.view viewport [] Knob.initial)
 
         --
-        , Bulletproof.story "Single"
-            (\name ->
-                Knob.view viewport
-                    [ ( name, Knob.Bool True )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.string "Knob Name" "Something"
-
-        --
         , Bulletproof.story "Multiple"
             (\n ->
                 Knob.view viewport
@@ -111,160 +101,214 @@ storyGeneral =
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
-storyString : Bulletproof.Story
-storyString =
-    Bulletproof.folder "String"
-        [ Bulletproof.story "Empty"
-            (Knob.view viewport
-                [ ( "String", Knob.String "" )
-                ]
-                Knob.initial
-            )
-
-        --
-        , Bulletproof.story "Single line"
-            (Knob.view viewport
-                [ ( "String", Knob.String "A single line" )
-                ]
-                Knob.initial
-            )
-
-        --
-        , Bulletproof.story "Single long line"
-            (\n ->
+storyBool : Bulletproof.Story
+storyBool =
+    Bulletproof.batch
+        [ Bulletproof.story "Bool false"
+            (\title value ->
                 Knob.view viewport
-                    [ ( "String", Knob.String (String.repeat n "ASingleLongLine") )
+                    [ ( title, Knob.Bool value )
                     ]
                     Knob.initial
             )
-            |> Bulletproof.Knob.int "Repeat String"
-                100
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 1
-                , Bulletproof.Knob.max 200
-                ]
+            |> Bulletproof.Knob.string "Title" "Bool"
+            |> Bulletproof.Knob.bool "Value" False
 
         --
-        , Bulletproof.story "Multiline"
-            (\n ->
+        , Bulletproof.story "Bool true"
+            (\title value ->
                 Knob.view viewport
-                    [ ( "String"
-                      , List.range 1 n
-                            |> List.map (\i -> "A line #" ++ String.fromInt i)
-                            |> String.join "\n"
-                            |> Knob.String
-                      )
+                    [ ( title, Knob.Bool value )
                     ]
                     Knob.initial
             )
-            |> Bulletproof.Knob.int "Repeat String"
-                100
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 1
-                , Bulletproof.Knob.max 200
-                ]
+            |> Bulletproof.Knob.string "Title" "Bool"
+            |> Bulletproof.Knob.bool "Value" True
         ]
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
-storyBool : Bulletproof.Story
-storyBool =
-    Bulletproof.folder "Bool"
-        [ Bulletproof.story "Unchecked"
-            (Knob.view viewport
-                [ ( "Bool", Knob.Bool False )
-                ]
-                Knob.initial
+storyString : Bulletproof.Story
+storyString =
+    Bulletproof.batch
+        [ Bulletproof.story "String empty"
+            (\title value ->
+                Knob.view viewport
+                    [ ( title, Knob.String value )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "String"
+            |> Bulletproof.Knob.string "Value" ""
 
         --
-        , Bulletproof.story "Checked"
-            (Knob.view viewport
-                [ ( "Bool", Knob.Bool True )
-                ]
-                Knob.initial
+        , Bulletproof.story "String single line"
+            (\title value ->
+                Knob.view viewport
+                    [ ( title, Knob.String value )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "String"
+            |> Bulletproof.Knob.string "Value" "A single line"
+
+        --
+        , Bulletproof.story "Single long line"
+            (\title value n ->
+                Knob.view viewport
+                    [ ( title, Knob.String (String.repeat n value) )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.string "Title" "String"
+            |> Bulletproof.Knob.string "Value" "A_single_long_line"
+            |> Bulletproof.Knob.int "Repeat the String N times"
+                100
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min 1
+                , Bulletproof.Knob.max 200
+                ]
+
+        --
+        , Bulletproof.story "String multiline"
+            (\title value ->
+                Knob.view viewport
+                    [ ( title, Knob.String value )
+                    ]
+                    Knob.initial
+            )
+            |> Bulletproof.Knob.string "Title" "String"
+            |> Bulletproof.Knob.string "Value" "First line\nSecond line"
         ]
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyInt : Bulletproof.Story
 storyInt =
-    Bulletproof.folder "Int"
-        [ Bulletproof.story "Input"
-            (Knob.view viewport
-                [ ( "Int", Knob.Int False 0 { min = Nothing, max = Nothing, step = Nothing } )
-                ]
-                Knob.initial
+    Bulletproof.batch
+        [ Bulletproof.story "Int input"
+            (\title value ->
+                Knob.view viewport
+                    [ ( title, Knob.Int False value { min = Nothing, max = Nothing, step = Nothing } )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "Int"
+            |> Bulletproof.Knob.int "Value" 0 []
 
         --
-        , Bulletproof.story "Range"
-            (Knob.view viewport
-                [ ( "Int", Knob.Int True 0 { min = Nothing, max = Nothing, step = Nothing } )
-                ]
-                Knob.initial
+        , Bulletproof.story "Int range"
+            (\title value min max ->
+                Knob.view viewport
+                    [ ( title, Knob.Int True value { min = min, max = max, step = Nothing } )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "Int"
+            |> Bulletproof.Knob.int "Value"
+                0
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min -150
+                , Bulletproof.Knob.max 150
+                , Bulletproof.Knob.step 10
+                ]
+            |> Bulletproof.Knob.radio "Min"
+                [ ( "Nothing", Nothing )
+                , ( "Just 0", Just 0 )
+                , ( "Just -100", Just -100 )
+                , ( "Just 100", Just 100 )
+                ]
+            |> Bulletproof.Knob.radio "Max"
+                [ ( "Nothing", Nothing )
+                , ( "Just 0", Just 0 )
+                , ( "Just -100", Just -100 )
+                , ( "Just 100", Just 100 )
+                ]
         ]
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyFloat : Bulletproof.Story
 storyFloat =
-    Bulletproof.folder "Float"
-        [ Bulletproof.story "Input"
-            (Knob.view viewport
-                [ ( "Float", Knob.Float False 0.21 { min = Nothing, max = Nothing, step = Nothing } )
-                ]
-                Knob.initial
+    Bulletproof.batch
+        [ Bulletproof.story "Float input"
+            (\title value ->
+                Knob.view viewport
+                    [ ( title, Knob.Float False value { min = Nothing, max = Nothing, step = Nothing } )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "Float"
+            |> Bulletproof.Knob.float "Value" 0 []
 
         --
-        , Bulletproof.story "Range"
-            (Knob.view viewport
-                [ ( "Float", Knob.Float True 0.21 { min = Nothing, max = Nothing, step = Nothing } )
-                ]
-                Knob.initial
+        , Bulletproof.story "Float range"
+            (\title value min max ->
+                Knob.view viewport
+                    [ ( title, Knob.Float True value { min = min, max = max, step = Nothing } )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "Float"
+            |> Bulletproof.Knob.float "Value"
+                0
+                [ Bulletproof.Knob.range
+                , Bulletproof.Knob.min -15
+                , Bulletproof.Knob.max 15
+                , Bulletproof.Knob.step 0.1
+                ]
+            |> Bulletproof.Knob.radio "Min"
+                [ ( "Nothing", Nothing )
+                , ( "Just 0", Just 0 )
+                , ( "Just -10", Just -10 )
+                , ( "Just 10", Just 10 )
+                ]
+            |> Bulletproof.Knob.radio "Max"
+                [ ( "Nothing", Nothing )
+                , ( "Just 0", Just 0 )
+                , ( "Just -10", Just -10 )
+                , ( "Just 10", Just 10 )
+                ]
         ]
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storyRadio : Bulletproof.Story
 storyRadio =
-    Bulletproof.folder "Radio"
-        [ Bulletproof.story "Duplicates"
-            (Knob.view viewport
-                [ ( "Radio"
-                  , Knob.Radio [ "Option #1", "Option #1" ]
-                  )
-                ]
-                Knob.initial
+    Bulletproof.batch
+        [ Bulletproof.story "Radio with options"
+            (\title optionNamePattern n ->
+                Knob.view viewport
+                    [ ( title
+                      , List.range 1 n
+                            |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
+                            |> Knob.Radio
+                      )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "Radio"
+            |> Bulletproof.Knob.string "Option Name pattern" "Option #${index}"
+            |> Bulletproof.Knob.radio "Amount of Options"
+                [ ( "2", 2 )
+                , ( "5", 5 )
+                , ( "10", 10 )
+                , ( "20", 20 )
+                ]
 
         --
-        , Bulletproof.story "Single"
-            (Knob.view viewport
-                [ ( "Radio"
-                  , Knob.Radio [ "Option #1" ]
-                  )
-                ]
-                Knob.initial
-            )
-
-        --
-        , Bulletproof.story "Long options"
-            (\width n ->
+        , Bulletproof.story "Radio with long options"
+            (\title longString n width ->
                 styled div
                     [ Css.width (Css.px (toFloat width))
                     , Css.backgroundColor (Css.hex "#ccc")
                     ]
                     []
                     [ Knob.view viewport
-                        [ ( "Radio"
+                        [ ( title
                           , Knob.Radio
                                 [ "Option #1"
-                                , String.repeat n "ALongLine"
+                                , String.repeat n longString
                                 , "Option #3"
                                 ]
                           )
@@ -272,34 +316,17 @@ storyRadio =
                         Knob.initial
                     ]
             )
-            |> Bulletproof.Knob.int "Container Width"
-                300
-                [ Bulletproof.Knob.min 0
-                ]
-            |> Bulletproof.Knob.int "Repeat String"
+            |> Bulletproof.Knob.string "Title" "Radio"
+            |> Bulletproof.Knob.string "Value" "A_single_long_line"
+            |> Bulletproof.Knob.int "Repeat the String N times"
                 100
                 [ Bulletproof.Knob.range
                 , Bulletproof.Knob.min 1
                 , Bulletproof.Knob.max 200
                 ]
-
-        --
-        , Bulletproof.story "Multiple"
-            (\n ->
-                Knob.view viewport
-                    [ ( "Radio"
-                      , List.range 1 n
-                            |> List.map (\i -> "Option #" ++ String.fromInt i)
-                            |> Knob.Radio
-                      )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.int "Amount of Options"
-                5
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 2
-                , Bulletproof.Knob.max 20
+            |> Bulletproof.Knob.int "Container width in px"
+                300
+                [ Bulletproof.Knob.min 0
                 ]
         ]
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
@@ -307,39 +334,40 @@ storyRadio =
 
 storySelect : Bulletproof.Story
 storySelect =
-    Bulletproof.folder "Select"
-        [ Bulletproof.story "Duplicates"
-            (Knob.view viewport
-                [ ( "Select"
-                  , Knob.Select [ "Option #1", "Option #1" ]
-                  )
-                ]
-                Knob.initial
+    Bulletproof.batch
+        [ Bulletproof.story "Select with options"
+            (\title optionNamePattern n ->
+                Knob.view viewport
+                    [ ( title
+                      , List.range 1 n
+                            |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
+                            |> Knob.Select
+                      )
+                    ]
+                    Knob.initial
             )
+            |> Bulletproof.Knob.string "Title" "Select"
+            |> Bulletproof.Knob.string "Option Name pattern" "Option #${index}"
+            |> Bulletproof.Knob.select "Amount of Options"
+                [ ( "2", 2 )
+                , ( "5", 5 )
+                , ( "10", 10 )
+                , ( "20", 20 )
+                ]
 
         --
-        , Bulletproof.story "Single"
-            (Knob.view viewport
-                [ ( "Select"
-                  , Knob.Select [ "Option #1" ]
-                  )
-                ]
-                Knob.initial
-            )
-
-        --
-        , Bulletproof.story "Long options"
-            (\width n ->
+        , Bulletproof.story "Select with long options"
+            (\title longString n width ->
                 styled div
                     [ Css.width (Css.px (toFloat width))
                     , Css.backgroundColor (Css.hex "#ccc")
                     ]
                     []
                     [ Knob.view viewport
-                        [ ( "Select"
+                        [ ( title
                           , Knob.Select
                                 [ "Option #1"
-                                , String.repeat n "ALongLine"
+                                , String.repeat n longString
                                 , "Option #3"
                                 ]
                           )
@@ -347,34 +375,17 @@ storySelect =
                         Knob.initial
                     ]
             )
-            |> Bulletproof.Knob.int "Container Width"
-                300
-                [ Bulletproof.Knob.min 0
-                ]
-            |> Bulletproof.Knob.int "Repeat String"
+            |> Bulletproof.Knob.string "Title" "Select"
+            |> Bulletproof.Knob.string "Value" "A_single_long_line"
+            |> Bulletproof.Knob.int "Repeat the String N times"
                 100
                 [ Bulletproof.Knob.range
                 , Bulletproof.Knob.min 1
                 , Bulletproof.Knob.max 200
                 ]
-
-        --
-        , Bulletproof.story "Multiple"
-            (\n ->
-                Knob.view viewport
-                    [ ( "Select"
-                      , List.range 1 n
-                            |> List.map (\i -> "Option #" ++ String.fromInt i)
-                            |> Knob.Select
-                      )
-                    ]
-                    Knob.initial
-            )
-            |> Bulletproof.Knob.int "Amount of Options"
-                5
-                [ Bulletproof.Knob.range
-                , Bulletproof.Knob.min 2
-                , Bulletproof.Knob.max 20
+            |> Bulletproof.Knob.int "Container width in px"
+                300
+                [ Bulletproof.Knob.min 0
                 ]
         ]
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
@@ -386,20 +397,26 @@ story =
         [ storyGeneral
 
         --
-        , storyString
-
-        --
+        , Bulletproof.label "BOOL"
         , storyBool
 
         --
+        , Bulletproof.label "STRING"
+        , storyString
+
+        --
+        , Bulletproof.label "INT"
         , storyInt
 
         --
+        , Bulletproof.label "FLOAT"
         , storyFloat
 
         --
+        , Bulletproof.label "RADIO"
         , storyRadio
 
         --
+        , Bulletproof.label "SELECT"
         , storySelect
         ]
