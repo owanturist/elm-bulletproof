@@ -136,7 +136,12 @@ storyInt =
                     |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Int"
-            |> Bulletproof.Knob.int "Value" 0 []
+            |> Bulletproof.Knob.int "Value [-1000; 1000] step 10"
+                0
+                [ Bulletproof.Knob.min -1000
+                , Bulletproof.Knob.max 1000
+                , Bulletproof.Knob.step 10
+                ]
 
         --
         , Bulletproof.story "Int range"
@@ -193,7 +198,12 @@ storyFloat =
                     |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Float"
-            |> Bulletproof.Knob.float "Value" 0 []
+            |> Bulletproof.Knob.float "Value [-100; 100] step 0.1"
+                0
+                [ Bulletproof.Knob.min -100
+                , Bulletproof.Knob.max 100
+                , Bulletproof.Knob.step 0.1
+                ]
 
         --
         , Bulletproof.story "Float range"
