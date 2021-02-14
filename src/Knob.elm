@@ -1,5 +1,6 @@
 module Knob exposing
     ( Knob(..)
+    , KnobValue(..)
     , Limits
     , Msg
     , Payload
@@ -505,6 +506,12 @@ viewKnobSelect name selected options =
         , Attributes.css [ Css.property "-webkit-appearance" "menulist" ]
         , Attributes.name name
         , Attributes.tabindex 0
+        , case selected of
+            Nothing ->
+                Attributes.css []
+
+            Just value ->
+                Attributes.value value
         , Events.onInput (UpdateString name)
         ]
         (List.map
@@ -513,7 +520,6 @@ viewKnobSelect name selected options =
                 , option
                     [ Attributes.value value
                     , Attributes.tabindex 0
-                    , Attributes.selected (Just value == selected)
                     ]
                     [ text value
                     ]
@@ -772,8 +778,8 @@ viewRoot globalViewport knobs state =
         |> Keyed.node "table" [ Attributes.css cssRoot ]
 
 
-view : Viewport -> List ( String, Knob ) -> State -> Html Msg
-view globalViewport knobs state =
+view : Viewport -> State -> List ( String, Knob ) -> Html Msg
+view globalViewport state knobs =
     if List.isEmpty knobs then
         viewEmpty
 
