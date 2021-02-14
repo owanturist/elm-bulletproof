@@ -562,7 +562,7 @@ viewWorkspace workspace settings state knobs =
             ]
 
         --
-        , Knob.view storyViewport workspace.knobs knobs
+        , Knob.view storyViewport knobs workspace.knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings
         ]

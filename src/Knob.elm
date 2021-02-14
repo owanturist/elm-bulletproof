@@ -777,8 +777,8 @@ viewRoot globalViewport knobs state =
         |> Keyed.node "table" [ Attributes.css cssRoot ]
 
 
-view : Viewport -> List ( String, Knob ) -> State -> Html Msg
-view globalViewport knobs state =
+view : Viewport -> State -> List ( String, Knob ) -> Html Msg
+view globalViewport state knobs =
     if List.isEmpty knobs then
         viewEmpty
 

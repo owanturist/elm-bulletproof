@@ -17,19 +17,15 @@ storyGeneral : Bulletproof.Story
 storyGeneral =
     Bulletproof.batch
         [ Bulletproof.story "Empty"
-            (Knob.view viewport [] Knob.initial)
+            (Knob.view viewport Knob.initial [])
 
         --
         , Bulletproof.story "Multiple"
             (\n ->
-                Knob.view viewport
-                    (List.map
-                        (\i ->
-                            ( "Knob #" ++ String.fromInt i, Knob.Bool True )
-                        )
-                        (List.reverse (List.range 1 n))
-                    )
-                    Knob.initial
+                List.range 1 n
+                    |> List.reverse
+                    |> List.map (\i -> ( "Knob #" ++ String.fromInt i, Knob.Bool True ))
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.int "Amount of Knobs"
                 10
@@ -46,10 +42,9 @@ storyBool =
     Bulletproof.batch
         [ Bulletproof.story "Bool false"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.Bool value )
-                    ]
-                    Knob.initial
+                ( title, Knob.Bool value )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Bool"
             |> Bulletproof.Knob.bool "Value" False
@@ -57,10 +52,9 @@ storyBool =
         --
         , Bulletproof.story "Bool true"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.Bool value )
-                    ]
-                    Knob.initial
+                ( title, Knob.Bool value )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Bool"
             |> Bulletproof.Knob.bool "Value" True
@@ -73,10 +67,9 @@ storyString =
     Bulletproof.batch
         [ Bulletproof.story "String empty"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.String value )
-                    ]
-                    Knob.initial
+                ( title, Knob.String value )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "String"
             |> Bulletproof.Knob.string "Value" ""
@@ -84,10 +77,9 @@ storyString =
         --
         , Bulletproof.story "String single line"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.String value )
-                    ]
-                    Knob.initial
+                ( title, Knob.String value )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "String"
             |> Bulletproof.Knob.string "Value" "A single line"
@@ -95,10 +87,9 @@ storyString =
         --
         , Bulletproof.story "Single long line"
             (\title value n ->
-                Knob.view viewport
-                    [ ( title, Knob.String (String.repeat n value) )
-                    ]
-                    Knob.initial
+                ( title, Knob.String (String.repeat n value) )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "String"
             |> Bulletproof.Knob.string "Value" "A_single_long_line"
@@ -112,10 +103,9 @@ storyString =
         --
         , Bulletproof.story "String multiline"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.String value )
-                    ]
-                    Knob.initial
+                ( title, Knob.String value )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "String"
             |> Bulletproof.Knob.string "Value" "First line\nSecond line"
@@ -128,10 +118,16 @@ storyInt =
     Bulletproof.batch
         [ Bulletproof.story "Int input"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.Int False value { min = Nothing, max = Nothing, step = Nothing } )
-                    ]
-                    Knob.initial
+                ( title
+                , Knob.Int False
+                    value
+                    { min = Nothing
+                    , max = Nothing
+                    , step = Nothing
+                    }
+                )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Int"
             |> Bulletproof.Knob.int "Value" 0 []
@@ -139,10 +135,16 @@ storyInt =
         --
         , Bulletproof.story "Int range"
             (\title value min max ->
-                Knob.view viewport
-                    [ ( title, Knob.Int True value { min = min, max = max, step = Nothing } )
-                    ]
-                    Knob.initial
+                ( title
+                , Knob.Int True
+                    value
+                    { min = min
+                    , max = max
+                    , step = Nothing
+                    }
+                )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Int"
             |> Bulletproof.Knob.int "Value"
@@ -173,10 +175,16 @@ storyFloat =
     Bulletproof.batch
         [ Bulletproof.story "Float input"
             (\title value ->
-                Knob.view viewport
-                    [ ( title, Knob.Float False value { min = Nothing, max = Nothing, step = Nothing } )
-                    ]
-                    Knob.initial
+                ( title
+                , Knob.Float False
+                    value
+                    { min = Nothing
+                    , max = Nothing
+                    , step = Nothing
+                    }
+                )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Float"
             |> Bulletproof.Knob.float "Value" 0 []
@@ -184,10 +192,16 @@ storyFloat =
         --
         , Bulletproof.story "Float range"
             (\title value min max ->
-                Knob.view viewport
-                    [ ( title, Knob.Float True value { min = min, max = max, step = Nothing } )
-                    ]
-                    Knob.initial
+                ( title
+                , Knob.Float True
+                    value
+                    { min = min
+                    , max = max
+                    , step = Nothing
+                    }
+                )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Float"
             |> Bulletproof.Knob.float "Value"
@@ -218,14 +232,13 @@ storyRadio =
     Bulletproof.batch
         [ Bulletproof.story "Radio with options"
             (\title optionNamePattern n ->
-                Knob.view viewport
-                    [ ( title
-                      , List.range 1 n
-                            |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
-                            |> Knob.Radio
-                      )
-                    ]
-                    Knob.initial
+                ( title
+                , List.range 1 n
+                    |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
+                    |> Knob.Radio
+                )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Radio"
             |> Bulletproof.Knob.string "Option Name pattern" "Option #${index}"
@@ -244,16 +257,15 @@ storyRadio =
                     , Css.backgroundColor (Css.hex "#ccc")
                     ]
                     []
-                    [ Knob.view viewport
-                        [ ( title
-                          , Knob.Radio
-                                [ "Option #1"
-                                , String.repeat n longString
-                                , "Option #3"
-                                ]
-                          )
-                        ]
-                        Knob.initial
+                    [ ( title
+                      , Knob.Radio
+                            [ "Option #1"
+                            , String.repeat n longString
+                            , "Option #3"
+                            ]
+                      )
+                        |> List.singleton
+                        |> Knob.view viewport Knob.initial
                     ]
             )
             |> Bulletproof.Knob.string "Title" "Radio"
@@ -277,14 +289,13 @@ storySelect =
     Bulletproof.batch
         [ Bulletproof.story "Select with options"
             (\title optionNamePattern n ->
-                Knob.view viewport
-                    [ ( title
-                      , List.range 1 n
-                            |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
-                            |> Knob.Select
-                      )
-                    ]
-                    Knob.initial
+                ( title
+                , List.range 1 n
+                    |> List.map (\i -> String.replace "${index}" (String.fromInt i) optionNamePattern)
+                    |> Knob.Select
+                )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Select"
             |> Bulletproof.Knob.string "Option Name pattern" "Option #${index}"
@@ -303,16 +314,15 @@ storySelect =
                     , Css.backgroundColor (Css.hex "#ccc")
                     ]
                     []
-                    [ Knob.view viewport
-                        [ ( title
-                          , Knob.Select
-                                [ "Option #1"
-                                , String.repeat n longString
-                                , "Option #3"
-                                ]
-                          )
-                        ]
-                        Knob.initial
+                    [ ( title
+                      , Knob.Select
+                            [ "Option #1"
+                            , String.repeat n longString
+                            , "Option #3"
+                            ]
+                      )
+                        |> List.singleton
+                        |> Knob.view viewport Knob.initial
                     ]
             )
             |> Bulletproof.Knob.string "Title" "Select"
@@ -336,11 +346,9 @@ storyColor =
     Bulletproof.batch
         [ Bulletproof.story "Color by string"
             (\title hex ->
-                Knob.view
-                    viewport
-                    [ ( title, Knob.Color hex )
-                    ]
-                    Knob.initial
+                ( title, Knob.Color hex )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Color"
             |> Bulletproof.Knob.string "Value (hex)" "#1ea5fd"
@@ -348,11 +356,9 @@ storyColor =
         --
         , Bulletproof.story "Color by color"
             (\title color ->
-                Knob.view
-                    viewport
-                    [ ( title, Knob.Color color.hex )
-                    ]
-                    Knob.initial
+                ( title, Knob.Color color.hex )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Color"
             |> Bulletproof.Knob.color "Value" "#1ea5fd"
@@ -365,11 +371,9 @@ storyDate =
     Bulletproof.batch
         [ Bulletproof.story "Date by string"
             (\title date ->
-                Knob.view
-                    viewport
-                    [ ( title, Knob.Date date )
-                    ]
-                    Knob.initial
+                ( title, Knob.Date date )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Date"
             |> Bulletproof.Knob.string "Value (yyyy-mm-dd)" "2021-02-20"
@@ -377,11 +381,9 @@ storyDate =
         --
         , Bulletproof.story "Date by date"
             (\title date ->
-                Knob.view
-                    viewport
-                    [ ( title, Knob.Date (Date.dateToString date) )
-                    ]
-                    Knob.initial
+                ( title, Knob.Date (Date.dateToString date) )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Date"
             |> Bulletproof.Knob.date "Value" "1993-02-09"
@@ -394,11 +396,9 @@ storyTime =
     Bulletproof.batch
         [ Bulletproof.story "Time by string"
             (\title time ->
-                Knob.view
-                    viewport
-                    [ ( title, Knob.Time time )
-                    ]
-                    Knob.initial
+                ( title, Knob.Time time )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Time"
             |> Bulletproof.Knob.string "Value" "16:38"
@@ -406,11 +406,9 @@ storyTime =
         --
         , Bulletproof.story "Time by time"
             (\title time ->
-                Knob.view
-                    viewport
-                    [ ( title, Knob.Time (Date.timeToString time) )
-                    ]
-                    Knob.initial
+                ( title, Knob.Time (Date.timeToString time) )
+                    |> List.singleton
+                    |> Knob.view viewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Time"
             |> Bulletproof.Knob.time "Value" "06:38"
@@ -422,11 +420,9 @@ storyFiles : Bulletproof.Story
 storyFiles =
     Bulletproof.story "Files"
         (\title ->
-            Knob.view
-                viewport
-                [ ( title, Knob.Files )
-                ]
-                Knob.initial
+            ( title, Knob.Files )
+                |> List.singleton
+                |> Knob.view viewport Knob.initial
         )
         |> Bulletproof.Knob.string "Title" "Files"
         |> Bulletproof.htmlFrom Html.Styled.toUnstyled
@@ -437,11 +433,9 @@ storyViewport =
     Bulletproof.batch
         [ Bulletproof.story "Viewport by input"
             (\title width height ->
-                Knob.view
-                    (Bulletproof.Knob.Viewport width height)
-                    [ ( title, Knob.StoryViewport )
-                    ]
-                    Knob.initial
+                ( title, Knob.StoryViewport )
+                    |> List.singleton
+                    |> Knob.view (Bulletproof.Knob.Viewport width height) Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Viewport"
             |> Bulletproof.Knob.int "Width"
@@ -456,11 +450,9 @@ storyViewport =
         --
         , Bulletproof.story "Viewport by viewport"
             (\title customViewport ->
-                Knob.view
-                    customViewport
-                    [ ( title, Knob.StoryViewport )
-                    ]
-                    Knob.initial
+                ( title, Knob.StoryViewport )
+                    |> List.singleton
+                    |> Knob.view customViewport Knob.initial
             )
             |> Bulletproof.Knob.string "Title" "Viewport"
             |> Bulletproof.Knob.viewport
