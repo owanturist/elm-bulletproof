@@ -67,7 +67,7 @@ validateLimits { onStep, onLeft, onRight, onBoth } name number limits =
     [ Maybe.andThen (\step -> ifelse (step > 0) Nothing (Just (onStep name step))) limits.step
     , Maybe.andThen (\min -> ifelse (number >= min) Nothing (Just (onLeft name number min))) limits.min
     , Maybe.andThen (\max -> ifelse (number <= max) Nothing (Just (onRight name number max))) limits.max
-    , Maybe.andThen (\( min, max ) -> ifelse (min <= max) Nothing (Just (onBoth name min max))) (Maybe.map2 Tuple.pair limits.min limits.max)
+    , Maybe.andThen (\( min, max ) -> ifelse (min < max) Nothing (Just (onBoth name min max))) (Maybe.map2 Tuple.pair limits.min limits.max)
     ]
         |> List.filterMap identity
 
@@ -334,7 +334,7 @@ explanationEmptyLabelTitle =
         [ textCode "Bulletproof.label"
         , text " has either empty or blank title"
         ]
-        [ text "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty nor blank title."
         ]
         """
 [ Bulletproof.label ""
@@ -358,7 +358,7 @@ explanationEmptyTodoTitle =
         [ textCode "Bulletproof.todo"
         , text " has either empty or blank title"
         ]
-        [ text "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty nor blank title."
         ]
         """
 [ Bulletproof.todo ""
@@ -382,27 +382,21 @@ explanationEmptyStoryTitle =
         [ textCode "Bulletproof.story"
         , text " has either empty or blank title"
         ]
-        [ text "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty nor blank title."
         ]
         """
-[ Bulletproof.story ""
-[ Bulletproof.story "Not empty title"
-    (burgerIcon
-        |> Bulletproof.fromHtml
-    )
+[ Bulletproof.story "" burgerIcon
+[ Bulletproof.story "Not empty title" burgerIcon
 
 --
-, Bulletproof.story "   "
-, Bulletproof.story "Not blank title"
-    (timesIcon
-        |> Bulletproof.fromHtml
-    )
+, Bulletproof.story "   " burgerIcon
+, Bulletproof.story "Not blank title" burgerIcon
 ]
 """
         [ ( SyntaxHighlight.Del, 0, 1 )
         , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 7, 8 )
-        , ( SyntaxHighlight.Add, 8, 9 )
+        , ( SyntaxHighlight.Del, 4, 5 )
+        , ( SyntaxHighlight.Add, 5, 6 )
         ]
 
 
@@ -412,7 +406,7 @@ explanationEmptyFolderTitle =
         [ textCode "Bulletproof.folder"
         , text " has either empty or blank title"
         ]
-        [ text "Please make sure you've defined neither empty or blank title."
+        [ text "Please make sure you've defined neither empty nor blank title."
         ]
         """
 [ Bulletproof.folder "" []
@@ -472,11 +466,8 @@ explanationDuplicateStories title n =
 , Bulletproof.todo "Icon user"
 
 --
-, Bulletproof.story "Icon"
-, Bulletproof.story "Icon burger"
-    (burgerIcon
-        |> Bulletproof.fromHtml
-    )
+, Bulletproof.story "Icon" burgerIcon
+, Bulletproof.story "Icon burger" burgerIcon
 ]
 """
         [ ( SyntaxHighlight.Del, 0, 1 )
@@ -530,7 +521,7 @@ explanationEmptyKnobTitle =
         [ textCode "Bulletproof.Knob.*"
         , text " has either empty or blank name"
         ]
-        [ text "Please make sure you've defined neither empty or blank name."
+        [ text "Please make sure you've defined neither empty nor blank name."
         ]
         """
 Bulletproof.story "Button"
@@ -540,17 +531,16 @@ Bulletproof.story "Button"
             ]
             [ text buttonText
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.string "" "Funny Button"
     |> Bulletproof.Knob.string "Not empty knob" "Funny Button"
     |> Bulletproof.Knob.int "  " 0
     |> Bulletproof.Knob.int "Not blank knob" 0
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
-        , ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ ( SyntaxHighlight.Del, 8, 9 )
+        , ( SyntaxHighlight.Add, 9, 10 )
+        , ( SyntaxHighlight.Del, 10, 11 )
+        , ( SyntaxHighlight.Add, 11, 12 )
         ]
 
 
@@ -570,17 +560,16 @@ Bulletproof.story "Button"
             ]
             [ text buttonText
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.string "Property" "Funny Button"
     |> Bulletproof.Knob.string "Text" "Funny Button"
     |> Bulletproof.Knob.int "Property" 0
     |> Bulletproof.Knob.int "Tab Index" 0
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
-        , ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ ( SyntaxHighlight.Del, 8, 9 )
+        , ( SyntaxHighlight.Add, 9, 10 )
+        , ( SyntaxHighlight.Del, 10, 11 )
+        , ( SyntaxHighlight.Add, 11, 12 )
         ]
 
 
@@ -600,7 +589,6 @@ Bulletproof.story "Button"
             ]
             [ text "Funny Button"
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.${knob} "Button type"
         []
@@ -611,8 +599,8 @@ Bulletproof.story "Button"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 15 )
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 14 )
         ]
 
 
@@ -632,19 +620,16 @@ Bulletproof.story "Button"
             ]
             [ text "Funny Button"
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.${knob} "Button type"
         [ ( "button", "button" )
-        ]
         , ( "reset", "reset" )
         , ( "submit", "submit" )
         ]
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 15 )
+        [ ( SyntaxHighlight.Add, 10, 12 )
         ]
 
 
@@ -654,7 +639,7 @@ explanationEmptyChoiceOption choice name =
         [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text " has either empty or blank options"
         ]
-        [ text "Please make sure you've defined neither empty or blank options."
+        [ text "Please make sure you've defined neither empty nor blank options."
         ]
         ("""
 Bulletproof.story "Input"
@@ -664,12 +649,11 @@ Bulletproof.story "Input"
             , value inputValue
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.${knob} "Input value"
         [ ( "", "" )
-        [ ( "empty string", "" )
         , ( "   ", "   " )
+        [ ( "empty string", "" )
         , ( "blank string", "   " )
         , ( "short string", "Hello World!" )
         , ( "long string", "Lorem ipsum dolor..." )
@@ -677,10 +661,8 @@ Bulletproof.story "Input"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
-        , ( SyntaxHighlight.Del, 12, 13 )
-        , ( SyntaxHighlight.Add, 13, 14 )
+        [ ( SyntaxHighlight.Del, 9, 11 )
+        , ( SyntaxHighlight.Add, 11, 15 )
         ]
 
 
@@ -700,7 +682,6 @@ Bulletproof.story "Input"
             [ type_ inputType
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.${knob} "Input type"
         [ ( "string", "text" )
@@ -713,8 +694,8 @@ Bulletproof.story "Input"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 9, 12 )
-        , ( SyntaxHighlight.Add, 12, 15 )
+        [ ( SyntaxHighlight.Del, 8, 11 )
+        , ( SyntaxHighlight.Add, 11, 14 )
         ]
 
 
@@ -725,7 +706,7 @@ explanationInvalidIntStep name step =
         , text " has not positive "
         , textCode ("Bulletproof.Knob.step " ++ String.fromInt step)
         ]
-        [ text "Please make sure you've defined a positive step."
+        [ text "Please make sure you've defined step greater than 0."
         ]
         """
 Bulletproof.story "Input"
@@ -734,7 +715,6 @@ Bulletproof.story "Input"
             [ size inputSize
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.int "Input size"
         200
@@ -744,8 +724,102 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 12, 13 )
-        , ( SyntaxHighlight.Add, 13, 14 )
+        [ ( SyntaxHighlight.Del, 11, 12 )
+        , ( SyntaxHighlight.Add, 12, 13 )
+        ]
+
+
+explanationInvalidIntMin : String -> Int -> Int -> Explanation msg
+explanationInvalidIntMin name value min =
+    Explanation
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
+        , text " has "
+        , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
+        , text " greater than actual value"
+        ]
+        [ text "Please make sure that minimum boundary is lower or equal to the value."
+        ]
+        """
+Bulletproof.story "Input"
+    (\\inputSize ->
+        input
+            [ size inputSize
+            ]
+            []
+    )
+    |> Bulletproof.Knob.int "Input size"
+        200
+        [ Bulletproof.Knob.min 300
+        [ Bulletproof.Knob.min 100
+        , Bulletproof.Knob.max 1000
+        , Bulletproof.Knob.step 10
+        ]
+"""
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 11 )
+        ]
+
+
+explanationInvalidIntMax : String -> Int -> Int -> Explanation msg
+explanationInvalidIntMax name value max =
+    Explanation
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
+        , text " has "
+        , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
+        , text " lower than actual value"
+        ]
+        [ text "Please make sure the maximum boundary is greater or equal to the value."
+        ]
+        """
+Bulletproof.story "Input"
+    (\\inputSize ->
+        input
+            [ size inputSize
+            ]
+            []
+    )
+    |> Bulletproof.Knob.int "Input size"
+        500
+        [ Bulletproof.Knob.min 100
+        , Bulletproof.Knob.max 200
+        , Bulletproof.Knob.max 1000
+        , Bulletproof.Knob.step 10
+        ]
+"""
+        [ ( SyntaxHighlight.Del, 10, 11 )
+        , ( SyntaxHighlight.Add, 11, 12 )
+        ]
+
+
+explanationInvalidIntMinMax : String -> Int -> Int -> Explanation msg
+explanationInvalidIntMinMax name min max =
+    Explanation
+        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" ")
+        , text " has "
+        , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
+        , text " greater than "
+        , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
+        ]
+        [ text "Please make sure the minimum boundary lower than the maximum boundary."
+        ]
+        """
+Bulletproof.story "Input"
+    (\\inputSize ->
+        input
+            [ size inputSize
+            ]
+            []
+    )
+    |> Bulletproof.Knob.int "Input size"
+        500
+        [ Bulletproof.Knob.min 2000
+        [ Bulletproof.Knob.min 100
+        , Bulletproof.Knob.max 1000
+        , Bulletproof.Knob.step 10
+        ]
+"""
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 11 )
         ]
 
 
@@ -756,7 +830,7 @@ explanationInvalidFloatStep name step =
         , text " has not positive "
         , textCode ("Bulletproof.Knob.step " ++ String.fromFloat step)
         ]
-        [ text "Please make sure you've defined a positive step."
+        [ text "Please make sure you've defined step greater than 0."
         ]
         """
 Bulletproof.story "Progressbar"
@@ -765,7 +839,6 @@ Bulletproof.story "Progressbar"
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.float "Progress value"
         0.42
@@ -775,40 +848,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 12, 13 )
-        , ( SyntaxHighlight.Add, 13, 14 )
-        ]
-
-
-explanationInvalidIntMin : String -> Int -> Int -> Explanation msg
-explanationInvalidIntMin name value min =
-    Explanation
-        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
-        , text " has "
-        , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
-        , text " more than actual value"
-        ]
-        [ text "Please make sure the min boundary is less or equal to the value."
-        ]
-        """
-Bulletproof.story "Input"
-    (\\inputSize ->
-        input
-            [ size inputSize
-            ]
-            []
-            |> Bulletproof.fromHtml
-    )
-    |> Bulletproof.Knob.int "Input size"
-        200
-        [ Bulletproof.Knob.min 300
-        [ Bulletproof.Knob.min 100
-        , Bulletproof.Knob.max 1000
-        , Bulletproof.Knob.step 10
-        ]
-"""
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ ( SyntaxHighlight.Del, 11, 12 )
+        , ( SyntaxHighlight.Add, 12, 13 )
         ]
 
 
@@ -818,9 +859,9 @@ explanationInvalidFloatMin name value min =
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" " ++ String.fromFloat value)
         , text " has "
         , textCode ("Bulletproof.Knob.min " ++ String.fromFloat min)
-        , text " more than actual value"
+        , text " greater than actual value"
         ]
-        [ text "Please make sure the min boundary is less or equal to the value."
+        [ text "Please make sure that minimum boundary is lower or equal to the value."
         ]
         """
 Bulletproof.story "Progressbar"
@@ -829,7 +870,6 @@ Bulletproof.story "Progressbar"
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.float "Progress value"
         0.42
@@ -839,40 +879,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
-        ]
-
-
-explanationInvalidIntMax : String -> Int -> Int -> Explanation msg
-explanationInvalidIntMax name value max =
-    Explanation
-        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" " ++ String.fromInt value)
-        , text " has "
-        , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
-        , text " less than actual value"
-        ]
-        [ text "Please make sure the max boundary is more or equal to the value."
-        ]
-        """
-Bulletproof.story "Input"
-    (\\inputSize ->
-        input
-            [ size inputSize
-            ]
-            []
-            |> Bulletproof.fromHtml
-    )
-    |> Bulletproof.Knob.int "Input size"
-        500
-        [ Bulletproof.Knob.min 100
-        , Bulletproof.Knob.max 200
-        , Bulletproof.Knob.max 1000
-        , Bulletproof.Knob.step 10
-        ]
-"""
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 11 )
         ]
 
 
@@ -882,9 +890,9 @@ explanationInvalidFloatMax name value max =
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" " ++ String.fromFloat value)
         , text " has "
         , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
-        , text " less than actual value"
+        , text " lower than actual value"
         ]
-        [ text "Please make sure the max boundary is more or equal to the value."
+        [ text "Please make sure the maximum boundary is greater or equal to the value."
         ]
         """
 Bulletproof.story "Progressbar"
@@ -893,7 +901,6 @@ Bulletproof.story "Progressbar"
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.float "Progress value"
         0.42
@@ -901,39 +908,6 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.max 0.3
         , Bulletproof.Knob.max 1
         , Bulletproof.Knob.step 0.01
-        ]
-"""
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
-        ]
-
-
-explanationInvalidIntMinMax : String -> Int -> Int -> Explanation msg
-explanationInvalidIntMinMax name min max =
-    Explanation
-        [ textCode ("Bulletproof.Knob.int" ++ " \"" ++ name ++ "\" ")
-        , text " has "
-        , textCode ("Bulletproof.Knob.min " ++ String.fromInt min)
-        , text " more than "
-        , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
-        ]
-        [ text "Please make sure the min boundary less or equal to the max boundary."
-        ]
-        """
-Bulletproof.story "Input"
-    (\\inputSize ->
-        input
-            [ size inputSize
-            ]
-            []
-            |> Bulletproof.fromHtml
-    )
-    |> Bulletproof.Knob.int "Input size"
-        500
-        [ Bulletproof.Knob.min 2000
-        [ Bulletproof.Knob.min 100
-        , Bulletproof.Knob.max 1000
-        , Bulletproof.Knob.step 10
         ]
 """
         [ ( SyntaxHighlight.Del, 10, 11 )
@@ -947,10 +921,10 @@ explanationInvalidFloatMinMax name min max =
         [ textCode ("Bulletproof.Knob.float" ++ " \"" ++ name ++ "\" ")
         , text " has "
         , textCode ("Bulletproof.Knob.min " ++ String.fromFloat min)
-        , text " more than "
+        , text " greater than "
         , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
         ]
-        [ text "Please make sure the min boundary less or equal to the max boundary."
+        [ text "Please make sure the minimum boundary lower than the maximum boundary."
         ]
         """
 Bulletproof.story "Progressbar"
@@ -959,7 +933,6 @@ Bulletproof.story "Progressbar"
             [ style "width" (String.fromFloat (100 * percent) ++ "%")
             ]
             []
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.float "Progress value"
         0.42
@@ -969,8 +942,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 11 )
         ]
 
 
@@ -994,13 +967,12 @@ Bulletproof.story "Colored Button"
             ]
             [ text "Funny Button"
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.color "Button color" "#cc0f"
     |> Bulletproof.Knob.color "Button color" "#cc0"
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ ( SyntaxHighlight.Del, 8, 9 )
+        , ( SyntaxHighlight.Add, 9, 10 )
         ]
 
 
@@ -1027,13 +999,12 @@ Bulletproof.story "Date show"
             , text (", Month " ++ String.fromInt date.month)
             , text (", Year " ++ String.fromInt date.year)
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.date "Show date" "32-13-2020"
-    |> Bulletproof.Knob.date "Show date" "02-02-2020"
+    |> Bulletproof.Knob.date "Show date" "29-02-2020"
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ ( SyntaxHighlight.Del, 9, 10 )
+        , ( SyntaxHighlight.Add, 10, 11 )
         ]
 
 
@@ -1055,13 +1026,12 @@ Bulletproof.story "Time show"
             [ text ("Minutes " ++ String.fromInt time.minutes)
             , text (", Hours " ++ String.fromInt time.hours)
             ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.time "Show time" "24:00"
     |> Bulletproof.Knob.time "Show time" "00:00"
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ ( SyntaxHighlight.Del, 8, 9 )
+        , ( SyntaxHighlight.Add, 9, 10 )
         ]
 
 
@@ -1075,26 +1045,20 @@ explanationDuplicateStoryViewport n =
         ]
         """
 Bulletproof.story "Button"
-    (\\viewport1 viewport2 ->
-    (\\viewport ->
+    (\\{ width } { height } ->
+    (\\{ width, height } ->
         button
-            [ style "width" (String.fromInt viewport1.width ++ "px")
-            , style "height" (String.fromInt viewport2.height ++ "px")
-            [ style "width" (String.fromInt viewport.width ++ "px")
-            , style "height" (String.fromInt viewport.height ++ "px")
+            [ style "width" (String.fromInt width ++ "px")
+            , style "height" (String.fromInt height ++ "px")
+            [ text "Hi, I'm Elfo!"
             ]
-            [ text "Hi, I am Elfo!"
-            ]
-            |> Bulletproof.fromHtml
     )
     |> Bulletproof.Knob.viewport
     |> Bulletproof.Knob.viewport
 """
         [ ( SyntaxHighlight.Del, 1, 2 )
         , ( SyntaxHighlight.Add, 2, 3 )
-        , ( SyntaxHighlight.Del, 4, 6 )
-        , ( SyntaxHighlight.Add, 6, 8 )
-        , ( SyntaxHighlight.Del, 14, 15 )
+        , ( SyntaxHighlight.Del, 10, 11 )
         ]
 
 
@@ -1143,23 +1107,23 @@ reasonToExplanation reason =
         InvalidIntStep name step ->
             explanationInvalidIntStep name step
 
-        InvalidFloatStep name step ->
-            explanationInvalidFloatStep name step
-
         InvalidIntMin name value min ->
             explanationInvalidIntMin name value min
-
-        InvalidFloatMin name value min ->
-            explanationInvalidFloatMin name value min
 
         InvalidIntMax name value max ->
             explanationInvalidIntMax name value max
 
-        InvalidFloatMax name value max ->
-            explanationInvalidFloatMax name value max
-
         InvalidIntMinMax name min max ->
             explanationInvalidIntMinMax name min max
+
+        InvalidFloatStep name step ->
+            explanationInvalidFloatStep name step
+
+        InvalidFloatMin name value min ->
+            explanationInvalidFloatMin name value min
+
+        InvalidFloatMax name value max ->
+            explanationInvalidFloatMax name value max
 
         InvalidFloatMinMax name min max ->
             explanationInvalidFloatMinMax name min max
