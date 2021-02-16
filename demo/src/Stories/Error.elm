@@ -165,6 +165,15 @@ story =
             |> Bulletproof.Knob.string "Knob name" "Radio name"
 
         --
+        , Bulletproof.story "Singleton Radio"
+            (\name ->
+                Error.view
+                    [ Error defaultPath (Error.SingletonChoice "radio" name)
+                    ]
+            )
+            |> Bulletproof.Knob.string "Knob name" "Radio name"
+
+        --
         , Bulletproof.story "Empty Radio Option"
             (\name ->
                 Error.view
@@ -197,6 +206,15 @@ story =
             (\name ->
                 Error.view
                     [ Error defaultPath (Error.EmptyChoice "select" name)
+                    ]
+            )
+            |> Bulletproof.Knob.string "Knob name" "Select name"
+
+        --
+        , Bulletproof.story "Singleton Select"
+            (\name ->
+                Error.view
+                    [ Error defaultPath (Error.SingletonChoice "select" name)
                     ]
             )
             |> Bulletproof.Knob.string "Knob name" "Select name"

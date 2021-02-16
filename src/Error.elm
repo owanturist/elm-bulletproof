@@ -26,6 +26,7 @@ type Reason
     | DuplicateFolders String Int
     | DuplicateKnobs String Int
     | EmptyChoice String String
+    | SingletonChoice String String
     | EmptyChoiceOption String String
     | DuplicateChoiceOptions String String String Int
     | InvalidIntStep String Int
@@ -93,16 +94,21 @@ validateFloatLimits =
 
 validateChoice : String -> String -> List String -> List Reason
 validateChoice choice name options =
-    if List.isEmpty options then
-        [ EmptyChoice choice name ]
+    case options of
+        [] ->
+            [ EmptyChoice choice name ]
 
-    else if List.member "" options then
-        [ EmptyChoiceOption choice name ]
+        _ :: [] ->
+            [ SingletonChoice choice name ]
 
-    else
-        List.map
-            (\( option, n ) -> DuplicateChoiceOptions choice name option n)
-            (countList options)
+        _ ->
+            if List.member "" options then
+                [ EmptyChoiceOption choice name ]
+
+            else
+                List.map
+                    (\( option, n ) -> DuplicateChoiceOptions choice name option n)
+                    (countList options)
 
 
 validateColor : String -> String -> List Reason
@@ -584,7 +590,7 @@ explanationEmptyChoice choice name =
         [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text " has no options"
         ]
-        [ text "Please make sure you've defined neither empty or blank options."
+        [ text "Please make sure you've defined any options."
         ]
         ("""
 Bulletproof.story "Button"
@@ -607,6 +613,38 @@ Bulletproof.story "Button"
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 15 )
+        ]
+
+
+explanationSingletonChoice : String -> String -> Explanation msg
+explanationSingletonChoice choice name =
+    Explanation
+        [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
+        , text " has only one option"
+        ]
+        [ text "Please make sure you've defined two or more options."
+        ]
+        ("""
+Bulletproof.story "Button"
+    (\\buttonType ->
+        button
+            [ type_ buttonType
+            ]
+            [ text "Funny Button"
+            ]
+            |> Bulletproof.fromHtml
+    )
+    |> Bulletproof.Knob.${knob} "Button type"
+        [ ( "button", "button" )
+        ]
+        , ( "reset", "reset" )
+        , ( "submit", "submit" )
+        ]
+"""
+            |> String.replace "${knob}" choice
+        )
+        [ ( SyntaxHighlight.Del, 11, 12 )
+        , ( SyntaxHighlight.Add, 12, 15 )
         ]
 
 
@@ -1093,6 +1131,9 @@ reasonToExplanation reason =
         EmptyChoice choice name ->
             explanationEmptyChoice choice name
 
+        SingletonChoice choice name ->
+            explanationSingletonChoice choice name
+
         EmptyChoiceOption choice name ->
             explanationEmptyChoiceOption choice name
 
@@ -1139,7 +1180,7 @@ reasonToExplanation reason =
 styledLabel : List (Html msg) -> Html msg
 styledLabel =
     styled div
-        [ Css.marginBottom (Css.px 4)
+        [ Css.marginTop (Css.px 6)
         , Css.fontWeight Css.bold
         , Css.fontSize (Css.px 14)
         , Css.lineHeight (Css.px 24)
@@ -1150,7 +1191,7 @@ styledLabel =
 styledDescription : List (Html msg) -> Html msg
 styledDescription =
     styled p
-        [ Css.margin3 (Css.px 12) Css.zero Css.zero
+        [ Css.margin3 (Css.px 8) Css.zero Css.zero
         , Css.fontSize (Css.px 13)
         ]
         []
@@ -1165,6 +1206,7 @@ styledPath =
         , Css.borderRadius (Css.px 3)
         , Css.fontFamily Css.monospace
         , Css.fontSize (Css.px 10)
+        , Css.lineHeight (Css.int 2)
         ]
 
 
@@ -1224,8 +1266,8 @@ viewError error =
             reasonToExplanation error.reason
     in
     styledError
-        [ styledLabel explanation.label
-        , viewPath error.path
+        [ viewPath error.path
+        , styledLabel explanation.label
         , styledDescription explanation.description
         , viewCodeExample explanation.code explanation.diffs
         ]
