@@ -26,6 +26,7 @@ type Reason
     | DuplicateFolders String Int
     | DuplicateKnobs String Int
     | EmptyChoice String String
+    | SingletonChoice String String
     | EmptyChoiceOption String String
     | DuplicateChoiceOptions String String String Int
     | InvalidIntStep String Int
@@ -93,16 +94,21 @@ validateFloatLimits =
 
 validateChoice : String -> String -> List String -> List Reason
 validateChoice choice name options =
-    if List.isEmpty options then
-        [ EmptyChoice choice name ]
+    case options of
+        [] ->
+            [ EmptyChoice choice name ]
 
-    else if List.member "" options then
-        [ EmptyChoiceOption choice name ]
+        _ :: [] ->
+            [ SingletonChoice choice name ]
 
-    else
-        List.map
-            (\( option, n ) -> DuplicateChoiceOptions choice name option n)
-            (countList options)
+        _ ->
+            if List.member "" options then
+                [ EmptyChoiceOption choice name ]
+
+            else
+                List.map
+                    (\( option, n ) -> DuplicateChoiceOptions choice name option n)
+                    (countList options)
 
 
 validateColor : String -> String -> List Reason
@@ -584,7 +590,7 @@ explanationEmptyChoice choice name =
         [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text " has no options"
         ]
-        [ text "Please make sure you've defined neither empty or blank options."
+        [ text "Please make sure you've defined neither any options."
         ]
         ("""
 Bulletproof.story "Button"
@@ -607,6 +613,38 @@ Bulletproof.story "Button"
         )
         [ ( SyntaxHighlight.Del, 10, 11 )
         , ( SyntaxHighlight.Add, 11, 15 )
+        ]
+
+
+explanationSingletonChoice : String -> String -> Explanation msg
+explanationSingletonChoice choice name =
+    Explanation
+        [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
+        , text " has only one option"
+        ]
+        [ text "Please make sure you've defined two or more options."
+        ]
+        ("""
+Bulletproof.story "Button"
+    (\\buttonType ->
+        button
+            [ type_ buttonType
+            ]
+            [ text "Funny Button"
+            ]
+            |> Bulletproof.fromHtml
+    )
+    |> Bulletproof.Knob.${knob} "Button type"
+        [ ( "button", "button" )
+        ]
+        , ( "reset", "reset" )
+        , ( "submit", "submit" )
+        ]
+"""
+            |> String.replace "${knob}" choice
+        )
+        [ ( SyntaxHighlight.Del, 11, 12 )
+        , ( SyntaxHighlight.Add, 12, 15 )
         ]
 
 
@@ -1092,6 +1130,9 @@ reasonToExplanation reason =
 
         EmptyChoice choice name ->
             explanationEmptyChoice choice name
+
+        SingletonChoice choice name ->
+            explanationSingletonChoice choice name
 
         EmptyChoiceOption choice name ->
             explanationEmptyChoiceOption choice name
