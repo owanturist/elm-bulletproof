@@ -527,10 +527,10 @@ story =
         , dateStory
 
         --
-        , Bulletproof.label "Time"
+        , Bulletproof.label "TIME"
         , timeStory
 
         --
-        , Bulletproof.label "Viewport"
+        , Bulletproof.label "VIEWPORT"
         , viewportStory
         ]

@@ -768,7 +768,7 @@ explanationInvalidIntMax name value max =
         , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
         , text " lower than actual value"
         ]
-        [ text "Please make sure the maximum boundary is greater or equal to the value."
+        [ text "Please make sure that maximum boundary is greater or equal to the value."
         ]
         """
 Bulletproof.story "Input"
@@ -800,7 +800,7 @@ explanationInvalidIntMinMax name min max =
         , text " greater than "
         , textCode ("Bulletproof.Knob.max " ++ String.fromInt max)
         ]
-        [ text "Please make sure the minimum boundary lower than the maximum boundary."
+        [ text "Please make sure that minimum boundary lower than the maximum boundary."
         ]
         """
 Bulletproof.story "Input"
@@ -892,7 +892,7 @@ explanationInvalidFloatMax name value max =
         , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
         , text " lower than actual value"
         ]
-        [ text "Please make sure the maximum boundary is greater or equal to the value."
+        [ text "Please make sure that maximum boundary is greater or equal to the value."
         ]
         """
 Bulletproof.story "Progressbar"
@@ -924,7 +924,7 @@ explanationInvalidFloatMinMax name min max =
         , text " greater than "
         , textCode ("Bulletproof.Knob.max " ++ String.fromFloat max)
         ]
-        [ text "Please make sure the minimum boundary lower than the maximum boundary."
+        [ text "Please make sure that minimum boundary lower than the maximum boundary."
         ]
         """
 Bulletproof.story "Progressbar"
