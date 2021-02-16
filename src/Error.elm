@@ -590,7 +590,7 @@ explanationEmptyChoice choice name =
         [ textCode ("Bulletproof.Knob." ++ choice ++ " \"" ++ name ++ "\" ")
         , text " has no options"
         ]
-        [ text "Please make sure you've defined neither any options."
+        [ text "Please make sure you've defined any options."
         ]
         ("""
 Bulletproof.story "Button"
