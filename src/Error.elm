@@ -1180,7 +1180,7 @@ reasonToExplanation reason =
 styledLabel : List (Html msg) -> Html msg
 styledLabel =
     styled div
-        [ Css.marginBottom (Css.px 4)
+        [ Css.marginTop (Css.px 6)
         , Css.fontWeight Css.bold
         , Css.fontSize (Css.px 14)
         , Css.lineHeight (Css.px 24)
@@ -1191,7 +1191,7 @@ styledLabel =
 styledDescription : List (Html msg) -> Html msg
 styledDescription =
     styled p
-        [ Css.margin3 (Css.px 12) Css.zero Css.zero
+        [ Css.margin3 (Css.px 8) Css.zero Css.zero
         , Css.fontSize (Css.px 13)
         ]
         []
@@ -1206,6 +1206,7 @@ styledPath =
         , Css.borderRadius (Css.px 3)
         , Css.fontFamily Css.monospace
         , Css.fontSize (Css.px 10)
+        , Css.lineHeight (Css.int 2)
         ]
 
 
@@ -1265,8 +1266,8 @@ viewError error =
             reasonToExplanation error.reason
     in
     styledError
-        [ styledLabel explanation.label
-        , viewPath error.path
+        [ viewPath error.path
+        , styledLabel explanation.label
         , styledDescription explanation.description
         , viewCodeExample explanation.code explanation.diffs
         ]
