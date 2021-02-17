@@ -20,9 +20,11 @@ import Menu
 import Navigation
 import NotFound
 import Palette
+import Range
 import Router
 import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
+import Style
 import Task
 import Url exposing (Url)
 import Utils exposing (Viewport, ifelse, px)
@@ -660,7 +662,7 @@ viewRoot settings dragging children =
                 , Events.on "mouseleave" (Decode.succeed DragEnd)
                 ]
         )
-        (styledGlobal settings dragging :: children)
+        (viewStyle :: styledGlobal settings dragging :: children)
 
 
 viewBulletproof : Story (Html ()) -> Model -> Browser.Document Msg
@@ -721,7 +723,8 @@ viewError errors =
     Browser.Document "Bulletproof | Error"
         [ styledRoot
             []
-            [ styledGlobal Settings.default NoDragging
+            [ viewStyle
+            , styledGlobal Settings.default NoDragging
             , Error.view errors
             ]
             |> Html.toUnstyled
@@ -733,7 +736,8 @@ viewEmpty =
     Browser.Document "Bulletproof"
         [ styledRoot
             []
-            [ styledGlobal Settings.default NoDragging
+            [ viewStyle
+            , styledGlobal Settings.default NoDragging
             , Empty.view
             ]
             |> Html.toUnstyled
@@ -742,6 +746,16 @@ viewEmpty =
 
 type alias Program flags =
     Platform.Program flags Model Msg
+
+
+viewStyle : Html msg
+viewStyle =
+    [ Range.css
+    ]
+        |> Style.render
+        |> Html.text
+        |> List.singleton
+        |> Html.node "style" []
 
 
 document : Story (Html ()) -> Model -> Browser.Document Msg
