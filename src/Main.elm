@@ -656,6 +656,7 @@ viewStyle =
     , Empty.css
     , Error.css
     , Icon.css
+    , Knob.css
     ]
         |> Style.render
         |> Html.text

@@ -15,17 +15,17 @@ module Knob exposing
     , applyString
     , applyTime
     , applyViewport
+    , css
     , initial
     , update
     , view
     )
 
 import Color exposing (Color)
-import Css
 import Date exposing (Date, Time)
 import Dict exposing (Dict)
 import File exposing (File)
-import Html.Styled as Html exposing (Html, div, input, label, option, span, styled, td, text, textarea, tr)
+import Html.Styled as Html exposing (Html, div, input, label, option, td, text, textarea, tr)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
@@ -34,6 +34,7 @@ import List
 import Palette
 import Range exposing (range)
 import String
+import Style
 import Utils exposing (Viewport, px, textCode)
 
 
@@ -368,58 +369,161 @@ update msg state =
 -- V I E W
 
 
-styledCheckbox : List (Html.Attribute msg) -> Html msg
-styledCheckbox attributes =
-    styled input
-        [ Css.margin Css.zero
+css : Style.Sheet
+css =
+    Style.sheet
+        [ knob__root
+        , knob__empty
+        , knob__bool
+        , knob__input
+        , knob__select
+        , Style.focusVisible knob__input
+            [ Style.rule "box-shadow" ("0 0 0 2px " ++ Palette.gray05)
+            ]
+        , knob__radio_group
+        , knob__radio_label
+        , knob__radio_input
+        , knob__row
+        , knob__row_name
+        , knob__row_knob
         ]
-        (Attributes.type_ "checkbox" :: attributes)
-        []
+
+
+knob__root : Style.Selector
+knob__root =
+    Style.class "knob__root"
+        [ Style.rule "width" "100%"
+        , Style.rule "vertical-align" "middle"
+        , Style.rule "border-collapse" "collapse"
+        , Style.rule "color" Palette.dark_
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-family" Palette.font_
+        ]
+
+
+knob__empty : Style.Selector
+knob__empty =
+    Style.class "knob__empty"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "flex"
+        , Style.rule "justify-content" "center"
+        , Style.rule "align-items" "center"
+        , Style.rule "padding" "12px"
+        , Style.rule "width" "100%"
+        , Style.rule "color" Palette.dark_
+        , Style.rule "font-size" "18px"
+        , Style.rule "font-family" Palette.font_
+        ]
+
+
+knob__bool : Style.Selector
+knob__bool =
+    Style.class "knob__bool"
+        [ Style.rule "margin" "0"
+        ]
+
+
+knob__select : Style.Selector
+knob__select =
+    Style.class "knob__select"
+        [ Style.rule "-webkit-appearance" "menulist"
+        ]
+
+
+knob__input : Style.Selector
+knob__input =
+    Style.class "knob__input"
+        [ Style.rule "-webkit-appearance" "none"
+        , Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "block"
+        , Style.rule "margin" "0"
+        , Style.rule "padding" "4px 8px"
+        , Style.rule "border" ("1px solid " ++ Palette.gray05)
+        , Style.rule "border-radius" "4px"
+        , Style.rule "width" "100% !important"
+        , Style.rule "background" "transparent"
+        , Style.rule "height" "28px"
+        , Style.rule "min-height" "28px"
+        , Style.rule "text-align" "left"
+        , Style.rule "font-size" "inherit"
+        , Style.rule "font-family" "inherit"
+        , Style.rule "outline" "none"
+        ]
+
+
+knob__radio_group : Style.Selector
+knob__radio_group =
+    Style.class "knob__radio_group"
+        [ Style.rule "display" "flex"
+        , Style.rule "flex-direction" "column"
+        , Style.rule "align-items" "flex-start"
+        , Style.rule "margin-top" "-8px"
+        ]
+
+
+knob__radio_label : Style.Selector
+knob__radio_label =
+    Style.class "knob__radio_label"
+        [ Style.rule "display" "flex"
+        , Style.rule "align-items" "center"
+        , Style.rule "margin-top" "8px"
+        , Style.rule "cursor" "pointer"
+        , Style.rule "word-break" "break-word"
+        ]
+
+
+knob__radio_input : Style.Selector
+knob__radio_input =
+    Style.class "knob__radio_text"
+        [ Style.rule "margin" "0 8px 0 0"
+        ]
+
+
+knob__row : Style.Selector
+knob__row =
+    Style.class "knob__row"
+        [ Style.rule "border-bottom" ("1px solid " ++ Palette.smoke_)
+        ]
+
+
+knob__row_name : Style.Selector
+knob__row_name =
+    Style.class "knob__row_name"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "min-width" "100px"
+        , Style.rule "height" "40px"
+        , Style.rule "white-space" "nowrap"
+        , Style.rule "padding" "8px 4px 8px 12px"
+        , Style.rule "font-weight" "bold"
+        ]
+
+
+knob__row_knob : Style.Selector
+knob__row_knob =
+    Style.class "knob__row_knob"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "width" "100%"
+        , Style.rule "height" "40px"
+        , Style.rule "padding" "8px 4px 8px 12px"
+        ]
 
 
 viewKnobBool : String -> Bool -> Html Msg
 viewKnobBool name checked =
-    styledCheckbox
-        [ Attributes.name name
+    input
+        [ Style.className knob__bool
+        , Attributes.type_ "checkbox"
+        , Attributes.name name
         , Attributes.checked checked
         , Events.onCheck (UpdateBool name)
         ]
-
-
-cssInput : List Css.Style
-cssInput =
-    [ Css.property "-webkit-appearance" "none"
-    , Css.boxSizing Css.borderBox
-    , Css.display Css.block
-    , Css.margin Css.zero
-    , Css.padding2 (Css.px 4) (Css.px 8)
-    , Css.border3 (Css.px 1) Css.solid Palette.gray50
-    , Css.borderRadius (Css.px 4)
-    , Css.important (Css.width (Css.pct 100))
-    , Css.backgroundColor Css.transparent
-    , Css.height (Css.px 28)
-    , Css.minHeight (Css.px 28)
-    , Css.textAlign Css.left
-    , Css.fontFamily Css.inherit
-    , Css.fontSize Css.inherit
-    , Css.outline Css.none
-
-    --
-    , Css.focus
-        [ Css.boxShadow5 Css.zero Css.zero Css.zero (Css.px 2) Palette.gray50
-        ]
-
-    --
-    , Css.hover
-        [ Css.boxShadow Css.none
-        ]
-    ]
+        []
 
 
 viewKnobString : String -> String -> Html Msg
 viewKnobString name value =
     textarea
-        [ Attributes.css cssInput
+        [ Style.className knob__input
         , Attributes.name name
         , Attributes.value value
         , Attributes.tabindex 0
@@ -437,7 +541,7 @@ viewKnobNumber :
     -> Html msg
 viewKnobNumber msg numToString name number limits =
     input
-        (Attributes.css cssInput
+        (Style.className knob__input
             :: Attributes.type_ "number"
             :: Attributes.name name
             :: Attributes.value (Maybe.withDefault "" (Maybe.map numToString number))
@@ -452,62 +556,28 @@ viewKnobNumber msg numToString name number limits =
         []
 
 
-cssRadioGroup : List Css.Style
-cssRadioGroup =
-    [ Css.displayFlex
-    , Css.flexDirection Css.column
-    , Css.alignItems Css.flexStart
-    , Css.marginTop (Css.px -8)
-    ]
-
-
-styledRadioLabel : List (Html msg) -> Html msg
-styledRadioLabel =
-    styled label
-        [ Css.displayFlex
-        , Css.alignItems Css.center
-        , Css.marginTop (Css.px 8)
-        , Css.cursor Css.pointer
-        ]
-        []
-
-
-styledRadioText : String -> Html msg
-styledRadioText =
-    styled span
-        [ Css.marginLeft (Css.px 8)
-        ]
-        []
-        << List.singleton
-        << text
-
-
-styledRadio : List (Html.Attribute msg) -> Html msg
-styledRadio attributes =
-    styled input
-        [ Css.margin Css.zero
-        ]
-        (Attributes.type_ "radio" :: attributes)
-        []
-
-
 viewKnobRadio : String -> Maybe String -> List String -> Html Msg
 viewKnobRadio name selected options =
     Keyed.node "div"
-        [ Attributes.css cssRadioGroup
+        [ Style.className knob__radio_group
         ]
         (List.map
             (\value ->
                 ( value
-                , styledRadioLabel
-                    [ styledRadio
-                        [ Attributes.name name
+                , label
+                    [ Style.className knob__radio_label
+                    ]
+                    [ input
+                        [ Style.className knob__radio_input
+                        , Attributes.type_ "radio"
+                        , Attributes.name name
                         , Attributes.value value
                         , Attributes.tabindex 0
                         , Attributes.checked (Just value == selected)
                         , Events.onCheck (\_ -> UpdateString name value)
                         ]
-                    , styledRadioText value
+                        []
+                    , text value
                     ]
                 )
             )
@@ -518,8 +588,8 @@ viewKnobRadio name selected options =
 viewKnobSelect : String -> Maybe String -> List String -> Html Msg
 viewKnobSelect name selected options =
     Keyed.node "select"
-        [ Attributes.css cssInput
-        , Attributes.css [ Css.property "-webkit-appearance" "menulist" ]
+        [ Style.className knob__input
+        , Style.className knob__select
         , Attributes.name name
         , Attributes.tabindex 0
         , case selected of
@@ -548,7 +618,7 @@ viewKnobSelect name selected options =
 viewKnobColor : String -> Maybe Color -> Html Msg
 viewKnobColor name color =
     input
-        [ Attributes.css cssInput
+        [ Style.className knob__input
         , Attributes.type_ "color"
         , Attributes.name name
         , Attributes.value (Maybe.withDefault "" (Maybe.map .hex color))
@@ -561,7 +631,7 @@ viewKnobColor name color =
 viewKnobDate : String -> Maybe Date -> Html Msg
 viewKnobDate name date =
     input
-        [ Attributes.css cssInput
+        [ Style.className knob__input
         , Attributes.type_ "date"
         , Attributes.name name
         , Attributes.value (Maybe.withDefault "" (Maybe.map Date.dateToString date))
@@ -574,7 +644,7 @@ viewKnobDate name date =
 viewKnobTime : String -> Maybe Time -> Html Msg
 viewKnobTime name time =
     input
-        [ Attributes.css cssInput
+        [ Style.className knob__input
         , Attributes.type_ "time"
         , Attributes.name name
         , Attributes.value (Maybe.withDefault "" (Maybe.map Date.timeToString time))
@@ -610,44 +680,14 @@ viewKnobStoryViewport { width, height } =
         ]
 
 
-styledKnobRow : List (Html msg) -> Html msg
-styledKnobRow =
-    styled tr
-        [ Css.borderBottom3 (Css.px 1) Css.solid Palette.smoke
-        ]
-        []
-
-
-styledKnobName : List (Html msg) -> Html msg
-styledKnobName =
-    styled td
-        [ Css.boxSizing Css.borderBox
-        , Css.minWidth (Css.px 100)
-        , Css.height (Css.px 40)
-        , Css.whiteSpace Css.noWrap
-        , Css.padding4 (Css.px 8) (Css.px 4) (Css.px 8) (Css.px 12)
-        , Css.fontWeight Css.bold
-        ]
-        []
-
-
-styledKnobCell : List (Html msg) -> Html msg
-styledKnobCell =
-    styled td
-        [ Css.boxSizing Css.borderBox
-        , Css.width (Css.pct 100)
-        , Css.height (Css.px 40)
-        , Css.padding4 (Css.px 8) (Css.px 12) (Css.px 8) (Css.px 4)
-        ]
-        []
-
-
 viewKnobRow : Viewport -> String -> Knob -> Maybe KnobValue -> ( String, Html Msg )
 viewKnobRow globalViewport name knob value =
     ( name
-    , styledKnobRow
-        [ styledKnobName [ text name ]
-        , styledKnobCell [ viewKnob globalViewport name knob value ]
+    , tr
+        [ Style.className knob__row
+        ]
+        [ td [ Style.className knob__row_name ] [ text name ]
+        , td [ Style.className knob__row_knob ] [ viewKnob globalViewport name knob value ]
         ]
     )
 
@@ -758,31 +798,11 @@ viewKnob globalViewport name knob value =
 
 viewEmpty : Html msg
 viewEmpty =
-    styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.displayFlex
-        , Css.justifyContent Css.center
-        , Css.alignItems Css.center
-        , Css.padding (Css.px 12)
-        , Css.width (Css.pct 100)
-        , Css.color Palette.dark
-        , Css.fontSize (Css.px 18)
-        , Css.fontFamilies Palette.font
+    div
+        [ Style.className knob__empty
         ]
-        []
         [ text "There are not declared Knobs to use."
         ]
-
-
-cssRoot : List Css.Style
-cssRoot =
-    [ Css.width (Css.pct 100)
-    , Css.verticalAlign Css.middle
-    , Css.borderCollapse Css.collapse
-    , Css.color Palette.dark
-    , Css.fontSize (Css.px 13)
-    , Css.fontFamilies Palette.font
-    ]
 
 
 viewRoot : Viewport -> List ( String, Knob ) -> State -> Html Msg
@@ -791,7 +811,7 @@ viewRoot globalViewport knobs state =
         |> List.map
             (\( name, knob ) -> viewKnobRow globalViewport name knob (Dict.get name state))
         |> List.reverse
-        |> Keyed.node "table" [ Attributes.css cssRoot ]
+        |> Keyed.node "table" [ Style.className knob__root ]
 
 
 view : Viewport -> State -> List ( String, Knob ) -> Html Msg
