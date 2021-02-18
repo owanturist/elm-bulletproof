@@ -26,6 +26,7 @@ import Router
 import Settings exposing (Orientation(..), Settings)
 import Story exposing (Story(..))
 import Style
+import SyntaxHighlight
 import Task
 import Url exposing (Url)
 import Utils exposing (Viewport, ifelse, px)
@@ -642,6 +643,24 @@ styledRoot =
         ]
 
 
+viewSyntaxHighlightStyle : Html msg
+viewSyntaxHighlightStyle =
+    Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
+
+
+viewStyle : Html msg
+viewStyle =
+    [ Range.css
+    , Button.css
+    , Empty.css
+    , Error.css
+    ]
+        |> Style.render
+        |> Html.text
+        |> List.singleton
+        |> Html.node "style" []
+
+
 viewRoot : Settings -> Dragging -> List (Html Msg) -> Html Msg
 viewRoot settings dragging children =
     styledRoot
@@ -663,7 +682,7 @@ viewRoot settings dragging children =
                 , Events.on "mouseleave" (Decode.succeed DragEnd)
                 ]
         )
-        (viewStyle :: styledGlobal settings dragging :: children)
+        (viewStyle :: styledGlobal settings dragging :: viewSyntaxHighlightStyle :: children)
 
 
 viewBulletproof : Story (Html ()) -> Model -> Browser.Document Msg
@@ -719,46 +738,20 @@ viewBulletproof story { settings, state, knobs } =
         ]
 
 
-viewError : List Error -> Browser.Document msg
+viewError : List Error -> Browser.Document Msg
 viewError errors =
     Browser.Document "Bulletproof | Error"
-        [ styledRoot
-            []
-            [ viewStyle
-            , styledGlobal Settings.default NoDragging
-            , Error.view errors
-            ]
+        [ viewRoot Settings.default NoDragging [ Error.view errors ]
             |> Html.toUnstyled
         ]
 
 
-viewEmpty : Browser.Document msg
+viewEmpty : Browser.Document Msg
 viewEmpty =
     Browser.Document "Bulletproof"
-        [ styledRoot
-            []
-            [ viewStyle
-            , styledGlobal Settings.default NoDragging
-            , Empty.view
-            ]
+        [ viewRoot Settings.default NoDragging [ Empty.view ]
             |> Html.toUnstyled
         ]
-
-
-type alias Program flags =
-    Platform.Program flags Model Msg
-
-
-viewStyle : Html msg
-viewStyle =
-    [ Range.css
-    , Button.css
-    , Empty.css
-    ]
-        |> Style.render
-        |> Html.text
-        |> List.singleton
-        |> Html.node "style" []
 
 
 document : Story (Html ()) -> Model -> Browser.Document Msg
@@ -775,6 +768,10 @@ document story model =
 
     else
         viewError errors
+
+
+type alias Program flags =
+    Platform.Program flags Model Msg
 
 
 run :

@@ -3,15 +3,18 @@ module Palette exposing
     , blue
     , blueDark
     , cloud
+    , cloud_
     , dark
     , dark50
     , dark_
     , font
+    , font_
     , gray
     , gray05
     , gray50
     , gray_
     , smoke
+    , smoke_
     , transparent
     , white
     , white_
@@ -55,6 +58,11 @@ cloud =
     Css.hex "#f6f9fc"
 
 
+cloud_ : String
+cloud_ =
+    rgb 246 249 252
+
+
 dark : Css.Color
 dark =
     Css.rgb 51 51 51
@@ -95,6 +103,11 @@ smoke =
     Css.rgba 0 0 0 0.05
 
 
+smoke_ : String
+smoke_ =
+    rgba 0 0 0 0.05
+
+
 black : Css.Color
 black =
     Css.hex "#000"
@@ -123,3 +136,19 @@ font =
     , "Arial"
     , "sans-serif"
     ]
+
+
+font_ : String
+font_ =
+    [ "\"Nunito Sans\""
+    , "-apple-system"
+    , "\".SFNSText-Regular\""
+    , "\"San Francisco\""
+    , "BlinkMacSystemFont"
+    , "\"Segoe UI\""
+    , "\"Helvetica Neue\""
+    , "Helvetica"
+    , "Arial"
+    , "sans-serif"
+    ]
+        |> String.join ","

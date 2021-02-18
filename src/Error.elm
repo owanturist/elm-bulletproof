@@ -1,15 +1,15 @@
-module Error exposing (Error, Reason(..), validateStories, view)
+module Error exposing (Error, Reason(..), css, validateStories, view)
 
 import Color
-import Css
 import Date
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, code, div, p, pre, styled, text)
+import Html.Styled as Html exposing (Html, code, div, p, pre, text)
 import Html.Styled.Attributes as Attributes
 import Knob exposing (Knob)
 import List
 import Palette
 import Story exposing (Story)
+import Style
 import SyntaxHighlight
 import Tuple
 import Utils exposing (ifelse, textCode)
@@ -1141,63 +1141,110 @@ reasonToExplanation reason =
             explanationDuplicateStoryViewport n
 
 
-styledLabel : List (Html msg) -> Html msg
-styledLabel =
-    styled div
-        [ Css.marginTop (Css.px 6)
-        , Css.fontWeight Css.bold
-        , Css.fontSize (Css.px 14)
-        , Css.lineHeight (Css.px 24)
+css : Style.Sheet
+css =
+    Style.sheet
+        [ error__root
+        , error__container
+        , error__error
+        , error__path
+        , error__label
+        , error__description
+        , error__code_example
         ]
-        []
 
 
-styledDescription : List (Html msg) -> Html msg
-styledDescription =
-    styled p
-        [ Css.margin3 (Css.px 8) Css.zero Css.zero
-        , Css.fontSize (Css.px 13)
+error__root : Style.Selector
+error__root =
+    Style.class "error__root"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "flex"
+        , Style.rule "flex-direction" "column"
+        , Style.rule "align-items" "center"
+        , Style.rule "padding" "0 8px"
+        , Style.rule "width" "100%"
+        , Style.rule "max-width" "100%"
+        , Style.rule "min-height" "100%"
+        , Style.rule "background" Palette.cloud_
+        , Style.rule "color" Palette.dark_
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-family" Palette.font_
         ]
-        []
 
 
-styledPath : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledPath =
-    styled code
-        [ Css.padding2 (Css.px 2) (Css.px 4)
-        , Css.backgroundColor Palette.smoke
-        , Css.color Palette.gray
-        , Css.borderRadius (Css.px 3)
-        , Css.fontFamily Css.monospace
-        , Css.fontSize (Css.px 10)
-        , Css.lineHeight (Css.int 2)
+error__container : Style.Selector
+error__container =
+    Style.class "error__container"
+        [ Style.rule "width" "600px"
+        , Style.rule "max-width" "100%"
+        ]
+
+
+error__error : Style.Selector
+error__error =
+    Style.class "error__error"
+        [ Style.rule "margin" "8px 0"
+        , Style.rule "padding" "12px 16px 8px"
+        , Style.rule "background" Palette.white_
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke_)
+        ]
+
+
+error__path : Style.Selector
+error__path =
+    Style.class "error__path"
+        [ Style.rule "padding" "2px 4px"
+        , Style.rule "background" Palette.smoke_
+        , Style.rule "color" Palette.gray_
+        , Style.rule "border-radius" "3px"
+        , Style.rule "font" "10px/2 monospace"
+        ]
+
+
+error__label : Style.Selector
+error__label =
+    Style.class "error__label"
+        [ Style.rule "margin-top" "6px"
+        , Style.rule "font-weight" "bold"
+        , Style.rule "font-size" "14px"
+        , Style.rule "line-height" "24px"
+        ]
+
+
+error__description : Style.Selector
+error__description =
+    Style.class "error__description"
+        [ Style.rule "margin" "8px 0 0"
+        , Style.rule "font-size" "13px"
+        ]
+
+
+error__code_example : Style.Selector
+error__code_example =
+    Style.class "error__code_example"
+        [ Style.rule "margin" "12px -8px 0"
+        , Style.rule "padding" "0 8px"
+        , Style.rule "border" ("1px solid " ++ Palette.smoke_)
+        , Style.rule "border-radius" "3px"
+        , Style.rule "overflow" "auto"
         ]
 
 
 viewPath : List String -> Html msg
 viewPath path =
-    styledPath
-        [ Attributes.title "Location"
+    code
+        [ Style.className error__path
+        , Attributes.title "Location"
         ]
         [ text ("/ " ++ String.join " / " path)
         ]
 
 
-styledCodeExample : List (Html msg) -> Html msg
-styledCodeExample =
-    styled div
-        [ Css.margin3 (Css.px 12) (Css.px -8) Css.zero
-        , Css.padding2 Css.zero (Css.px 8)
-        , Css.border3 (Css.px 1) Css.solid Palette.smoke
-        , Css.borderRadius (Css.px 3)
-        , Css.overflow Css.auto
-        ]
-        []
-
-
 viewCodeExample : String -> List ( SyntaxHighlight.Highlight, Int, Int ) -> Html msg
 viewCodeExample exampleCode diffs =
-    styledCodeExample
+    div
+        [ Style.className error__code_example
+        ]
         [ case SyntaxHighlight.elm (String.trim exampleCode) of
             Err _ ->
                 pre [] [ text (String.trim exampleCode) ]
@@ -1212,63 +1259,26 @@ viewCodeExample exampleCode diffs =
         ]
 
 
-styledError : List (Html msg) -> Html msg
-styledError =
-    styled div
-        [ Css.margin2 (Css.px 8) Css.zero
-        , Css.padding3 (Css.px 12) (Css.px 16) (Css.px 8)
-        , Css.backgroundColor Palette.white
-        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        ]
-        []
-
-
 viewError : Error -> Html msg
 viewError error =
     let
         explanation =
             reasonToExplanation error.reason
     in
-    styledError
+    div
+        [ Style.className error__error
+        ]
         [ viewPath error.path
-        , styledLabel explanation.label
-        , styledDescription explanation.description
+        , div [ Style.className error__label ] explanation.label
+        , p [ Style.className error__description ] explanation.description
         , viewCodeExample explanation.code explanation.diffs
         ]
 
 
-styledContainer : List (Html msg) -> Html msg
-styledContainer =
-    styled div
-        [ Css.width (Css.px 600)
-        , Css.maxWidth (Css.pct 100)
-        ]
-        []
-
-
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.displayFlex
-        , Css.flexDirection Css.column
-        , Css.alignItems Css.center
-        , Css.padding2 Css.zero (Css.px 8)
-        , Css.width (Css.pct 100)
-        , Css.maxWidth (Css.pct 100)
-        , Css.minHeight (Css.pct 100)
-        , Css.backgroundColor Palette.cloud
-        , Css.property "word-break" "break-word"
-        , Css.color Palette.dark
-        , Css.fontSize (Css.px 13)
-        , Css.fontFamilies Palette.font
-        ]
-        []
-
-
 view : List Error -> Html msg
 view errors =
-    styledRoot
-        [ Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
-        , styledContainer (List.map viewError errors)
+    div
+        [ Style.className error__root
+        ]
+        [ div [ Style.className error__container ] (List.map viewError errors)
         ]

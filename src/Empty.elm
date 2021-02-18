@@ -39,7 +39,7 @@ css : Style.Sheet
 css =
     Style.sheet
         [ empty__root
-        , empty__content
+        , empty__container
         , empty__title
         ]
 
@@ -49,20 +49,23 @@ empty__root =
     Style.class "empty__root"
         [ Style.rule "display" "flex"
         , Style.rule "align-items" "center"
+        , Style.rule "justify-content" "center"
         , Style.rule "height" "100%"
         , Style.rule "width" "100%"
+        , Style.rule "overflow" "auto"
         , Style.rule "color" Palette.dark_
         , Style.rule "background" Palette.white_
-        , Style.rule "font-family" (String.join "," Palette.font)
         , Style.rule "font-size" "13px"
         , Style.rule "font-size" "1.5vmin"
+        , Style.rule "font-family" Palette.font_
         ]
 
 
-empty__content : Style.Selector
-empty__content =
-    Style.class "empty__content"
-        [ Style.rule "padding" "12px 24px"
+empty__container : Style.Selector
+empty__container =
+    Style.class "empty__container"
+        [ Style.rule "min-width" "0"
+        , Style.rule "padding" "12px 24px"
         ]
 
 
@@ -79,9 +82,8 @@ view =
     div
         [ Style.className empty__root
         ]
-        [ Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
-        , div
-            [ Style.className empty__content
+        [ div
+            [ Style.className empty__container
             ]
             [ div
                 [ Style.className empty__title
