@@ -1,8 +1,8 @@
-module Empty exposing (view)
+module Empty exposing (css, view)
 
-import Css
-import Html.Styled as Html exposing (Html, br, div, pre, styled, text)
+import Html.Styled as Html exposing (Html, br, div, pre, text)
 import Palette
+import Style
 import SyntaxHighlight
 
 
@@ -35,46 +35,57 @@ story =
     """
 
 
-styledTitle : List (Html msg) -> Html msg
-styledTitle =
-    styled div
-        [ Css.marginBottom (Css.em 1)
-        , Css.fontSize (Css.em 2.5)
+css : Style.Sheet
+css =
+    Style.sheet
+        [ empty__root
+        , empty__content
+        , empty__title
         ]
-        []
 
 
-styledMessage : List (Html msg) -> Html msg
-styledMessage =
-    styled div
-        [ Css.padding2 (Css.px 12) (Css.px 24)
+empty__root : Style.Selector
+empty__root =
+    Style.class "empty__root"
+        [ Style.rule "display" "flex"
+        , Style.rule "align-items" "center"
+        , Style.rule "height" "100%"
+        , Style.rule "width" "100%"
+        , Style.rule "color" Palette.dark_
+        , Style.rule "background" Palette.white_
+        , Style.rule "font-family" (String.join "," Palette.font)
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-size" "1.5vmin"
         ]
-        []
 
 
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.displayFlex
-        , Css.alignItems Css.center
-        , Css.justifyContent Css.center
-        , Css.height (Css.pct 100)
-        , Css.width (Css.pct 100)
-        , Css.color Palette.dark
-        , Css.backgroundColor Palette.white
-        , Css.fontFamilies Palette.font
-        , Css.fontSize (Css.px 13)
-        , Css.fontSize (Css.vmin 1.5)
+empty__content : Style.Selector
+empty__content =
+    Style.class "empty__content"
+        [ Style.rule "padding" "12px 24px"
         ]
-        []
+
+
+empty__title : Style.Selector
+empty__title =
+    Style.class "empty__title"
+        [ Style.rule "margin-bottom" "1em"
+        , Style.rule "font-size" "2.5em"
+        ]
 
 
 view : Html msg
 view =
-    styledRoot
+    div
+        [ Style.className empty__root
+        ]
         [ Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
-        , styledMessage
-            [ styledTitle
+        , div
+            [ Style.className empty__content
+            ]
+            [ div
+                [ Style.className empty__title
+                ]
                 [ text "Don't know where to start?"
                 , br [] []
                 , text "Let me tell you a story..."
