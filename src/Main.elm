@@ -4,6 +4,7 @@ import Browser
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation
+import Button
 import Css
 import Css.Global exposing (global)
 import Css.Transitions exposing (transition)
@@ -751,6 +752,7 @@ type alias Program flags =
 viewStyle : Html msg
 viewStyle =
     [ Range.css
+    , Button.css
     ]
         |> Style.render
         |> Html.text

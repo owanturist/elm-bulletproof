@@ -1,4 +1,4 @@
-module Style exposing (Rule, Selector, Sheet, class, className, render, rule, sheet)
+module Style exposing (Rule, Selector, Sheet, class, className, focusVisible, hover, render, rule, sheet)
 
 import Html.Styled as Html
 import Html.Styled.Attributes as Attributes
@@ -35,6 +35,21 @@ unpackSelector (Selector name rules) =
 class : String -> List Rule -> Selector
 class name rules =
     Selector name (unpack unpackRule rules)
+
+
+pseudoClass : String -> Selector -> List Rule -> Selector
+pseudoClass pseudo (Selector name _) rules =
+    Selector (name ++ ":" ++ pseudo) (unpack unpackRule rules)
+
+
+hover : Selector -> List Rule -> Selector
+hover =
+    pseudoClass "hover"
+
+
+focusVisible : Selector -> List Rule -> Selector
+focusVisible =
+    pseudoClass "focus-visible"
 
 
 className : Selector -> Html.Attribute msg

@@ -5,15 +5,34 @@ module Palette exposing
     , cloud
     , dark
     , dark50
+    , dark_
     , font
     , gray
+    , gray05
     , gray50
+    , gray_
     , smoke
     , transparent
     , white
+    , white_
     )
 
 import Css
+
+
+joinComma : List Int -> String
+joinComma =
+    String.join "," << List.map String.fromInt
+
+
+rgb : Int -> Int -> Int -> String
+rgb r g b =
+    "rgb(" ++ joinComma [ r, g, b ] ++ ")"
+
+
+rgba : Int -> Int -> Int -> Float -> String
+rgba r g b a =
+    "rgba(" ++ joinComma [ r, g, b ] ++ "," ++ String.fromFloat a ++ ")"
 
 
 transparent : Css.Color
@@ -41,6 +60,11 @@ dark =
     Css.rgb 51 51 51
 
 
+dark_ : String
+dark_ =
+    rgb 51 51 51
+
+
 dark50 : Css.Color
 dark50 =
     Css.rgba 51 51 51 0.5
@@ -51,9 +75,19 @@ gray =
     Css.rgb 153 153 153
 
 
+gray_ : String
+gray_ =
+    rgb 153 153 153
+
+
 gray50 : Css.Color
 gray50 =
     Css.rgba 153 153 153 0.5
+
+
+gray05 : String
+gray05 =
+    rgba 153 153 153 0.5
 
 
 smoke : Css.Color
@@ -69,6 +103,11 @@ black =
 white : Css.Color
 white =
     Css.hex "#fff"
+
+
+white_ : String
+white_ =
+    rgb 255 255 255
 
 
 font : List String

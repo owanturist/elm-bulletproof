@@ -1,46 +1,47 @@
-module Button exposing (button)
+module Button exposing (button, css)
 
-import Css
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Palette
+import Style
 import Utils exposing (onSpaceOrEnter)
 
 
-cssButton : List Css.Style
-cssButton =
-    [ Css.boxSizing Css.borderBox
-    , Css.display Css.inlineFlex
-    , Css.alignItems Css.center
-    , Css.justifyContent Css.center
-    , Css.width (Css.px 24)
-    , Css.height (Css.px 24)
-    , Css.border3 (Css.px 1) Css.solid Palette.gray
-    , Css.color Palette.dark
-    , Css.backgroundColor Palette.white
-    , Css.borderRadius (Css.px 3)
-    , Css.fontSize (Css.px 0)
-    , Css.outline Css.none
-    , Css.cursor Css.pointer
-    , Css.property "user-select" "none"
-
-    --
-    , Css.focus
-        [ Css.boxShadow5 Css.zero Css.zero Css.zero (Css.px 2) Palette.gray50
+css : Style.Sheet
+css =
+    Style.sheet
+        [ button__root
+        , Style.focusVisible button__root
+            [ Style.rule "box-shadow" ("0 0 0 2px " ++ Palette.gray05)
+            ]
         ]
 
-    --
-    , Css.hover
-        [ Css.boxShadow Css.none
+
+button__root : Style.Selector
+button__root =
+    Style.class "button__root"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "inline-flex"
+        , Style.rule "align-items" "center"
+        , Style.rule "justify-content" "center"
+        , Style.rule "width" "24px"
+        , Style.rule "height" "24px"
+        , Style.rule "border" ("1px solid " ++ Palette.gray_)
+        , Style.rule "color" Palette.dark_
+        , Style.rule "background-color" Palette.white_
+        , Style.rule "border-radius" "3px"
+        , Style.rule "font-size" "0"
+        , Style.rule "outline" "none"
+        , Style.rule "cursor" "pointer"
+        , Style.rule "user-select" "none"
         ]
-    ]
 
 
 button : msg -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 button onPress attributes =
     div
-        (Attributes.css cssButton
+        (Style.className button__root
             :: Attributes.attribute "role" "button"
             :: Attributes.tabindex 0
             :: Events.onClick onPress
