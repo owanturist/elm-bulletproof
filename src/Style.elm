@@ -1,4 +1,16 @@
-module Style exposing (Rule, Selector, Sheet, class, className, focusVisible, hover, render, rule, sheet)
+module Style exposing
+    ( Rule
+    , Selector
+    , Sheet
+    , class
+    , className
+    , classNameString
+    , focusVisible
+    , hover
+    , render
+    , rule
+    , sheet
+    )
 
 import Html.Styled as Html
 import Html.Styled.Attributes as Attributes
@@ -52,9 +64,14 @@ focusVisible =
     pseudoClass "focus-visible"
 
 
+classNameString : Selector -> String
+classNameString (Selector name _) =
+    name
+
+
 className : Selector -> Html.Attribute msg
-className (Selector name _) =
-    Attributes.class name
+className =
+    Attributes.class << classNameString
 
 
 type Sheet

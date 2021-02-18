@@ -14,6 +14,7 @@ import Error exposing (Error)
 import Html.Styled as Html exposing (Html, div, nav, styled)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
+import Icon
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
 import Knob
@@ -654,6 +655,7 @@ viewStyle =
     , Button.css
     , Empty.css
     , Error.css
+    , Icon.css
     ]
         |> Style.render
         |> Html.text
