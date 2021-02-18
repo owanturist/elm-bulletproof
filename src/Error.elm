@@ -320,11 +320,26 @@ validateStories =
     validateStoriesHelp []
 
 
+type Diff
+    = Add Int Int
+    | Del Int Int
+
+
+applyDiff : Diff -> SyntaxHighlight.HCode -> SyntaxHighlight.HCode
+applyDiff diff code =
+    case diff of
+        Add start end ->
+            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Add) start end code
+
+        Del start end ->
+            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Del) start end code
+
+
 type alias Explanation msg =
     { label : List (Html msg)
     , description : List (Html msg)
     , code : String
-    , diffs : List ( SyntaxHighlight.Highlight, Int, Int )
+    , diffs : List Diff
     }
 
 
@@ -345,10 +360,10 @@ explanationEmptyLabelTitle =
 , Bulletproof.label "Not blank title"
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -369,10 +384,10 @@ explanationEmptyTodoTitle =
 , Bulletproof.todo "Not blank title"
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -393,10 +408,10 @@ explanationEmptyStoryTitle =
 , Bulletproof.story "Not blank title" burgerIcon
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -417,10 +432,10 @@ explanationEmptyFolderTitle =
 , Bulletproof.folder "Not blank title" []
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -440,10 +455,10 @@ explanationDuplicateLabels title n =
 , Bulletproof.label "Project Components"
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -470,12 +485,12 @@ explanationDuplicateStories title n =
 , Bulletproof.story "Icon burger" burgerIcon
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
-        , ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
+        , Del 8 9
+        , Add 9 10
         ]
 
 
@@ -506,12 +521,12 @@ explanationDuplicateFolders title n =
     ]
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
-        , ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
+        , Del 11 12
+        , Add 12 13
         ]
 
 
@@ -537,10 +552,10 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.int "  " 0
     |> Bulletproof.Knob.int "Not blank knob" 0
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
-        , ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 8 9
+        , Add 9 10
+        , Del 10 11
+        , Add 11 12
         ]
 
 
@@ -566,10 +581,10 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.int "Property" 0
     |> Bulletproof.Knob.int "Tab Index" 0
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
-        , ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 8 9
+        , Add 9 10
+        , Del 10 11
+        , Add 11 12
         ]
 
 
@@ -599,8 +614,8 @@ Bulletproof.story "Button"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 14 )
+        [ Del 9 10
+        , Add 10 14
         ]
 
 
@@ -629,7 +644,7 @@ Bulletproof.story "Button"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Add, 10, 12 )
+        [ Add 10 12
         ]
 
 
@@ -661,8 +676,8 @@ Bulletproof.story "Input"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 9, 11 )
-        , ( SyntaxHighlight.Add, 11, 15 )
+        [ Del 9 11
+        , Add 11 15
         ]
 
 
@@ -694,8 +709,8 @@ Bulletproof.story "Input"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 8, 11 )
-        , ( SyntaxHighlight.Add, 11, 14 )
+        [ Del 8 11
+        , Add 11 14
         ]
 
 
@@ -724,8 +739,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ Del 11 12
+        , Add 12 13
         ]
 
 
@@ -755,8 +770,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -786,8 +801,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 10 11
+        , Add 11 12
         ]
 
 
@@ -818,8 +833,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -848,8 +863,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ Del 11 12
+        , Add 12 13
         ]
 
 
@@ -879,8 +894,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -910,8 +925,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 10 11
+        , Add 11 12
         ]
 
 
@@ -942,8 +957,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -971,8 +986,8 @@ Bulletproof.story "Colored Button"
     |> Bulletproof.Knob.color "Button color" "#cc0f"
     |> Bulletproof.Knob.color "Button color" "#cc0"
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
+        [ Del 8 9
+        , Add 9 10
         ]
 
 
@@ -1003,8 +1018,8 @@ Bulletproof.story "Date show"
     |> Bulletproof.Knob.date "Show date" "32-13-2020"
     |> Bulletproof.Knob.date "Show date" "29-02-2020"
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -1030,8 +1045,8 @@ Bulletproof.story "Time show"
     |> Bulletproof.Knob.time "Show time" "24:00"
     |> Bulletproof.Knob.time "Show time" "00:00"
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
+        [ Del 8 9
+        , Add 9 10
         ]
 
 
@@ -1056,9 +1071,9 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.viewport
     |> Bulletproof.Knob.viewport
 """
-        [ ( SyntaxHighlight.Del, 1, 2 )
-        , ( SyntaxHighlight.Add, 2, 3 )
-        , ( SyntaxHighlight.Del, 10, 11 )
+        [ Del 1 2
+        , Add 2 3
+        , Del 10 11
         ]
 
 
@@ -1169,6 +1184,7 @@ error__root =
         , Style.rule "color" Palette.dark_
         , Style.rule "font-size" "13px"
         , Style.rule "font-family" Palette.font_
+        , Style.rule "word-break" "break-word"
         ]
 
 
@@ -1197,7 +1213,8 @@ error__path =
         , Style.rule "background" Palette.smoke_
         , Style.rule "color" Palette.gray_
         , Style.rule "border-radius" "3px"
-        , Style.rule "font" "10px/2 monospace"
+        , Style.rule "font-size" "10px"
+        , Style.rule "line-height" "2"
         ]
 
 
@@ -1240,7 +1257,7 @@ viewPath path =
         ]
 
 
-viewCodeExample : String -> List ( SyntaxHighlight.Highlight, Int, Int ) -> Html msg
+viewCodeExample : String -> List Diff -> Html msg
 viewCodeExample exampleCode diffs =
     div
         [ Style.className error__code_example
@@ -1250,10 +1267,7 @@ viewCodeExample exampleCode diffs =
                 pre [] [ text (String.trim exampleCode) ]
 
             Ok elmCode ->
-                List.foldl
-                    (\( highlight, start, end ) code -> SyntaxHighlight.highlightLines (Just highlight) start end code)
-                    elmCode
-                    diffs
+                List.foldl applyDiff elmCode diffs
                     |> SyntaxHighlight.toBlockHtml Nothing
                     |> Html.fromUnstyled
         ]
