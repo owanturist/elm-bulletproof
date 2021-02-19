@@ -657,6 +657,7 @@ viewStyle =
     , Error.css
     , Icon.css
     , Knob.css
+    , Menu.css
     ]
         |> Style.render
         |> Html.text

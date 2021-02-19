@@ -5,6 +5,7 @@ module Style exposing
     , class
     , className
     , classNameString
+    , classNames
     , focusVisible
     , hover
     , render
@@ -46,7 +47,7 @@ unpackSelector (Selector name rules) =
 
 class : String -> List Rule -> Selector
 class name rules =
-    Selector name (unpack unpackRule rules)
+    Selector ("_bp__" ++ name) (unpack unpackRule rules)
 
 
 pseudoClass : String -> Selector -> List Rule -> Selector
@@ -72,6 +73,13 @@ classNameString (Selector name _) =
 className : Selector -> Html.Attribute msg
 className =
     Attributes.class << classNameString
+
+
+classNames : List ( Selector, Bool ) -> Html.Attribute msg
+classNames selectors =
+    selectors
+        |> List.map (Tuple.mapFirst classNameString)
+        |> Attributes.classList
 
 
 type Sheet
