@@ -22,6 +22,7 @@ not_found__path =
         , Style.rule "padding" "4px 12px"
         , Style.rule "background" Palette.gray05
         , Style.rule "border-radius" "4px"
+        , Style.rule "font-family" "monospace"
         , Style.rule "letter-spacing" "0.05em"
         ]
 

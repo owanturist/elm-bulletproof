@@ -35,7 +35,8 @@ import Palette
 import Range exposing (range)
 import String
 import Style
-import Utils exposing (Viewport, px, textCode)
+import TextCode exposing (textCode)
+import Utils exposing (Viewport, px)
 
 
 type Knob

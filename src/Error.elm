@@ -11,8 +11,9 @@ import Palette
 import Story exposing (Story)
 import Style
 import SyntaxHighlight
+import TextCode exposing (textCode)
 import Tuple
-import Utils exposing (ifelse, textCode)
+import Utils exposing (ifelse)
 
 
 type Reason
@@ -326,13 +327,13 @@ type Diff
 
 
 applyDiff : Diff -> SyntaxHighlight.HCode -> SyntaxHighlight.HCode
-applyDiff diff code =
+applyDiff diff hcode =
     case diff of
         Add start end ->
-            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Add) start end code
+            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Add) start end hcode
 
         Del start end ->
-            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Del) start end code
+            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Del) start end hcode
 
 
 type alias Explanation msg =
@@ -1214,6 +1215,7 @@ error__path =
         , Style.rule "color" Palette.gray_
         , Style.rule "border-radius" "3px"
         , Style.rule "font-size" "10px"
+        , Style.rule "font-family" "monospace"
         , Style.rule "line-height" "2"
         ]
 

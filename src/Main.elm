@@ -29,6 +29,7 @@ import Story exposing (Story(..))
 import Style
 import SyntaxHighlight
 import Task
+import TextCode
 import Url exposing (Url)
 import Utils exposing (Viewport, ifelse, px)
 
@@ -658,6 +659,7 @@ viewStyle =
     , Icon.css
     , Knob.css
     , Menu.css
+    , TextCode.css
     , Navigation.css
     , NotFound.css
     ]

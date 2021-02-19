@@ -1,10 +1,8 @@
-module Utils exposing (Viewport, ifelse, notClosest, onSpaceOrEnter, px, textCode)
+module Utils exposing (Viewport, ifelse, notClosest, onSpaceOrEnter, px)
 
-import Css
-import Html.Styled as Html exposing (Html, code, styled, text)
+import Html.Styled as Html
 import Html.Styled.Events as Events
 import Json.Decode as Decode exposing (Decoder)
-import Palette
 
 
 type alias Viewport =
@@ -16,21 +14,6 @@ type alias Viewport =
 px : Int -> String
 px n =
     String.fromInt n ++ "px"
-
-
-textCode : String -> Html msg
-textCode =
-    styled code
-        [ Css.display Css.inlineBlock
-        , Css.padding2 (Css.px 2) (Css.px 4)
-        , Css.backgroundColor Palette.cloud
-        , Css.letterSpacing (Css.em 0.05)
-        , Css.fontFamily Css.monospace
-        , Css.lineHeight (Css.px 18)
-        ]
-        []
-        << List.singleton
-        << text
 
 
 ifelse : Bool -> x -> x -> x

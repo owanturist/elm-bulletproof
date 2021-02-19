@@ -10,7 +10,7 @@ import Router
 import Set exposing (Set)
 import Story exposing (Story(..))
 import Style
-import Utils exposing (ifelse, onSpaceOrEnter)
+import Utils exposing (ifelse, onSpaceOrEnter, px)
 
 
 
@@ -229,7 +229,7 @@ viewSpacer n =
     if n > 0 then
         span
             [ Style.className navigation__spacer
-            , Attributes.style "width" (String.fromInt (n * 22) ++ "px")
+            , Attributes.style "width" (px (n * 22))
             ]
             []
 
