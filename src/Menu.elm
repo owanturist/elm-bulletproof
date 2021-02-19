@@ -159,11 +159,10 @@ css =
         , menu__trigger
 
         --
-        , Style.hover menu__trigger
-            [ Style.rule "opacity" "1"
-            , Style.rule "transition" "opacity 0.2s"
+        , Style.all
+            [ Style.hover menu__trigger
+            , Style.focusVisible menu__trigger
             ]
-        , Style.focusVisible menu__trigger
             [ Style.rule "opacity" "1"
             , Style.rule "transition" "opacity 0.2s"
             ]
@@ -174,10 +173,10 @@ css =
 
         --
         , menu__item
-        , Style.hover menu__item
-            [ Style.rule "background" Palette.smoke_
+        , Style.all
+            [ Style.hover menu__item
+            , Style.focusVisible menu__item
             ]
-        , Style.focusVisible menu__item
             [ Style.rule "background" Palette.smoke_
             ]
 
