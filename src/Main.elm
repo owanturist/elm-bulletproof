@@ -658,6 +658,7 @@ viewStyle =
     , Icon.css
     , Knob.css
     , Menu.css
+    , Navigation.css
     ]
         |> Style.render
         |> Html.text

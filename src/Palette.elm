@@ -2,9 +2,12 @@ module Palette exposing
     ( black
     , blue
     , blueDark
+    , blueDark_
+    , blue_
     , cloud
     , cloud_
     , dark
+    , dark05
     , dark50
     , dark_
     , font
@@ -48,9 +51,19 @@ blue =
     Css.rgb 30 165 253
 
 
+blue_ : String
+blue_ =
+    rgb 30 165 253
+
+
 blueDark : Css.Color
 blueDark =
     Css.rgb 8 155 251
+
+
+blueDark_ : String
+blueDark_ =
+    rgb 8 155 251
 
 
 cloud : Css.Color
@@ -76,6 +89,11 @@ dark_ =
 dark50 : Css.Color
 dark50 =
     Css.rgba 51 51 51 0.5
+
+
+dark05 : String
+dark05 =
+    rgba 51 51 51 0.5
 
 
 gray : Css.Color

@@ -2,6 +2,8 @@ module Style exposing
     ( Rule
     , Selector
     , Sheet
+    , adjacent
+    , all
     , class
     , className
     , classNameString
@@ -37,22 +39,22 @@ rule property value =
 
 
 type Selector
-    = Selector String String
+    = Selector String String String
 
 
 unpackSelector : Selector -> String
-unpackSelector (Selector name rules) =
-    "." ++ name ++ "{" ++ rules ++ "}"
+unpackSelector (Selector prefix name rules) =
+    prefix ++ name ++ "{" ++ rules ++ "}"
 
 
 class : String -> List Rule -> Selector
 class name rules =
-    Selector ("_bp__" ++ name) (unpack unpackRule rules)
+    Selector "." ("_bp__" ++ name) (unpack unpackRule rules)
 
 
 pseudoClass : String -> Selector -> List Rule -> Selector
-pseudoClass pseudo (Selector name _) rules =
-    Selector (name ++ ":" ++ pseudo) (unpack unpackRule rules)
+pseudoClass pseudo (Selector prefix name _) rules =
+    Selector prefix (name ++ ":" ++ pseudo) (unpack unpackRule rules)
 
 
 hover : Selector -> List Rule -> Selector
@@ -65,8 +67,29 @@ focusVisible =
     pseudoClass "focus-visible"
 
 
+adjacent : String -> Selector -> List Rule -> Selector
+adjacent prev (Selector prefix current _) rules =
+    Selector "" (prev ++ " + " ++ prefix ++ current) (unpack unpackRule rules)
+
+
+all : List (List Rule -> Selector) -> List Rule -> Selector
+all selectors rules =
+    let
+        allSelectors =
+            selectors
+                |> List.map ((|>) [] >> withPrefix)
+                |> String.join ","
+    in
+    Selector "" allSelectors (unpack unpackRule rules)
+
+
+withPrefix : Selector -> String
+withPrefix (Selector prefix name _) =
+    prefix ++ name
+
+
 classNameString : Selector -> String
-classNameString (Selector name _) =
+classNameString (Selector _ name _) =
     name
 
 

@@ -1,8 +1,7 @@
-module Navigation exposing (Model, Msg, initial, open, update, view)
+module Navigation exposing (Model, Msg, css, initial, open, update, view)
 
-import Css
-import Html.Styled as Html exposing (Html, a, div, header, span, styled, text)
-import Html.Styled.Attributes as Attributes exposing (css)
+import Html.Styled as Html exposing (Html, a, div, header, span, text)
+import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Icon
@@ -10,6 +9,7 @@ import Palette
 import Router
 import Set exposing (Set)
 import Story exposing (Story(..))
+import Style
 import Utils exposing (ifelse, onSpaceOrEnter)
 
 
@@ -76,100 +76,195 @@ update key msg model =
 -- V I E W
 
 
+css : Style.Sheet
+css =
+    Style.sheet
+        [ navigation__spacer
+        , navigation__icon_box
+
+        --
+        , navigation__label
+        , Style.adjacent "*"
+            navigation__label
+            [ Style.rule "margin-top" "8px"
+            ]
+
+        --
+        , navigation__item
+        , navigation__item_active
+        , Style.all
+            [ Style.hover navigation__item_active
+            , Style.focusVisible navigation__item_active
+            ]
+            [ Style.rule "background" Palette.blueDark_
+            ]
+        , navigation__item_interactive
+        , Style.all
+            [ Style.hover navigation__item_interactive
+            , Style.focusVisible navigation__item_interactive
+            ]
+            [ Style.rule "background" Palette.smoke_
+            ]
+
+        --
+        , navigation__header
+        , navigation__container
+        , navigation__scroller
+        , navigation__root
+        ]
+
+
+navigation__spacer : Style.Selector
+navigation__spacer =
+    Style.class "navigation__spacer"
+        [ Style.rule "display" "inline-block"
+        ]
+
+
+navigation__icon_box : Style.Selector
+navigation__icon_box =
+    Style.class "navigation__icon_box"
+        [ Style.rule "display" "inline-block"
+        , Style.rule "margin-right" "4px"
+        , Style.rule "width" "18px"
+        , Style.rule "vertical-align" "middle"
+        ]
+
+
+navigation__label : Style.Selector
+navigation__label =
+    Style.class "navigation__label"
+        [ Style.rule "padding" "4px 12px 5px 8px"
+        , Style.rule "color" Palette.dark05
+        , Style.rule "font-weight" "bold"
+        , Style.rule "font-size" "12px"
+        , Style.rule "letter-spacing" "0.25em"
+        ]
+
+
+navigation__item : Style.Selector
+navigation__item =
+    Style.class "navigation__item"
+        [ Style.rule "display" "block"
+        , Style.rule "padding" "4px 12px 4px 8px"
+        , Style.rule "text-decoration" "none"
+        , Style.rule "outline" "none"
+        , Style.rule "color" "inherit"
+        ]
+
+
+navigation__item_interactive : Style.Selector
+navigation__item_interactive =
+    Style.class "navigation__item_interactive"
+        [ Style.rule "cursor" "pointer"
+        ]
+
+
+navigation__item_active : Style.Selector
+navigation__item_active =
+    Style.class "navigation__item_active"
+        [ Style.rule "background" Palette.blue_
+        , Style.rule "color" Palette.white_
+        , Style.rule "font-weight" "bold"
+        , Style.rule "cursor" "pointer"
+        ]
+
+
+navigation__header : Style.Selector
+navigation__header =
+    Style.class "navigation__header"
+        [ Style.rule "position" "absolute"
+        , Style.rule "top" "0"
+        , Style.rule "right" "0"
+        , Style.rule "left" "0"
+        , Style.rule "padding" "16px 12px 16px 48px"
+        , Style.rule "background" Palette.white_
+        , Style.rule "font-weight" "bold"
+        , Style.rule "font-size" "16px"
+        , Style.rule "line-height" "1"
+        , Style.rule "letter-spacing" "0.05em"
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke_)
+        ]
+
+
+navigation__container : Style.Selector
+navigation__container =
+    Style.class "navigation__container"
+        [ Style.rule "flex" "1 0 0"
+        , Style.rule "padding" "8px 0 20px"
+        ]
+
+
+navigation__scroller : Style.Selector
+navigation__scroller =
+    Style.class "navigation__scroller"
+        [ Style.rule "display" "flex"
+        , Style.rule "width" "100%"
+        , Style.rule "height" "100%"
+        , Style.rule "overflow" "auto"
+        ]
+
+
+navigation__root : Style.Selector
+navigation__root =
+    Style.class "navigation__root"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "position" "relative"
+        , Style.rule "padding-top" "48px"
+        , Style.rule "width" "100%"
+        , Style.rule "height" "100%"
+        , Style.rule "white-space" "nowrap"
+        , Style.rule "user-select" "none"
+        , Style.rule "color" Palette.dark_
+        , Style.rule "background" Palette.cloud_
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-family" Palette.font_
+        ]
+
+
 toKey : Story.Path -> String
 toKey =
-    String.join "<-@->"
+    String.join ""
 
 
 viewSpacer : Int -> Html msg
 viewSpacer n =
     if n > 0 then
-        styled span
-            [ Css.display Css.inlineBlock
-            , Css.width (Css.px (toFloat n * 22))
+        span
+            [ Style.className navigation__spacer
+            , Attributes.style "width" (String.fromInt (n * 22) ++ "px")
             ]
-            []
             []
 
     else
         text ""
 
 
-styledIconHolder : List (Html msg) -> Html msg
-styledIconHolder =
-    styled span
-        [ Css.display Css.inlineBlock
-        , Css.marginRight (Css.px 4)
-        , Css.width (Css.px 18)
-        , Css.verticalAlign Css.middle
-        ]
-        []
+viewIconBox : List (Html msg) -> Html msg
+viewIconBox =
+    span [ Style.className navigation__icon_box ]
 
 
 viewTodo : Story.Path -> String -> Html msg
 viewTodo path title =
     div
-        [ css (cssStaticItem False)
+        [ Style.className navigation__item
         , Attributes.tabindex -1
         ]
         [ viewSpacer (List.length path)
-        , styledIconHolder [ Icon.tools ]
+        , viewIconBox [ Icon.tools ]
         , text title
         ]
 
 
-styledLabel : List (Html msg) -> Html msg
-styledLabel =
-    styled div
-        [ Css.marginTop (Css.px 8)
-        , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 5) (Css.px 8)
-        , Css.color Palette.dark50
-        , Css.fontSize (Css.px 12)
-        , Css.fontWeight Css.bold
-        , Css.letterSpacing (Css.em 0.25)
-        , Css.firstChild
-            [ Css.marginTop Css.zero
-            ]
-        ]
-        []
-
-
 viewLabel : Story.Path -> String -> Html msg
 viewLabel path title =
-    styledLabel
+    div
+        [ Style.className navigation__label
+        ]
         [ viewSpacer (List.length path)
         , text (String.toUpper title)
         ]
-
-
-cssStaticItem : Bool -> List Css.Style
-cssStaticItem active =
-    [ Css.display Css.block
-    , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 4) (Css.px 8)
-    , Css.textDecoration Css.none
-    , Css.outline Css.none
-    , Css.color Css.inherit
-    , if active then
-        Css.batch
-            [ Css.backgroundColor Palette.blue
-            , Css.color Palette.white
-            , Css.fontWeight Css.bold
-            ]
-
-      else
-        Css.batch []
-    ]
-
-
-cssItem : Bool -> List Css.Style
-cssItem active =
-    Css.focus
-        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
-        ]
-        :: Css.hover
-            [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
-            ]
-        :: cssStaticItem active
 
 
 viewStoryLink : Bool -> Story.Path -> String -> Html Msg
@@ -182,7 +277,8 @@ viewStoryLink active path title =
             List.reverse storyPath
     in
     a
-        [ css (cssItem active)
+        [ Style.className navigation__item
+        , Style.className (ifelse active navigation__item_active navigation__item_interactive)
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
         , Attributes.title (String.join " / " exactStoryPath)
@@ -190,14 +286,9 @@ viewStoryLink active path title =
         , onSpaceOrEnter (GoToStory exactStoryPath)
         ]
         [ viewSpacer (List.length path)
-        , styledIconHolder [ Icon.elm ]
+        , viewIconBox [ Icon.elm ]
         , text title
         ]
-
-
-styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledFolder active =
-    styled div (Css.cursor Css.pointer :: cssItem active)
 
 
 viewFolderTree : Model -> Story.Path -> Story.Path -> String -> Story (Html ()) -> List ( String, Html Msg )
@@ -229,15 +320,17 @@ viewFolderTree model current path title story =
                 []
     in
     ( toKey ("FOLDER" :: folderPath)
-    , styledFolder active
-        [ Attributes.attribute "role" "button"
+    , div
+        [ Style.className navigation__item
+        , Style.className (ifelse active navigation__item_active navigation__item_interactive)
+        , Attributes.attribute "role" "button"
         , Attributes.tabindex 0
         , Attributes.title (String.join " / " (List.reverse folderPath))
         , Events.onClick (Toggle folderPath)
         , onSpaceOrEnter (Toggle folderPath)
         ]
         [ viewSpacer (List.length path)
-        , styledIconHolder
+        , viewIconBox
             [ if opened then
                 ifelse (Story.isEmpty story) Icon.folderEmptyOpen Icon.folderOpen
 
@@ -278,69 +371,21 @@ viewItem model current path story =
             List.concatMap (viewItem model current path) stories
 
 
-styledHeader : List (Html msg) -> Html msg
-styledHeader =
-    styled header
-        [ Css.position Css.absolute
-        , Css.top Css.zero
-        , Css.right Css.zero
-        , Css.left Css.zero
-        , Css.padding4 (Css.px 16) (Css.px 12) (Css.px 16) (Css.px 48)
-        , Css.backgroundColor Palette.white
-        , Css.fontWeight Css.bold
-        , Css.fontSize (Css.px 16)
-        , Css.lineHeight (Css.int 1)
-        , Css.letterSpacing (Css.em 0.05)
-        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        ]
-        []
-
-
-cssContainer : List Css.Style
-cssContainer =
-    [ Css.flex3 (Css.int 1) Css.zero Css.zero
-    , Css.padding3 (Css.px 8) Css.zero (Css.px 20)
-    ]
-
-
-styledScroller : List (Html msg) -> Html msg
-styledScroller =
-    styled div
-        [ Css.displayFlex
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.overflow Css.auto
-        ]
-        []
-
-
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.position Css.relative
-        , Css.paddingTop (Css.px 48)
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.whiteSpace Css.noWrap
-        , Css.property "user-select" "none"
-        , Css.backgroundColor Palette.cloud
-        , Css.color Palette.dark
-        , Css.fontFamilies Palette.font
-        , Css.fontSize (Css.px 13)
-        ]
-        []
-
-
 view : Story.Path -> Story (Html ()) -> Model -> Html Msg
 view current story model =
-    styledRoot
-        [ styledHeader
+    div
+        [ Style.className navigation__root
+        ]
+        [ header
+            [ Style.className navigation__header
+            ]
             [ text "BULLETPROOF"
             ]
-        , styledScroller
+        , div
+            [ Style.className navigation__scroller
+            ]
             [ Keyed.node "div"
-                [ css cssContainer
+                [ Style.className navigation__container
                 ]
                 (viewItem model current [] story)
             ]
