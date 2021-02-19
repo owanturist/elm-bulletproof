@@ -1,59 +1,70 @@
-module NotFound exposing (view)
+module NotFound exposing (css, view)
 
-import Css
-import Html.Styled exposing (Html, br, code, div, styled, text)
+import Html.Styled exposing (Html, br, code, div, text)
 import Palette
 import Story
+import Style
 
 
-styledPath : List (Html msg) -> Html msg
-styledPath =
-    styled code
-        [ Css.display Css.inlineBlock
-        , Css.padding2 (Css.px 4) (Css.px 12)
-        , Css.backgroundColor Palette.gray50
-        , Css.borderRadius (Css.px 4)
-        , Css.letterSpacing (Css.em 0.05)
-        , Css.fontFamily Css.monospace
+css : Style.Sheet
+css =
+    Style.sheet
+        [ not_found__path
+        , not_found__message
+        , not_found__root
         ]
-        []
 
 
-styledMessage : List (Html msg) -> Html msg
-styledMessage =
-    styled div
-        [ Css.padding2 (Css.px 12) (Css.px 24)
+not_found__path : Style.Selector
+not_found__path =
+    Style.class "not_found__path"
+        [ Style.rule "display" "inline-block"
+        , Style.rule "padding" "4px 12px"
+        , Style.rule "background" Palette.gray05
+        , Style.rule "border-radius" "4px"
+        , Style.rule "letter-spacing" "0.05em"
         ]
-        []
 
 
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.displayFlex
-        , Css.alignItems Css.center
-        , Css.justifyContent Css.center
-        , Css.height (Css.pct 100)
-        , Css.width (Css.pct 100)
-        , Css.color Palette.dark
-        , Css.backgroundColor Palette.white
-        , Css.fontFamilies Palette.font
-        , Css.fontSize (Css.px 24)
-        , Css.fontSize (Css.vmin 3)
-        , Css.lineHeight (Css.num 1.5)
+not_found__message : Style.Selector
+not_found__message =
+    Style.class "not_found__message"
+        [ Style.rule "padding" "12px 24px"
         ]
-        []
+
+
+not_found__root : Style.Selector
+not_found__root =
+    Style.class "not_found__root"
+        [ Style.rule "display" "flex"
+        , Style.rule "align-items" "center"
+        , Style.rule "justify-content" "center"
+        , Style.rule "height" "100%"
+        , Style.rule "width" "100%"
+        , Style.rule "color" Palette.dark_
+        , Style.rule "background" Palette.white_
+        , Style.rule "line-height" "1.t"
+        , Style.rule "font-size" "24px"
+        , Style.rule "font-size" "3vim"
+        , Style.rule "font-family" Palette.font_
+        ]
 
 
 view : Story.Path -> Html msg
 view path =
-    styledRoot
-        [ styledMessage
+    div
+        [ Style.className not_found__root
+        ]
+        [ div
+            [ Style.className not_found__message
+            ]
             [ text "Ooops..."
             , br [] []
             , text "There is no Story at this path:"
             , br [] []
-            , styledPath [ text (String.join " / " ("" :: path)) ]
+            , code
+                [ Style.className not_found__path ]
+                [ text ("/ " ++ String.join " / " path) ]
             , br [] []
             , text "I suggest you to choose an existing one from the sidebar 😉"
             ]
