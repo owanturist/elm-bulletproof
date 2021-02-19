@@ -173,10 +173,7 @@ navigation__item_active =
 navigation__header : Style.Selector
 navigation__header =
     Style.class "navigation__header"
-        [ Style.rule "position" "absolute"
-        , Style.rule "top" "0"
-        , Style.rule "right" "0"
-        , Style.rule "left" "0"
+        [ Style.rule "flex" "0 0 auto"
         , Style.rule "padding" "16px 12px 16px 48px"
         , Style.rule "background" Palette.white_
         , Style.rule "font-weight" "bold"
@@ -184,6 +181,7 @@ navigation__header =
         , Style.rule "line-height" "1"
         , Style.rule "letter-spacing" "0.05em"
         , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke_)
+        , Style.rule "overflow" "hidden"
         ]
 
 
@@ -200,7 +198,6 @@ navigation__scroller =
     Style.class "navigation__scroller"
         [ Style.rule "display" "flex"
         , Style.rule "width" "100%"
-        , Style.rule "height" "100%"
         , Style.rule "overflow" "auto"
         ]
 
@@ -209,8 +206,8 @@ navigation__root : Style.Selector
 navigation__root =
     Style.class "navigation__root"
         [ Style.rule "box-sizing" "border-box"
-        , Style.rule "position" "relative"
-        , Style.rule "padding-top" "48px"
+        , Style.rule "display" "flex"
+        , Style.rule "flex-direction" "column"
         , Style.rule "width" "100%"
         , Style.rule "height" "100%"
         , Style.rule "white-space" "nowrap"
