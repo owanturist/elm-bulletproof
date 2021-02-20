@@ -177,7 +177,7 @@ css =
             [ Style.hover menu__item
             , Style.focusVisible menu__item
             ]
-            [ Style.rule "background" Palette.smoke_
+            [ Style.rule "background" Palette.smoke
             ]
 
         --
@@ -191,7 +191,7 @@ menu__root =
         [ Style.rule "position" "relative"
         , Style.rule "user-select" "none"
         , Style.rule "font-size" "13px"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 
@@ -219,10 +219,10 @@ menu__dropdown =
         , Style.rule "left" "0"
         , Style.rule "margin-top" "8px"
         , Style.rule "padding" "4px 0"
-        , Style.rule "border" ("1px solid " ++ Palette.gray_)
+        , Style.rule "border" ("1px solid " ++ Palette.gray)
         , Style.rule "border-radius" "3px"
         , Style.rule "min-width" "200px"
-        , Style.rule "background" Palette.white_
+        , Style.rule "background" Palette.white
         , Style.rule "box-shadow" ("0 3px 4px " ++ Palette.gray05)
         ]
 
@@ -245,8 +245,8 @@ menu__hotkey =
         , Style.rule "margin-left" "4px"
         , Style.rule "padding" "2px 4px"
         , Style.rule "border-radius" "3px"
-        , Style.rule "color" Palette.gray_
-        , Style.rule "background" Palette.smoke_
+        , Style.rule "color" Palette.gray
+        , Style.rule "background" Palette.smoke
         , Style.rule "line-height" "1"
         , Style.rule "font-size" "14px"
         , Style.rule "font-family" "monospace"

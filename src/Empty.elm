@@ -53,11 +53,11 @@ empty__root =
         , Style.rule "height" "100%"
         , Style.rule "width" "100%"
         , Style.rule "overflow" "auto"
-        , Style.rule "color" Palette.dark_
-        , Style.rule "background" Palette.white_
+        , Style.rule "color" Palette.dark
+        , Style.rule "background" Palette.white
         , Style.rule "font-size" "13px"
         , Style.rule "font-size" "1.5vmin"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 

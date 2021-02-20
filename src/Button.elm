@@ -27,9 +27,9 @@ button__root =
         , Style.rule "justify-content" "center"
         , Style.rule "width" "24px"
         , Style.rule "height" "24px"
-        , Style.rule "border" ("1px solid " ++ Palette.gray_)
-        , Style.rule "color" Palette.dark_
-        , Style.rule "background" Palette.white_
+        , Style.rule "border" ("1px solid " ++ Palette.gray)
+        , Style.rule "color" Palette.dark
+        , Style.rule "background" Palette.white
         , Style.rule "border-radius" "3px"
         , Style.rule "font-size" "0"
         , Style.rule "outline" "none"

@@ -359,7 +359,7 @@ cssGlobal : Style.Sheet
 cssGlobal =
     Style.sheet
         [ Style.selector "body"
-            [ Style.rule "background" Palette.cloud_
+            [ Style.rule "background" Palette.cloud
             ]
 
         --
@@ -430,7 +430,7 @@ main__story_container =
         , Style.rule "display" "block"
         , Style.rule "flex" "1 0 auto"
         , Style.rule "position" "relative"
-        , Style.rule "background" Palette.white_
+        , Style.rule "background" Palette.white
         ]
 
 
@@ -444,7 +444,7 @@ main__story_container__with_paddings =
 main__story_container__dark_background : Style.Selector
 main__story_container__dark_background =
     Style.class "main__story_container__dark_background"
-        [ Style.rule "background" Palette.dark_
+        [ Style.rule "background" Palette.dark
         ]
 
 
@@ -491,7 +491,7 @@ main__dragger_line : Style.Selector
 main__dragger_line =
     Style.class "main__dragger_line"
         [ Style.rule "height" "100%"
-        , Style.rule "background" Palette.smoke_
+        , Style.rule "background" Palette.smoke
         ]
 
 
@@ -500,7 +500,7 @@ main__dock =
     Style.class "main__dock"
         [ Style.rule "position" "relative"
         , Style.rule "flex" "1 1 0"
-        , Style.rule "background" Palette.white_
+        , Style.rule "background" Palette.white
         , Style.rule "overflow" "hidden"
         ]
 
@@ -521,7 +521,7 @@ main__workspace =
         [ Style.rule "position" "relative"
         , Style.rule "display" "flex"
         , Style.rule "flex-direction" "row"
-        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke_)
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke)
         ]
 
 
@@ -569,7 +569,7 @@ main__root =
         , Style.rule "width" "100%"
         , Style.rule "height" "100%"
         , Style.rule "font-size" "13px"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 

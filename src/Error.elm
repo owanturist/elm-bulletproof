@@ -1181,10 +1181,10 @@ error__root =
         , Style.rule "width" "100%"
         , Style.rule "max-width" "100%"
         , Style.rule "min-height" "100%"
-        , Style.rule "background" Palette.cloud_
-        , Style.rule "color" Palette.dark_
+        , Style.rule "background" Palette.cloud
+        , Style.rule "color" Palette.dark
         , Style.rule "font-size" "13px"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         , Style.rule "word-break" "break-word"
         ]
 
@@ -1202,8 +1202,8 @@ error__error =
     Style.class "error__error"
         [ Style.rule "margin" "8px 0"
         , Style.rule "padding" "12px 16px 8px"
-        , Style.rule "background" Palette.white_
-        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke_)
+        , Style.rule "background" Palette.white
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke)
         ]
 
 
@@ -1211,8 +1211,8 @@ error__path : Style.Selector
 error__path =
     Style.class "error__path"
         [ Style.rule "padding" "2px 4px"
-        , Style.rule "background" Palette.smoke_
-        , Style.rule "color" Palette.gray_
+        , Style.rule "background" Palette.smoke
+        , Style.rule "color" Palette.gray
         , Style.rule "border-radius" "3px"
         , Style.rule "font-size" "10px"
         , Style.rule "font-family" "monospace"
@@ -1243,7 +1243,7 @@ error__code_example =
     Style.class "error__code_example"
         [ Style.rule "margin" "12px -8px 0"
         , Style.rule "padding" "0 8px"
-        , Style.rule "border" ("1px solid " ++ Palette.smoke_)
+        , Style.rule "border" ("1px solid " ++ Palette.smoke)
         , Style.rule "border-radius" "3px"
         , Style.rule "overflow" "auto"
         ]

@@ -95,14 +95,14 @@ css =
             [ Style.hover navigation__item_active
             , Style.focusVisible navigation__item_active
             ]
-            [ Style.rule "background" Palette.blueDark_
+            [ Style.rule "background" Palette.blueDark
             ]
         , navigation__item_interactive
         , Style.each
             [ Style.hover navigation__item_interactive
             , Style.focusVisible navigation__item_interactive
             ]
-            [ Style.rule "background" Palette.smoke_
+            [ Style.rule "background" Palette.smoke
             ]
 
         --
@@ -162,8 +162,8 @@ navigation__item_interactive =
 navigation__item_active : Style.Selector
 navigation__item_active =
     Style.class "navigation__item_active"
-        [ Style.rule "background" Palette.blue_
-        , Style.rule "color" Palette.white_
+        [ Style.rule "background" Palette.blue
+        , Style.rule "color" Palette.white
         , Style.rule "font-weight" "bold"
         , Style.rule "cursor" "pointer"
         ]
@@ -174,12 +174,12 @@ navigation__header =
     Style.class "navigation__header"
         [ Style.rule "flex" "0 0 auto"
         , Style.rule "padding" "16px 12px 16px 48px"
-        , Style.rule "background" Palette.white_
+        , Style.rule "background" Palette.white
         , Style.rule "font-weight" "bold"
         , Style.rule "font-size" "16px"
         , Style.rule "line-height" "1"
         , Style.rule "letter-spacing" "0.05em"
-        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke_)
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke)
         , Style.rule "overflow" "hidden"
         ]
 
@@ -211,10 +211,10 @@ navigation__root =
         , Style.rule "height" "100%"
         , Style.rule "white-space" "nowrap"
         , Style.rule "user-select" "none"
-        , Style.rule "color" Palette.dark_
-        , Style.rule "background" Palette.cloud_
+        , Style.rule "color" Palette.dark
+        , Style.rule "background" Palette.cloud
         , Style.rule "font-size" "13px"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 

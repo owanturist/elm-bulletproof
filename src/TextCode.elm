@@ -17,7 +17,7 @@ text_code__root =
     Style.class "text_code__root"
         [ Style.rule "display" "inline-block"
         , Style.rule "padding" "2px 4px"
-        , Style.rule "background" Palette.cloud_
+        , Style.rule "background" Palette.cloud
         , Style.rule "font-family" "monospace"
         , Style.rule "letter-spacing" "0.05em"
         , Style.rule "line-height" "18px"

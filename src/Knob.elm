@@ -396,9 +396,9 @@ knob__root =
         [ Style.rule "width" "100%"
         , Style.rule "vertical-align" "middle"
         , Style.rule "border-collapse" "collapse"
-        , Style.rule "color" Palette.dark_
+        , Style.rule "color" Palette.dark
         , Style.rule "font-size" "13px"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 
@@ -411,9 +411,9 @@ knob__empty =
         , Style.rule "align-items" "center"
         , Style.rule "padding" "12px"
         , Style.rule "width" "100%"
-        , Style.rule "color" Palette.dark_
+        , Style.rule "color" Palette.dark
         , Style.rule "font-size" "18px"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 
@@ -483,7 +483,7 @@ knob__radio_input =
 knob__row : Style.Selector
 knob__row =
     Style.class "knob__row"
-        [ Style.rule "border-bottom" ("1px solid " ++ Palette.smoke_)
+        [ Style.rule "border-bottom" ("1px solid " ++ Palette.smoke)
         ]
 
 

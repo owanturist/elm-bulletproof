@@ -42,12 +42,12 @@ not_found__root =
         , Style.rule "justify-content" "center"
         , Style.rule "height" "100%"
         , Style.rule "width" "100%"
-        , Style.rule "color" Palette.dark_
-        , Style.rule "background" Palette.white_
+        , Style.rule "color" Palette.dark
+        , Style.rule "background" Palette.white
         , Style.rule "line-height" "1.5"
         , Style.rule "font-size" "24px"
         , Style.rule "font-size" "3vim"
-        , Style.rule "font-family" Palette.font_
+        , Style.rule "font-family" Palette.font
         ]
 
 
