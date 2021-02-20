@@ -220,9 +220,9 @@ navigation__root =
         ]
 
 
-toKey : Story.Path -> String
-toKey =
-    String.join "|"
+toKey : String -> String -> String
+toKey left right =
+    left ++ "|" ++ right
 
 
 stringifyPath : Story.Path -> String
@@ -338,30 +338,33 @@ viewFolderTree model current path title story =
             else
                 []
     in
-    ( toKey ("FOLDER" :: folderPath)
-    , Lazy.lazy6 viewFolder
-        opened
-        active
-        (Story.isEmpty story)
-        title
-        (List.length path)
-        (stringifyPath (List.reverse folderPath))
-        |> Html.map ((|>) folderPath)
-    )
-        :: stories
+    [ ( toKey "FOLDER" title
+      , Lazy.lazy6 viewFolder
+            opened
+            active
+            (Story.isEmpty story)
+            title
+            (List.length path)
+            (stringifyPath (List.reverse folderPath))
+            |> Html.map ((|>) folderPath)
+      )
+    , ( toKey "FOLDER_TREE" title
+      , Keyed.node "div" [] stories
+      )
+    ]
 
 
 viewItem : Model -> Story.Path -> Story.Path -> Story (Html ()) -> List ( String, Html Msg )
 viewItem model current path story =
     case story of
         Story.Label title ->
-            [ ( toKey ("LABEL" :: title :: path)
+            [ ( toKey "LABEL" title
               , Lazy.lazy2 viewLabel (List.length path) title
               )
             ]
 
         Story.Todo title ->
-            [ ( toKey ("TODO" :: title :: path)
+            [ ( toKey "TODO" title
               , Lazy.lazy2 viewTodo (List.length path) title
               )
             ]
@@ -371,7 +374,7 @@ viewItem model current path story =
                 storyPath =
                     List.reverse (title :: path)
             in
-            [ ( toKey ("STORY" :: title :: path)
+            [ ( toKey "STORY" title
               , Lazy.lazy5 viewStoryLink
                     (current == [ title ])
                     title
