@@ -248,8 +248,25 @@ viewIconBox =
     span [ Style.className navigation__icon_box ] << List.singleton
 
 
-viewTodo : Int -> String -> Html msg
-viewTodo indent title =
+viewLabel : String -> Int -> Html msg
+viewLabel title indent =
+    div
+        [ Style.className navigation__label
+        ]
+        [ viewSpacer indent
+        , text (String.toUpper title)
+        ]
+
+
+viewLabelItem : String -> Story.Path -> ( String, Html msg )
+viewLabelItem title path =
+    ( toKey "LABEL" title
+    , Lazy.lazy2 viewLabel title (List.length path)
+    )
+
+
+viewTodo : String -> Int -> Html msg
+viewTodo title indent =
     div
         [ Style.className navigation__item
         , Attributes.tabindex -1
@@ -260,18 +277,15 @@ viewTodo indent title =
         ]
 
 
-viewLabel : Int -> String -> Html msg
-viewLabel indent title =
-    div
-        [ Style.className navigation__label
-        ]
-        [ viewSpacer indent
-        , text (String.toUpper title)
-        ]
+viewTodoItem : String -> Story.Path -> ( String, Html msg )
+viewTodoItem title path =
+    ( toKey "STORY" title
+    , Lazy.lazy2 viewTodo title (List.length path)
+    )
 
 
-viewStoryLink : Bool -> String -> Int -> String -> String -> Html (Story.Path -> Msg)
-viewStoryLink active title indent url tooltip =
+viewStory : Bool -> String -> Int -> String -> String -> Html (Story.Path -> Msg)
+viewStory active title indent url tooltip =
     a
         [ Style.className navigation__item
         , Style.className (ifelse active navigation__item_active navigation__item_interactive)
@@ -285,6 +299,30 @@ viewStoryLink active title indent url tooltip =
         , viewIconBox Icon.elm
         , text title
         ]
+
+
+viewStoryItem : String -> Story.Path -> Story.Path -> ( String, Html Msg )
+viewStoryItem title path current =
+    let
+        storyPath =
+            List.reverse (title :: path)
+
+        active =
+            current == [ title ]
+
+        url =
+            Router.toString storyPath
+
+        indent =
+            List.length path
+
+        tooltip =
+            stringifyPath storyPath
+    in
+    ( toKey "STORY" title
+    , Lazy.lazy5 viewStory active title indent url tooltip
+        |> Html.map ((|>) storyPath)
+    )
 
 
 viewMakeFolder :
@@ -336,96 +374,79 @@ viewFolder opened active title indent tooltip =
         }
 
 
-viewFolderTree : Story.Path -> Story.Path -> String -> Model -> Story (Html ()) -> List ( String, Html Msg )
-viewFolderTree current path title =
-    if List.head current == Just title then
-        viewItem (List.drop 1 current) (title :: path)
-
-    else
-        viewItem [] (title :: path)
-
-
-viewItem : Story.Path -> Story.Path -> Model -> Story (Html ()) -> List ( String, Html Msg )
-viewItem current path model story =
-    case story of
-        Story.Label title ->
-            [ ( toKey "LABEL" title
-              , Lazy.lazy2 viewLabel (List.length path) title
-              )
-            ]
-
-        Story.Todo title ->
-            [ ( toKey "TODO" title
-              , Lazy.lazy2 viewTodo (List.length path) title
-              )
-            ]
-
-        Story.Single title _ ->
-            let
-                storyPath =
-                    List.reverse (title :: path)
-
-                active =
-                    current == [ title ]
-
-                url =
-                    Router.toString storyPath
-
-                indent =
-                    List.length path
-
-                tooltip =
-                    stringifyPath storyPath
-            in
-            [ ( toKey "STORY" title
-              , Lazy.lazy5 viewStoryLink active title indent url tooltip
-                    |> Html.map ((|>) storyPath)
-              )
-            ]
-
-        Story.Folder title substory ->
-            let
-                folderPath =
-                    title :: path
-
-                opened =
-                    Set.member folderPath model
-
-                indent =
-                    List.length path
-
-                tooltip =
-                    stringifyPath (List.reverse folderPath)
-            in
-            if Story.isEmpty substory then
-                [ ( toKey "FOLDER" title
-                  , Lazy.lazy4 viewEmptyFolder opened title indent tooltip
-                        |> Html.map ((|>) folderPath)
-                  )
-                ]
-
-            else if opened then
-                [ ( toKey "FOLDER" title
-                  , Lazy.lazy5 viewFolder True False title indent tooltip
-                        |> Html.map ((|>) folderPath)
-                  )
-                , ( toKey "FOLDER_TREE" title
-                  , Keyed.node "div" [] (viewFolderTree current path title model substory)
-                  )
-                ]
+viewFolderTree : String -> Story.Path -> Story.Path -> Model -> Story view -> List ( String, Html Msg )
+viewFolderTree title path current =
+    let
+        nextCurrent =
+            if List.head current == Just title then
+                List.drop 1 current
 
             else
-                [ ( toKey "FOLDER" title
-                  , Lazy.lazy5 viewFolder False (List.head current == Just title) title indent tooltip
-                        |> Html.map ((|>) folderPath)
-                  )
-                ]
+                []
+    in
+    viewItem (title :: path) nextCurrent
+
+
+viewFolderItem : String -> Story.Path -> Story.Path -> Model -> Story view -> List ( String, Html Msg )
+viewFolderItem title path current model story =
+    let
+        folderPath =
+            title :: path
+
+        opened =
+            Set.member folderPath model
+
+        indent =
+            List.length path
+
+        tooltip =
+            stringifyPath (List.reverse folderPath)
+    in
+    if Story.isEmpty story then
+        [ ( toKey "FOLDER" title
+          , Lazy.lazy4 viewEmptyFolder opened title indent tooltip
+                |> Html.map ((|>) folderPath)
+          )
+        ]
+
+    else if opened then
+        [ ( toKey "FOLDER" title
+          , Lazy.lazy5 viewFolder True False title indent tooltip
+                |> Html.map ((|>) folderPath)
+          )
+        , ( toKey "FOLDER_TREE" title
+          , Keyed.node "div" [] (viewFolderTree title path current model story)
+          )
+        ]
+
+    else
+        [ ( toKey "FOLDER" title
+          , Lazy.lazy5 viewFolder False (List.head current == Just title) title indent tooltip
+                |> Html.map ((|>) folderPath)
+          )
+        ]
+
+
+viewItem : Story.Path -> Story.Path -> Model -> Story view -> List ( String, Html Msg )
+viewItem path current model story =
+    case story of
+        Story.Label title ->
+            [ viewLabelItem title path ]
+
+        Story.Todo title ->
+            [ viewTodoItem title path ]
+
+        Story.Single title _ ->
+            [ viewStoryItem title path current ]
+
+        Story.Folder title substory ->
+            viewFolderItem title path current model substory
 
         Story.Batch stories ->
-            List.concatMap (viewItem current path model) stories
+            List.concatMap (viewItem path current model) stories
 
 
-view : Story.Path -> Story (Html ()) -> Model -> Html Msg
+view : Story.Path -> Story view -> Model -> Html Msg
 view current story model =
     div
         [ Style.className navigation__root
@@ -441,6 +462,6 @@ view current story model =
             [ Keyed.node "div"
                 [ Style.className navigation__container
                 ]
-                (viewItem current [] model story)
+                (viewItem [] current model story)
             ]
         ]
