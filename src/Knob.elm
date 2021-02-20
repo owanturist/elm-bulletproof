@@ -710,7 +710,7 @@ viewKnob globalViewport name knob value =
             viewKnobNumber (UpdateInt name limits) String.fromInt name (Just defaultInt) limits
 
         ( Int True defaultInt limits, Just (IntValue int) ) ->
-            range (UpdateInt name limits)
+            range
                 name
                 String.fromInt
                 { min = Maybe.withDefault 0 limits.min
@@ -718,9 +718,10 @@ viewKnob globalViewport name knob value =
                 , step = Maybe.withDefault 1 limits.step
                 , value = Maybe.withDefault defaultInt int
                 }
+                |> Html.map (UpdateInt name limits)
 
         ( Int True defaultInt limits, _ ) ->
-            range (UpdateInt name limits)
+            range
                 name
                 String.fromInt
                 { min = Maybe.withDefault 0 limits.min
@@ -728,6 +729,7 @@ viewKnob globalViewport name knob value =
                 , step = Maybe.withDefault 1 limits.step
                 , value = defaultInt
                 }
+                |> Html.map (UpdateInt name limits)
 
         ( Float False _ limits, Just (FloatValue float) ) ->
             viewKnobNumber (UpdateFloat name limits) String.fromFloat name float limits
@@ -736,7 +738,7 @@ viewKnob globalViewport name knob value =
             viewKnobNumber (UpdateFloat name limits) String.fromFloat name (Just defaultFloat) limits
 
         ( Float True defaultFloat limits, Just (FloatValue float) ) ->
-            range (UpdateFloat name limits)
+            range
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 limits.min
@@ -744,9 +746,10 @@ viewKnob globalViewport name knob value =
                 , step = Maybe.withDefault 0.01 limits.step
                 , value = Maybe.withDefault defaultFloat float
                 }
+                |> Html.map (UpdateFloat name limits)
 
         ( Float True defaultFloat limits, _ ) ->
-            range (UpdateFloat name limits)
+            range
                 name
                 String.fromFloat
                 { min = Maybe.withDefault 0 limits.min
@@ -754,6 +757,7 @@ viewKnob globalViewport name knob value =
                 , step = Maybe.withDefault 0.01 limits.step
                 , value = defaultFloat
                 }
+                |> Html.map (UpdateFloat name limits)
 
         ( Radio options, Just (StringValue selected) ) ->
             viewKnobRadio name (Just selected) options

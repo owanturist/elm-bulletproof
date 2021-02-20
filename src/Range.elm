@@ -3,6 +3,7 @@ module Range exposing (css, range)
 import Html exposing (Html, div, input, span, text)
 import Html.Attributes as Attributes
 import Html.Events as Events
+import Html.Lazy as Lazy
 import Style
 
 
@@ -64,9 +65,39 @@ trailingZeros step value =
             value
 
 
+rangeHelp : String -> String -> String -> String -> String -> Html String
+rangeHelp name min max step value =
+    let
+        _ =
+            Debug.log "__" ""
+    in
+    div
+        [ Style.className range__root ]
+        [ span
+            [ Style.className range__border ]
+            [ text (trailingZeros step min)
+            ]
+        , input
+            [ Style.className range__input
+            , Attributes.type_ "range"
+            , Attributes.tabindex 0
+            , Attributes.name name
+            , Attributes.min min
+            , Attributes.max max
+            , Attributes.step step
+            , Attributes.value value
+            , Events.onInput identity
+            ]
+            []
+        , span
+            [ Style.className range__border ]
+            [ text (trailingZeros step value ++ " / " ++ trailingZeros step max)
+            ]
+        ]
+
+
 range :
-    (String -> msg)
-    -> String
+    String
     -> (number -> String)
     ->
         { min : number
@@ -74,8 +105,8 @@ range :
         , step : number
         , value : number
         }
-    -> Html msg
-range msg name numToString { min, max, step, value } =
+    -> Html String
+range name numToString { min, max, step, value } =
     let
         ( minStr, maxStr, stepStr ) =
             ( numToString min, numToString max, numToString step )
@@ -83,26 +114,9 @@ range msg name numToString { min, max, step, value } =
         valueStr =
             numToString (clamp min max value)
     in
-    div
-        [ Style.className range__root ]
-        [ span
-            [ Style.className range__border ]
-            [ text (trailingZeros stepStr minStr)
-            ]
-        , input
-            [ Style.className range__input
-            , Attributes.type_ "range"
-            , Attributes.tabindex 0
-            , Attributes.name name
-            , Attributes.min minStr
-            , Attributes.max maxStr
-            , Attributes.step stepStr
-            , Attributes.value valueStr
-            , Events.onInput msg
-            ]
-            []
-        , span
-            [ Style.className range__border ]
-            [ text (trailingZeros stepStr valueStr ++ " / " ++ trailingZeros stepStr maxStr)
-            ]
-        ]
+    Lazy.lazy5 rangeHelp
+        name
+        (numToString min)
+        (numToString max)
+        (numToString step)
+        (numToString (clamp min max value))

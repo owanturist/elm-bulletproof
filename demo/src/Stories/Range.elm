@@ -10,7 +10,7 @@ story =
     Bulletproof.folder "Range"
         [ Bulletproof.story "Int"
             (\min max step value ->
-                range (always ())
+                range
                     "int-range"
                     String.fromInt
                     { min = min
@@ -27,7 +27,7 @@ story =
         --
         , Bulletproof.story "Float"
             (\min max step value ->
-                range (always ())
+                range
                     "float-range"
                     String.fromFloat
                     { min = min
@@ -41,3 +41,4 @@ story =
             |> Bulletproof.Knob.float "Step" 0.05 []
             |> Bulletproof.Knob.float "Value" 3 []
         ]
+        |> Bulletproof.html
