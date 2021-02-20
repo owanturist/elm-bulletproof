@@ -1,6 +1,6 @@
 module NotFound exposing (css, view)
 
-import Html.Styled exposing (Html, br, code, div, text)
+import Html exposing (Html, br, code, div, text)
 import Palette
 import Story
 import Style

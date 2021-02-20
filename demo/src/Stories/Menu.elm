@@ -2,7 +2,6 @@ module Stories.Menu exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Html.Styled
 import Menu
 import Settings exposing (default)
 
@@ -43,4 +42,4 @@ story =
             |> Bulletproof.Knob.bool "Add Paddings" True
             |> Bulletproof.Knob.bool "Dark Background" True
         ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html

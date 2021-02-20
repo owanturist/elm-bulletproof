@@ -1,8 +1,8 @@
 module Button exposing (button, css)
 
-import Html.Styled as Html exposing (Html, div)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
+import Html exposing (Html, div)
+import Html.Attributes as Attributes
+import Html.Events as Events
 import Palette
 import Style
 import Utils exposing (onSpaceOrEnter)

@@ -1,6 +1,6 @@
 module TextCode exposing (css, textCode)
 
-import Html.Styled as Html exposing (Html, code, text)
+import Html exposing (Html, code, text)
 import Palette
 import Style
 

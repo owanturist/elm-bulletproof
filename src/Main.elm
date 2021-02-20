@@ -8,9 +8,9 @@ import Button
 import Dict exposing (Dict)
 import Empty
 import Error exposing (Error)
-import Html.Styled as Html exposing (Html, div, nav)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
+import Html exposing (Html, div, nav)
+import Html.Attributes as Attributes
+import Html.Events as Events
 import Icon
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
@@ -780,10 +780,7 @@ viewRoot dockOrientation dragging children =
     in
     div
         (Style.className main__root :: attributes)
-        (viewStyle
-            :: Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
-            :: children
-        )
+        (viewStyle :: SyntaxHighlight.useTheme SyntaxHighlight.gitHub :: children)
 
 
 viewBulletproof : Story (Html ()) -> Model -> Browser.Document Msg
@@ -837,7 +834,6 @@ viewBulletproof story { settings, state, knobs } =
             --
             , workspaceView
             ]
-            |> Html.toUnstyled
         ]
 
 
@@ -845,7 +841,6 @@ viewError : List Error -> Model -> Browser.Document Msg
 viewError errors { settings, state } =
     Browser.Document "Bulletproof | Error"
         [ viewRoot settings.dockOrientation state.dragging [ Error.view errors ]
-            |> Html.toUnstyled
         ]
 
 
@@ -853,7 +848,6 @@ viewEmpty : Model -> Browser.Document Msg
 viewEmpty { settings, state } =
     Browser.Document "Bulletproof"
         [ viewRoot settings.dockOrientation state.dragging [ Empty.view ]
-            |> Html.toUnstyled
         ]
 
 

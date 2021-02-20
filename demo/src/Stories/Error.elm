@@ -3,7 +3,6 @@ module Stories.Error exposing (story)
 import Bulletproof
 import Bulletproof.Knob
 import Error exposing (Error)
-import Html.Styled
 
 
 stringToPath : String -> List String
@@ -48,7 +47,6 @@ layoutStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 storiesStory : Bulletproof.Story
@@ -126,7 +124,6 @@ storiesStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 knobsStory : Bulletproof.Story
@@ -153,7 +150,6 @@ knobsStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 radioStory : Bulletproof.Story
@@ -201,7 +197,6 @@ radioStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 selectStory : Bulletproof.Story
@@ -249,7 +244,6 @@ selectStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 intStory : Bulletproof.Story
@@ -339,7 +333,6 @@ intStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 floatStory : Bulletproof.Story
@@ -429,7 +422,6 @@ floatStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 colorStory : Bulletproof.Story
@@ -442,7 +434,6 @@ colorStory =
         )
         |> Bulletproof.Knob.string "Knob name" "Color name"
         |> Bulletproof.Knob.string "Color" "#asd"
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 dateStory : Bulletproof.Story
@@ -455,7 +446,6 @@ dateStory =
         )
         |> Bulletproof.Knob.string "Knob name" "Date name"
         |> Bulletproof.Knob.string "Date" "32-13-2020"
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 timeStory : Bulletproof.Story
@@ -468,7 +458,6 @@ timeStory =
         )
         |> Bulletproof.Knob.string "Knob name" "Time name"
         |> Bulletproof.Knob.string "Time" "60:25"
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 viewportStory : Bulletproof.Story
@@ -485,7 +474,6 @@ viewportStory =
             , Bulletproof.Knob.min 2
             , Bulletproof.Knob.max 10
             ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
 
 
 story : Bulletproof.Story

@@ -15,8 +15,8 @@ module Style exposing
     , sheet
     )
 
-import Html.Styled as Html
-import Html.Styled.Attributes as Attributes
+import Html
+import Html.Attributes as Attributes
 
 
 unpack : (a -> String) -> List a -> String

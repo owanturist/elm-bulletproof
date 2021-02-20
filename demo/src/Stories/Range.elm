@@ -2,7 +2,6 @@ module Stories.Range exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Html.Styled
 import Range exposing (range)
 
 
@@ -42,4 +41,3 @@ story =
             |> Bulletproof.Knob.float "Step" 0.05 []
             |> Bulletproof.Knob.float "Value" 3 []
         ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

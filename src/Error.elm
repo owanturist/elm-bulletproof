@@ -3,8 +3,8 @@ module Error exposing (Error, Reason(..), css, validateStories, view)
 import Color
 import Date
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, code, div, p, pre, text)
-import Html.Styled.Attributes as Attributes
+import Html exposing (Html, code, div, p, pre, text)
+import Html.Attributes as Attributes
 import Knob exposing (Knob)
 import List
 import Palette
@@ -1271,7 +1271,6 @@ viewCodeExample exampleCode diffs =
             Ok elmCode ->
                 List.foldl applyDiff elmCode diffs
                     |> SyntaxHighlight.toBlockHtml Nothing
-                    |> Html.fromUnstyled
         ]
 
 

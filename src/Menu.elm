@@ -2,9 +2,9 @@ module Menu exposing (Msg, Stage(..), css, subscriptions, update, view)
 
 import Browser.Events
 import Button exposing (button)
-import Html.Styled as Html exposing (Html, div, span, text)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
+import Html exposing (Html, div, span, text)
+import Html.Attributes as Attributes
+import Html.Events as Events
 import Icon
 import Json.Decode as Decode exposing (Decoder)
 import Palette

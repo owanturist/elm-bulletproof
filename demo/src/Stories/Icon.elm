@@ -2,8 +2,8 @@ module Stories.Icon exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Html.Styled exposing (Html, code, div, text)
-import Html.Styled.Attributes exposing (style)
+import Html exposing (Html, code, div, text)
+import Html.Attributes exposing (style)
 import Icon
 
 
@@ -51,4 +51,3 @@ story =
                 |> viewContainer color.hex
         )
         |> Bulletproof.Knob.color "Color" "#1ea5fd"
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled

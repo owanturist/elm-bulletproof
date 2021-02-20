@@ -10,8 +10,8 @@ module Icon exposing
     )
 
 import Style
-import Svg.Styled as Svg exposing (Svg, path, svg)
-import Svg.Styled.Attributes as Attributes
+import Svg exposing (Svg, path, svg)
+import Svg.Attributes as Attributes
 
 
 css : Style.Sheet

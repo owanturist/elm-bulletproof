@@ -4,8 +4,8 @@ import Bulletproof
 import Bulletproof.Knob
 import Date
 import Dict
-import Html.Styled exposing (div)
-import Html.Styled.Attributes exposing (style)
+import Html exposing (div)
+import Html.Attributes exposing (style)
 import Knob
 import Utils exposing (px)
 
@@ -41,7 +41,7 @@ generalStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 boolStory : Bulletproof.Story
@@ -66,7 +66,7 @@ boolStory =
         |> Bulletproof.Knob.bool "Value" True
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 stringStory : Bulletproof.Story
@@ -117,7 +117,7 @@ stringStory =
         |> Bulletproof.Knob.string "Value" "First line\nSecond line"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 intStory : Bulletproof.Story
@@ -179,7 +179,7 @@ intStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 floatStory : Bulletproof.Story
@@ -241,7 +241,7 @@ floatStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 radioStory : Bulletproof.Story
@@ -310,7 +310,7 @@ radioStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 selectStory : Bulletproof.Story
@@ -379,7 +379,7 @@ selectStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 colorStory : Bulletproof.Story
@@ -404,7 +404,7 @@ colorStory =
         |> Bulletproof.Knob.color "Value" "#1ea5fd"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 dateStory : Bulletproof.Story
@@ -429,7 +429,7 @@ dateStory =
         |> Bulletproof.Knob.date "Value" "1993-02-09"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 timeStory : Bulletproof.Story
@@ -454,7 +454,7 @@ timeStory =
         |> Bulletproof.Knob.time "Value" "06:38"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 filesStory : Bulletproof.Story
@@ -466,7 +466,7 @@ filesStory =
                 |> Knob.view viewport Knob.initial
         )
         |> Bulletproof.Knob.string "Title" "Files"
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 viewportStory : Bulletproof.Story
@@ -498,7 +498,7 @@ viewportStory =
         |> Bulletproof.Knob.viewport
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 story : Bulletproof.Story

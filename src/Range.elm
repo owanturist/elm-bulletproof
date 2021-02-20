@@ -1,8 +1,8 @@
 module Range exposing (css, range)
 
-import Html.Styled as Html exposing (Html, div, input, span, text)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
+import Html exposing (Html, div, input, span, text)
+import Html.Attributes as Attributes
+import Html.Events as Events
 import Style
 
 

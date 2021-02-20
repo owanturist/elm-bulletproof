@@ -1,9 +1,9 @@
 module Navigation exposing (Model, Msg, css, initial, open, update, view)
 
-import Html.Styled as Html exposing (Html, a, div, header, span, text)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
-import Html.Styled.Keyed as Keyed
+import Html exposing (Html, a, div, header, span, text)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Html.Keyed as Keyed
 import Icon
 import Palette
 import Router

@@ -25,10 +25,10 @@ import Color exposing (Color)
 import Date exposing (Date, Time)
 import Dict exposing (Dict)
 import File exposing (File)
-import Html.Styled as Html exposing (Html, div, input, label, option, td, text, textarea, tr)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
-import Html.Styled.Keyed as Keyed
+import Html exposing (Html, div, input, label, option, td, text, textarea, tr)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Html.Keyed as Keyed
 import Json.Decode as Decode exposing (Decoder)
 import List
 import Palette
@@ -593,12 +593,7 @@ viewKnobSelect name selected options =
         , Style.className knob__select
         , Attributes.name name
         , Attributes.tabindex 0
-        , case selected of
-            Nothing ->
-                Attributes.css []
-
-            Just value ->
-                Attributes.value value
+        , Attributes.value (Maybe.withDefault "" selected)
         , Events.onInput (UpdateString name)
         ]
         (List.map

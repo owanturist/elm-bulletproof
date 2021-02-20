@@ -30,7 +30,6 @@ module Bulletproof exposing
 -}
 
 import Html exposing (Html)
-import Html.Styled
 import Main
 import Story
 
@@ -259,16 +258,6 @@ type alias Program =
     Main.Program ()
 
 
-fromUnstyled : Story.Story (Html msg) -> Story.Story (Html.Styled.Html msg)
-fromUnstyled =
-    Story.map
-        (\workspace ->
-            { knobs = workspace.knobs
-            , view = Maybe.map Html.Styled.fromUnstyled << workspace.view
-            }
-        )
-
-
 {-| Program to represent your stories.
 
 > **Note:** If you want Bulletproof to keep settings
@@ -294,7 +283,6 @@ program : List (Story.Story (Html msg)) -> Program
 program stories =
     batch stories
         |> html
-        |> fromUnstyled
         |> Main.run
             { settingsFromFlags = always Nothing
             , onSettingsChange = always Cmd.none
@@ -356,7 +344,6 @@ programWithSettings :
 programWithSettings { onSettingsJsonChange } stories =
     batch stories
         |> html
-        |> fromUnstyled
         |> Main.run
             { settingsFromFlags = .settingsJson
             , onSettingsChange = onSettingsJsonChange

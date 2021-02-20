@@ -1,6 +1,6 @@
 module Empty exposing (css, view)
 
-import Html.Styled as Html exposing (Html, br, div, pre, text)
+import Html exposing (Html, br, div, pre, text)
 import Palette
 import Style
 import SyntaxHighlight
@@ -97,6 +97,6 @@ view =
                     pre [] [ text (String.trim exampleGetStarted) ]
 
                 Ok elmCode ->
-                    Html.fromUnstyled (SyntaxHighlight.toBlockHtml Nothing elmCode)
+                    SyntaxHighlight.toBlockHtml Nothing elmCode
             ]
         ]

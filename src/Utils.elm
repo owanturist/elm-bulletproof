@@ -1,7 +1,7 @@
 module Utils exposing (Viewport, ifelse, notClosest, onSpaceOrEnter, px)
 
-import Html.Styled as Html
-import Html.Styled.Events as Events
+import Html
+import Html.Events as Events
 import Json.Decode as Decode exposing (Decoder)
 
 
