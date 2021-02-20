@@ -2,8 +2,8 @@ module Stories.Navigation exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Css
-import Html.Styled exposing (Html, div, styled, text)
+import Html.Styled exposing (Html, div, text)
+import Html.Styled.Attributes exposing (style)
 import Navigation
 import Set
 
@@ -33,13 +33,12 @@ story =
                     )
                     Navigation.initial
                     |> List.singleton
-                    |> styled div
-                        [ Css.width (Css.px 150)
-                        , Css.height (Css.px 300)
-                        , Css.border3 (Css.px 1) Css.solid (Css.hex "#444")
-                        , Css.overflow Css.auto
+                    |> div
+                        [ style "width" "150px"
+                        , style "height" "300px"
+                        , style "border" "1px solid #444"
+                        , style "overflow" "auto"
                         ]
-                        []
             )
             |> Bulletproof.Knob.string "Stories prefix" "SuperLongStoryTitle"
             |> Bulletproof.Knob.int "Amount of Stories"

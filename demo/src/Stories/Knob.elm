@@ -2,11 +2,12 @@ module Stories.Knob exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Css
 import Date
 import Dict
-import Html.Styled exposing (div, styled)
+import Html.Styled exposing (div)
+import Html.Styled.Attributes exposing (style)
 import Knob
+import Utils exposing (px)
 
 
 viewport : Bulletproof.Knob.Viewport
@@ -280,11 +281,10 @@ radioStory =
     --
     , Bulletproof.story "Radio with long options"
         (\title longString n width ->
-            styled div
-                [ Css.width (Css.px (toFloat width))
-                , Css.backgroundColor (Css.hex "#ccc")
+            div
+                [ style "width" (px width)
+                , style "background" "#ccc"
                 ]
-                []
                 [ ( title
                   , Knob.Radio
                         [ "Option #1"
@@ -350,11 +350,10 @@ selectStory =
     --
     , Bulletproof.story "Select with long options"
         (\title longString n width ->
-            styled div
-                [ Css.width (Css.px (toFloat width))
-                , Css.backgroundColor (Css.hex "#ccc")
+            div
+                [ style "width" (px width)
+                , style "background" "#ccc"
                 ]
-                []
                 [ ( title
                   , Knob.Select
                         [ "Option #1"
