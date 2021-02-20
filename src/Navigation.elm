@@ -243,9 +243,9 @@ viewSpacer n =
         text ""
 
 
-viewIconBox : List (Html msg) -> Html msg
+viewIconBox : Html msg -> Html msg
 viewIconBox =
-    span [ Style.className navigation__icon_box ]
+    span [ Style.className navigation__icon_box ] << List.singleton
 
 
 viewTodo : Int -> String -> Html msg
@@ -255,7 +255,7 @@ viewTodo indent title =
         , Attributes.tabindex -1
         ]
         [ viewSpacer indent
-        , viewIconBox [ Icon.tools ]
+        , viewIconBox Icon.tools
         , text title
         ]
 
@@ -282,7 +282,7 @@ viewStoryLink active title indent url path =
         , onSpaceOrEnter GoToStory
         ]
         [ viewSpacer indent
-        , viewIconBox [ Icon.elm ]
+        , viewIconBox Icon.elm
         , text title
         ]
 
@@ -299,13 +299,11 @@ viewFolder opened active empty title indent path =
         , onSpaceOrEnter Toggle
         ]
         [ viewSpacer indent
-        , viewIconBox
-            [ if opened then
-                ifelse empty Icon.folderEmptyOpen Icon.folderOpen
+        , if opened then
+            viewIconBox (ifelse empty Icon.folderEmptyOpen Icon.folderOpen)
 
-              else
-                ifelse empty Icon.folderEmpty Icon.folder
-            ]
+          else
+            viewIconBox (ifelse empty Icon.folderEmpty Icon.folder)
         , text title
         ]
 
