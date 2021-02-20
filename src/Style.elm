@@ -2,16 +2,16 @@ module Style exposing
     ( Rule
     , Selector
     , Sheet
-    , adjacent
-    , all
     , class
     , className
     , classNameString
     , classNames
+    , each
     , focusVisible
     , hover
     , render
     , rule
+    , selector
     , sheet
     )
 
@@ -67,13 +67,13 @@ focusVisible =
     pseudoClass "focus-visible"
 
 
-adjacent : String -> Selector -> List Rule -> Selector
-adjacent prev (Selector prefix current _) rules =
-    Selector "" (prev ++ " + " ++ prefix ++ current) (unpack unpackRule rules)
+selector : String -> List Rule -> Selector
+selector cssSelector rules =
+    Selector "" cssSelector (unpack unpackRule rules)
 
 
-all : List (List Rule -> Selector) -> List Rule -> Selector
-all selectors rules =
+each : List (List Rule -> Selector) -> List Rule -> Selector
+each selectors rules =
     let
         allSelectors =
             selectors

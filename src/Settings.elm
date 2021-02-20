@@ -11,6 +11,7 @@ module Settings exposing
     , minNavigationWidth
     , minStoryHeight
     , minStoryWidth
+    , paddingSize
     )
 
 import Json.Decode as Decode exposing (Decoder)
@@ -143,3 +144,8 @@ minStoryWidth =
 minStoryHeight : Int
 minStoryHeight =
     200
+
+
+paddingSize : Int
+paddingSize =
+    10

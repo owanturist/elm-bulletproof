@@ -44,7 +44,7 @@ not_found__root =
         , Style.rule "width" "100%"
         , Style.rule "color" Palette.dark_
         , Style.rule "background" Palette.white_
-        , Style.rule "line-height" "1.t"
+        , Style.rule "line-height" "1.5"
         , Style.rule "font-size" "24px"
         , Style.rule "font-size" "3vim"
         , Style.rule "font-family" Palette.font_

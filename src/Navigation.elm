@@ -84,22 +84,21 @@ css =
 
         --
         , navigation__label
-        , Style.adjacent "*"
-            navigation__label
+        , Style.selector ("* + ." ++ Style.classNameString navigation__label)
             [ Style.rule "margin-top" "8px"
             ]
 
         --
         , navigation__item
         , navigation__item_active
-        , Style.all
+        , Style.each
             [ Style.hover navigation__item_active
             , Style.focusVisible navigation__item_active
             ]
             [ Style.rule "background" Palette.blueDark_
             ]
         , navigation__item_interactive
-        , Style.all
+        , Style.each
             [ Style.hover navigation__item_interactive
             , Style.focusVisible navigation__item_interactive
             ]

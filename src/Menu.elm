@@ -159,7 +159,7 @@ css =
         , menu__trigger
 
         --
-        , Style.all
+        , Style.each
             [ Style.hover menu__trigger
             , Style.focusVisible menu__trigger
             ]
@@ -173,7 +173,7 @@ css =
 
         --
         , menu__item
-        , Style.all
+        , Style.each
             [ Style.hover menu__item
             , Style.focusVisible menu__item
             ]
