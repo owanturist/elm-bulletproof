@@ -1,9 +1,11 @@
 module Navigation exposing (Model, Msg, css, initial, open, update, view)
 
+import Array exposing (length)
 import Html exposing (Html, a, div, header, span, text)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import Html.Keyed as Keyed
+import Html.Lazy as Lazy
 import Icon
 import Palette
 import Router
@@ -220,7 +222,12 @@ navigation__root =
 
 toKey : Story.Path -> String
 toKey =
-    String.join ""
+    String.join "|"
+
+
+stringifyPath : Story.Path -> String
+stringifyPath =
+    String.join " / "
 
 
 viewSpacer : Int -> Html msg
@@ -241,48 +248,64 @@ viewIconBox =
     span [ Style.className navigation__icon_box ]
 
 
-viewTodo : Story.Path -> String -> Html msg
-viewTodo path title =
+viewTodo : Int -> String -> Html msg
+viewTodo indent title =
     div
         [ Style.className navigation__item
         , Attributes.tabindex -1
         ]
-        [ viewSpacer (List.length path)
+        [ viewSpacer indent
         , viewIconBox [ Icon.tools ]
         , text title
         ]
 
 
-viewLabel : Story.Path -> String -> Html msg
-viewLabel path title =
+viewLabel : Int -> String -> Html msg
+viewLabel indent title =
     div
         [ Style.className navigation__label
         ]
-        [ viewSpacer (List.length path)
+        [ viewSpacer indent
         , text (String.toUpper title)
         ]
 
 
-viewStoryLink : Bool -> Story.Path -> String -> Html Msg
-viewStoryLink active path title =
-    let
-        storyPath =
-            title :: path
-
-        exactStoryPath =
-            List.reverse storyPath
-    in
+viewStoryLink : Bool -> String -> Int -> String -> String -> Html (Story.Path -> Msg)
+viewStoryLink active title indent url path =
     a
         [ Style.className navigation__item
         , Style.className (ifelse active navigation__item_active navigation__item_interactive)
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
-        , Attributes.title (String.join " / " exactStoryPath)
-        , Attributes.href (Router.toString exactStoryPath)
-        , onSpaceOrEnter (GoToStory exactStoryPath)
+        , Attributes.title path
+        , Attributes.href url
+        , onSpaceOrEnter GoToStory
         ]
-        [ viewSpacer (List.length path)
+        [ viewSpacer indent
         , viewIconBox [ Icon.elm ]
+        , text title
+        ]
+
+
+viewFolder : Bool -> Bool -> Bool -> String -> Int -> String -> Html (Story.Path -> Msg)
+viewFolder opened active empty title indent path =
+    div
+        [ Style.className navigation__item
+        , Style.className (ifelse active navigation__item_active navigation__item_interactive)
+        , Attributes.attribute "role" "button"
+        , Attributes.tabindex 0
+        , Attributes.title path
+        , Events.onClick Toggle
+        , onSpaceOrEnter Toggle
+        ]
+        [ viewSpacer indent
+        , viewIconBox
+            [ if opened then
+                ifelse empty Icon.folderEmptyOpen Icon.folderOpen
+
+              else
+                ifelse empty Icon.folderEmpty Icon.folder
+            ]
         , text title
         ]
 
@@ -316,25 +339,14 @@ viewFolderTree model current path title story =
                 []
     in
     ( toKey ("FOLDER" :: folderPath)
-    , div
-        [ Style.className navigation__item
-        , Style.className (ifelse active navigation__item_active navigation__item_interactive)
-        , Attributes.attribute "role" "button"
-        , Attributes.tabindex 0
-        , Attributes.title (String.join " / " (List.reverse folderPath))
-        , Events.onClick (Toggle folderPath)
-        , onSpaceOrEnter (Toggle folderPath)
-        ]
-        [ viewSpacer (List.length path)
-        , viewIconBox
-            [ if opened then
-                ifelse (Story.isEmpty story) Icon.folderEmptyOpen Icon.folderOpen
-
-              else
-                ifelse (Story.isEmpty story) Icon.folderEmpty Icon.folder
-            ]
-        , text title
-        ]
+    , Lazy.lazy6 viewFolder
+        opened
+        active
+        (Story.isEmpty story)
+        title
+        (List.length path)
+        (stringifyPath (List.reverse folderPath))
+        |> Html.map ((|>) folderPath)
     )
         :: stories
 
@@ -344,19 +356,29 @@ viewItem model current path story =
     case story of
         Story.Label title ->
             [ ( toKey ("LABEL" :: title :: path)
-              , viewLabel path title
+              , Lazy.lazy2 viewLabel (List.length path) title
               )
             ]
 
         Story.Todo title ->
             [ ( toKey ("TODO" :: title :: path)
-              , viewTodo path title
+              , Lazy.lazy2 viewTodo (List.length path) title
               )
             ]
 
         Story.Single title _ ->
+            let
+                storyPath =
+                    List.reverse (title :: path)
+            in
             [ ( toKey ("STORY" :: title :: path)
-              , viewStoryLink (current == [ title ]) path title
+              , Lazy.lazy5 viewStoryLink
+                    (current == [ title ])
+                    title
+                    (List.length path)
+                    (Router.toString storyPath)
+                    (stringifyPath storyPath)
+                    |> Html.map ((|>) storyPath)
               )
             ]
 

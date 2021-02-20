@@ -11,6 +11,7 @@ import Error exposing (Error)
 import Html exposing (Html, div, nav)
 import Html.Attributes as Attributes
 import Html.Events as Events
+import Html.Lazy as Lazy
 import Icon
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
@@ -697,13 +698,25 @@ styledWorkspace settings { viewport, dragging } =
         ]
 
 
+viewStoryWorkspace : Int -> Int -> Knob.State -> (Knob.Payload -> Maybe (Html ())) -> Html ()
+viewStoryWorkspace width height knobs workspaceView =
+    Knob.Payload knobs (Viewport width height)
+        |> workspaceView
+        |> Maybe.withDefault (Html.text "")
+
+
+viewStoryKnobs : Int -> Int -> Knob.State -> List ( String, Knob.Knob ) -> Html Knob.Msg
+viewStoryKnobs width height knobs workspaceKnobs =
+    Knob.view (Viewport width height) knobs workspaceKnobs
+
+
 viewWorkspace : Story.Workspace (Html ()) -> Settings -> State -> Knob.State -> Html Msg
 viewWorkspace workspace settings state knobs =
     let
         viewport =
             calcViewport settings state.viewport
 
-        storyViewport =
+        { width, height } =
             reducePaddingsForViewport settings.addPaddings viewport
     in
     styledWorkspace
@@ -713,15 +726,13 @@ viewWorkspace workspace settings state knobs =
             viewport
             (isNoDragging state.dragging)
             [ viewStoryContainer settings
-                [ Knob.Payload knobs storyViewport
-                    |> workspace.view
-                    |> Maybe.withDefault (Html.text "")
+                [ Lazy.lazy4 viewStoryWorkspace width height knobs workspace.view
                     |> Html.map (always NoOp)
                 ]
             ]
 
         --
-        , Knob.view storyViewport knobs workspace.knobs
+        , Lazy.lazy4 viewStoryKnobs width height knobs workspace.knobs
             |> Html.map (KnobMsg state.current)
             |> viewDock settings.dockOrientation
         ]
@@ -802,7 +813,7 @@ viewBulletproof story { settings, state, knobs } =
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace workspace settings state
+                        |> Lazy.lazy4 viewWorkspace workspace settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
@@ -812,9 +823,10 @@ viewBulletproof story { settings, state, knobs } =
             [ div
                 [ Style.className main__menu
                 ]
-                [ Html.map
-                    (MenuMsg story)
-                    (Menu.view state.menuOpened actualSettings)
+                [ Lazy.lazy2 Menu.view
+                    state.menuOpened
+                    actualSettings
+                    |> Html.map (MenuMsg story)
                 ]
 
             --
@@ -826,9 +838,11 @@ viewBulletproof story { settings, state, knobs } =
                     , Style.className main__dragger__high
                     , Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
                     ]
-                , Html.map
-                    NavigationMsg
-                    (Navigation.view state.current story state.navigation)
+                , Lazy.lazy3 Navigation.view
+                    state.current
+                    story
+                    state.navigation
+                    |> Html.map NavigationMsg
                 ]
 
             --

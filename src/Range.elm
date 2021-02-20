@@ -67,10 +67,6 @@ trailingZeros step value =
 
 rangeHelp : String -> String -> String -> String -> String -> Html String
 rangeHelp name min max step value =
-    let
-        _ =
-            Debug.log "__" ""
-    in
     div
         [ Style.className range__root ]
         [ span

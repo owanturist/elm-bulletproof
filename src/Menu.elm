@@ -5,6 +5,7 @@ import Button exposing (button)
 import Html exposing (Html, div, span, text)
 import Html.Attributes as Attributes
 import Html.Events as Events
+import Html.Lazy as Lazy
 import Icon
 import Json.Decode as Decode exposing (Decoder)
 import Palette
@@ -335,12 +336,12 @@ view opened settings =
     let
         children =
             if opened then
-                [ viewTrigger True Close
-                , viewDropdown settings
+                [ Lazy.lazy2 viewTrigger True Close
+                , Lazy.lazy viewDropdown settings
                 ]
 
             else
-                [ viewTrigger settings.navigationVisible Open
+                [ Lazy.lazy2 viewTrigger settings.navigationVisible Open
                 ]
     in
     div [ Style.className menu__root ] children

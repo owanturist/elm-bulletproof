@@ -29,6 +29,7 @@ import Html exposing (Html, div, input, label, option, td, text, textarea, tr)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import Html.Keyed as Keyed
+import Html.Lazy as Lazy
 import Json.Decode as Decode exposing (Decoder)
 import List
 import Palette
@@ -534,20 +535,19 @@ viewKnobString name value =
 
 
 viewKnobNumber :
-    (String -> msg)
-    -> (number -> String)
+    (number -> String)
     -> String
-    -> Maybe number
     -> Limits number
-    -> Html msg
-viewKnobNumber msg numToString name number limits =
+    -> number
+    -> Html String
+viewKnobNumber numToString name limits value =
     input
         (Style.className knob__input
             :: Attributes.type_ "number"
             :: Attributes.name name
-            :: Attributes.value (Maybe.withDefault "" (Maybe.map numToString number))
+            :: Attributes.value (numToString value)
             :: Attributes.tabindex 0
-            :: Events.onInput msg
+            :: Events.onInput identity
             :: List.filterMap identity
                 [ Maybe.map (Attributes.min << numToString) limits.min
                 , Maybe.map (Attributes.max << numToString) limits.max
@@ -557,93 +557,103 @@ viewKnobNumber msg numToString name number limits =
         []
 
 
-viewKnobRadio : String -> Maybe String -> List String -> Html Msg
-viewKnobRadio name selected options =
+viewKnobRadioOption : Bool -> String -> String -> Html Msg
+viewKnobRadioOption checked name value =
+    label
+        [ Style.className knob__radio_label
+        ]
+        [ input
+            [ Style.className knob__radio_input
+            , Attributes.type_ "radio"
+            , Attributes.name name
+            , Attributes.value value
+            , Attributes.tabindex 0
+            , Attributes.checked checked
+            , Events.onCheck (\_ -> UpdateString name value)
+            ]
+            []
+        , text value
+        ]
+
+
+viewKnobRadio : String -> List String -> String -> Html Msg
+viewKnobRadio name options selected =
     Keyed.node "div"
         [ Style.className knob__radio_group
         ]
         (List.map
             (\value ->
                 ( value
-                , label
-                    [ Style.className knob__radio_label
-                    ]
-                    [ input
-                        [ Style.className knob__radio_input
-                        , Attributes.type_ "radio"
-                        , Attributes.name name
-                        , Attributes.value value
-                        , Attributes.tabindex 0
-                        , Attributes.checked (Just value == selected)
-                        , Events.onCheck (\_ -> UpdateString name value)
-                        ]
-                        []
-                    , text value
-                    ]
+                , Lazy.lazy3 viewKnobRadioOption (value == selected) name value
                 )
             )
             options
         )
 
 
-viewKnobSelect : String -> Maybe String -> List String -> Html Msg
-viewKnobSelect name selected options =
+viewKnobSelectOption : String -> Html msg
+viewKnobSelectOption value =
+    option
+        [ Attributes.value value
+        , Attributes.tabindex 0
+        ]
+        [ text value
+        ]
+
+
+viewKnobSelect : String -> List String -> String -> Html Msg
+viewKnobSelect name options selected =
     Keyed.node "select"
         [ Style.className knob__input
         , Style.className knob__select
         , Attributes.name name
         , Attributes.tabindex 0
-        , Attributes.value (Maybe.withDefault "" selected)
+        , Attributes.value selected
         , Events.onInput (UpdateString name)
         ]
         (List.map
             (\value ->
                 ( value
-                , option
-                    [ Attributes.value value
-                    , Attributes.tabindex 0
-                    ]
-                    [ text value
-                    ]
+                , Lazy.lazy viewKnobSelectOption value
                 )
             )
             options
         )
 
 
-viewKnobColor : String -> Maybe Color -> Html Msg
+viewKnobColor : String -> String -> Html Msg
 viewKnobColor name color =
     input
         [ Style.className knob__input
         , Attributes.type_ "color"
         , Attributes.name name
-        , Attributes.value (Maybe.withDefault "" (Maybe.map .hex color))
+        , Attributes.value color
         , Attributes.tabindex 0
         , Events.onInput (UpdateColor name)
         ]
         []
 
 
-viewKnobDate : String -> Maybe Date -> Html Msg
+viewKnobDate : String -> String -> Html Msg
 viewKnobDate name date =
     input
         [ Style.className knob__input
         , Attributes.type_ "date"
         , Attributes.name name
-        , Attributes.value (Maybe.withDefault "" (Maybe.map Date.dateToString date))
+        , Attributes.value date
         , Attributes.tabindex 0
         , Events.onInput (UpdateDate name)
         ]
         []
 
 
-viewKnobTime : String -> Maybe Time -> Html Msg
+viewKnobTime : String -> String -> Html Msg
 viewKnobTime name time =
     input
         [ Style.className knob__input
         , Attributes.type_ "time"
         , Attributes.name name
-        , Attributes.value (Maybe.withDefault "" (Maybe.map Date.timeToString time))
+        , Attributes.value time
         , Attributes.tabindex 0
         , Events.onInput (UpdateTime name)
         ]
@@ -683,7 +693,7 @@ viewKnobRow globalViewport name knob value =
         [ Style.className knob__row
         ]
         [ td [ Style.className knob__row_name ] [ text name ]
-        , td [ Style.className knob__row_knob ] [ viewKnob globalViewport name knob value ]
+        , td [ Style.className knob__row_knob ] [ Lazy.lazy4 viewKnob globalViewport name knob value ]
         ]
     )
 
@@ -692,22 +702,25 @@ viewKnob : Viewport -> String -> Knob -> Maybe KnobValue -> Html Msg
 viewKnob globalViewport name knob value =
     case ( knob, value ) of
         ( Bool _, Just (BoolValue bool) ) ->
-            viewKnobBool name bool
+            Lazy.lazy2 viewKnobBool name bool
 
         ( Bool defaultBool, _ ) ->
-            viewKnobBool name defaultBool
+            Lazy.lazy2 viewKnobBool name defaultBool
 
         ( String _, Just (StringValue string) ) ->
-            viewKnobString name string
+            Lazy.lazy2 viewKnobString name string
 
         ( String defaultString, _ ) ->
-            viewKnobString name defaultString
+            Lazy.lazy2 viewKnobString name defaultString
 
         ( Int False _ limits, Just (IntValue int) ) ->
-            viewKnobNumber (UpdateInt name limits) String.fromInt name int limits
+            Maybe.withDefault 0 int
+                |> Lazy.lazy4 viewKnobNumber String.fromInt name limits
+                |> Html.map (UpdateInt name limits)
 
         ( Int False defaultInt limits, _ ) ->
-            viewKnobNumber (UpdateInt name limits) String.fromInt name (Just defaultInt) limits
+            viewKnobNumber String.fromInt name limits defaultInt
+                |> Html.map (UpdateInt name limits)
 
         ( Int True defaultInt limits, Just (IntValue int) ) ->
             range
@@ -732,68 +745,83 @@ viewKnob globalViewport name knob value =
                 |> Html.map (UpdateInt name limits)
 
         ( Float False _ limits, Just (FloatValue float) ) ->
-            viewKnobNumber (UpdateFloat name limits) String.fromFloat name float limits
+            Maybe.withDefault 0 float
+                |> Lazy.lazy4 viewKnobNumber String.fromFloat name limits
+                |> Html.map (UpdateFloat name limits)
 
         ( Float False defaultFloat limits, _ ) ->
-            viewKnobNumber (UpdateFloat name limits) String.fromFloat name (Just defaultFloat) limits
+            viewKnobNumber String.fromFloat name limits defaultFloat
+                |> Html.map (UpdateFloat name limits)
 
         ( Float True defaultFloat limits, Just (FloatValue float) ) ->
-            range
-                name
-                String.fromFloat
-                { min = Maybe.withDefault 0 limits.min
-                , max = Maybe.withDefault 1 limits.max
-                , step = Maybe.withDefault 0.01 limits.step
-                , value = Maybe.withDefault defaultFloat float
-                }
+            { min = Maybe.withDefault 0 limits.min
+            , max = Maybe.withDefault 1 limits.max
+            , step = Maybe.withDefault 0.01 limits.step
+            , value = Maybe.withDefault defaultFloat float
+            }
+                |> range name String.fromFloat
                 |> Html.map (UpdateFloat name limits)
 
         ( Float True defaultFloat limits, _ ) ->
-            range
-                name
-                String.fromFloat
-                { min = Maybe.withDefault 0 limits.min
-                , max = Maybe.withDefault 1 limits.max
-                , step = Maybe.withDefault 0.01 limits.step
-                , value = defaultFloat
-                }
+            { min = Maybe.withDefault 0 limits.min
+            , max = Maybe.withDefault 1 limits.max
+            , step = Maybe.withDefault 0.01 limits.step
+            , value = defaultFloat
+            }
+                |> range name String.fromFloat
                 |> Html.map (UpdateFloat name limits)
 
         ( Radio options, Just (StringValue selected) ) ->
-            viewKnobRadio name (Just selected) options
+            Lazy.lazy3 viewKnobRadio name options selected
 
         ( Radio options, _ ) ->
-            viewKnobRadio name (List.head options) options
+            List.head options
+                |> Maybe.withDefault ""
+                |> Lazy.lazy3 viewKnobRadio name options
 
         ( Select options, Just (StringValue selected) ) ->
-            viewKnobSelect name (Just selected) options
+            Lazy.lazy3 viewKnobSelect name options selected
 
         ( Select options, _ ) ->
-            viewKnobSelect name (List.head options) options
+            List.head options
+                |> Maybe.withDefault ""
+                |> Lazy.lazy3 viewKnobSelect name options
 
         ( Color _, Just (ColorValue (Just color)) ) ->
-            viewKnobColor name (Just color)
+            Lazy.lazy2 viewKnobColor name color.hex
 
         ( Color defaultColor, _ ) ->
-            viewKnobColor name (Color.fromString defaultColor)
+            -- converts Knob color string to valid html color
+            Color.fromString defaultColor
+                |> Maybe.map .hex
+                |> Maybe.withDefault ""
+                |> Lazy.lazy2 viewKnobColor name
 
         ( Date _, Just (DateValue (Just date)) ) ->
-            viewKnobDate name (Just date)
+            Lazy.lazy2 viewKnobDate name (Date.dateToString date)
 
         ( Date defaultDate, _ ) ->
-            viewKnobDate name (Date.dateFromString defaultDate)
+            -- converts Knob date string to valid html date
+            Date.dateFromString defaultDate
+                |> Maybe.map Date.dateToString
+                |> Maybe.withDefault ""
+                |> Lazy.lazy2 viewKnobDate name
 
         ( Time _, Just (TimeValue (Just time)) ) ->
-            viewKnobTime name (Just time)
+            Lazy.lazy2 viewKnobTime name (Date.timeToString time)
 
         ( Time defaultTime, _ ) ->
-            viewKnobTime name (Date.timeFromString defaultTime)
+            -- converts Knob time string to valid html time
+            Date.timeFromString defaultTime
+                |> Maybe.map Date.timeToString
+                |> Maybe.withDefault ""
+                |> Lazy.lazy2 viewKnobTime name
 
         ( Files, _ ) ->
-            viewKnobFile name
+            Lazy.lazy viewKnobFile name
 
         ( StoryViewport, _ ) ->
-            viewKnobStoryViewport globalViewport
+            Lazy.lazy viewKnobStoryViewport globalViewport
 
 
 viewEmpty : Html msg
@@ -820,4 +848,4 @@ view globalViewport state knobs =
         viewEmpty
 
     else
-        viewRoot globalViewport knobs state
+        Lazy.lazy3 viewRoot globalViewport knobs state
