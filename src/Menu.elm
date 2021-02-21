@@ -142,7 +142,7 @@ subscriptions opened =
     Sub.batch
         [ Browser.Events.onKeyPress keyNavigationDecoder
         , if opened then
-            Browser.Events.onMouseUp (notClosest (Style.classNameString menu__dropdown) Close)
+            Browser.Events.onMouseUp (notClosest (Style.className menu__dropdown) Close)
 
           else
             Sub.none
@@ -155,40 +155,19 @@ subscriptions opened =
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ menu__root
         , menu__trigger
-
-        --
-        , Style.each
-            [ Style.hover menu__trigger
-            , Style.focusVisible menu__trigger
-            ]
-            [ Style.rule "opacity" "1"
-            , Style.rule "transition" "opacity 0.2s"
-            ]
-        , menu__trigger_vivid
-
-        --
+        , menu__trigger__vivid
         , menu__dropdown
-
-        --
         , menu__item
-        , Style.each
-            [ Style.hover menu__item
-            , Style.focusVisible menu__item
-            ]
-            [ Style.rule "background" Palette.smoke
-            ]
-
-        --
         , menu__hotkey
         ]
 
 
-menu__root : Style.Selector
+menu__root : Style.Element
 menu__root =
-    Style.class "menu__root"
+    Style.el "menu__root"
         [ Style.rule "position" "relative"
         , Style.rule "user-select" "none"
         , Style.rule "font-size" "13px"
@@ -196,25 +175,33 @@ menu__root =
         ]
 
 
-menu__trigger : Style.Selector
+menu__trigger : Style.Element
 menu__trigger =
-    Style.class "menu__trigger"
+    Style.el "menu__trigger"
         [ Style.rule "opacity" "0.2"
         , Style.rule "transition" "opacity 1s"
         ]
+        |> Style.hover
+            [ Style.rule "opacity" "1"
+            , Style.rule "transition" "opacity 0.2s"
+            ]
+        |> Style.focusVisible
+            [ Style.rule "opacity" "1"
+            , Style.rule "transition" "opacity 0.2s"
+            ]
 
 
-menu__trigger_vivid : Style.Selector
-menu__trigger_vivid =
-    Style.class "menu__trigger_vivid"
-        [ Style.rule "opacity" "1"
-        , Style.rule "transition" "opacity 0.2s"
-        ]
+menu__trigger__vivid : Style.Element
+menu__trigger__vivid =
+    [ Style.rule "opacity" "1"
+    , Style.rule "transition" "opacity 0.2s"
+    ]
+        |> Style.mod menu__trigger "vivid"
 
 
-menu__dropdown : Style.Selector
+menu__dropdown : Style.Element
 menu__dropdown =
-    Style.class "menu__dropdown"
+    Style.el "menu__dropdown"
         [ Style.rule "position" "absolute"
         , Style.rule "top" "100%"
         , Style.rule "left" "0"
@@ -228,20 +215,26 @@ menu__dropdown =
         ]
 
 
-menu__item : Style.Selector
+menu__item : Style.Element
 menu__item =
-    Style.class "menu__item"
+    Style.el "menu__item"
         [ Style.rule "display" "flex"
         , Style.rule "justify-content" "space-between"
         , Style.rule "padding" "4px 12px"
         , Style.rule "cursor" "pointer"
         , Style.rule "outline" "none"
         ]
+        |> Style.hover
+            [ Style.rule "background" Palette.smoke
+            ]
+        |> Style.focusVisible
+            [ Style.rule "background" Palette.smoke
+            ]
 
 
-menu__hotkey : Style.Selector
+menu__hotkey : Style.Element
 menu__hotkey =
-    Style.class "menu__hotkey"
+    Style.el "menu__hotkey"
         [ Style.rule "display" "inline-block"
         , Style.rule "margin-left" "4px"
         , Style.rule "padding" "2px 4px"
@@ -257,9 +250,9 @@ menu__hotkey =
 viewTrigger : Bool -> Msg -> Html Msg
 viewTrigger vivid onClick =
     button onClick
-        [ Style.classNames
+        [ Style.classList
             [ ( menu__trigger, True )
-            , ( menu__trigger_vivid, vivid )
+            , ( menu__trigger__vivid, vivid )
             ]
         ]
         [ Icon.bars
@@ -269,7 +262,7 @@ viewTrigger vivid onClick =
 viewItem : msg -> Char -> String -> Html msg
 viewItem msg key title =
     div
-        [ Style.className menu__item
+        [ Style.class menu__item
         , Attributes.attribute "role" "button"
         , Attributes.tabindex 0
         , Events.onClick msg
@@ -277,7 +270,7 @@ viewItem msg key title =
         ]
         [ text title
         , span
-            [ Style.className menu__hotkey
+            [ Style.class menu__hotkey
             ]
             [ text (String.fromChar (Char.toUpper key))
             ]
@@ -287,7 +280,7 @@ viewItem msg key title =
 viewDropdown : Settings -> Html Msg
 viewDropdown settings =
     div
-        [ Style.className menu__dropdown
+        [ Style.class menu__dropdown
         ]
         [ ifelse settings.navigationVisible "Hide sidebar" "Show sidebar"
             |> viewItem ToggleNavigationVisibility 's'
@@ -344,4 +337,4 @@ view opened settings =
                 [ Lazy.lazy2 viewTrigger settings.navigationVisible Open
                 ]
     in
-    div [ Style.className menu__root ] children
+    div [ Style.class menu__root ] children

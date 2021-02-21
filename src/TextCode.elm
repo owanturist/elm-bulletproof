@@ -7,14 +7,14 @@ import Style
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ text_code__root
         ]
 
 
-text_code__root : Style.Selector
+text_code__root : Style.Element
 text_code__root =
-    Style.class "text_code__root"
+    Style.el "text_code__root"
         [ Style.rule "display" "inline-block"
         , Style.rule "padding" "2px 4px"
         , Style.rule "background" Palette.cloud
@@ -27,7 +27,7 @@ text_code__root =
 textCode : String -> Html msg
 textCode =
     code
-        [ Style.className text_code__root
+        [ Style.class text_code__root
         ]
         << List.singleton
         << text

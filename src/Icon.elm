@@ -16,14 +16,14 @@ import Svg.Attributes as Attributes
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ icon__root
         ]
 
 
-icon__root : Style.Selector
+icon__root : Style.Element
 icon__root =
-    Style.class "icon__root"
+    Style.el "icon__root"
         [ Style.rule "height" "14px"
         ]
 
@@ -31,7 +31,7 @@ icon__root =
 viewIcon : Int -> Int -> Int -> Int -> String -> Svg msg
 viewIcon minX minY width height d =
     svg
-        [ Attributes.class (Style.classNameString icon__root)
+        [ Attributes.class (Style.className icon__root)
         , Attributes.fill "currentColor"
         , [ minX, minY, width, height ]
             |> List.map String.fromInt

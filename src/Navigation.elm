@@ -80,51 +80,37 @@ update key msg model =
 
 css : Style.Sheet
 css =
-    Style.sheet
-        [ navigation__spacer
-        , navigation__icon_box
+    Style.batch
+        [ Style.elements
+            [ navigation__spacer
+            , navigation__icon_box
+            , navigation__label
+            , navigation__item
+            , navigation__item__active
+            , navigation__item__interactive
+            , navigation__header
+            , navigation__container
+            , navigation__scroller
+            , navigation__root
+            ]
 
         --
-        , navigation__label
-        , Style.selector ("* + ." ++ Style.classNameString navigation__label)
+        , Style.selector ("* + ." ++ Style.className navigation__label)
             [ Style.rule "margin-top" "8px"
             ]
-
-        --
-        , navigation__item
-        , navigation__item_active
-        , Style.each
-            [ Style.hover navigation__item_active
-            , Style.focusVisible navigation__item_active
-            ]
-            [ Style.rule "background" Palette.blueDark
-            ]
-        , navigation__item_interactive
-        , Style.each
-            [ Style.hover navigation__item_interactive
-            , Style.focusVisible navigation__item_interactive
-            ]
-            [ Style.rule "background" Palette.smoke
-            ]
-
-        --
-        , navigation__header
-        , navigation__container
-        , navigation__scroller
-        , navigation__root
         ]
 
 
-navigation__spacer : Style.Selector
+navigation__spacer : Style.Element
 navigation__spacer =
-    Style.class "navigation__spacer"
+    Style.el "navigation__spacer"
         [ Style.rule "display" "inline-block"
         ]
 
 
-navigation__icon_box : Style.Selector
+navigation__icon_box : Style.Element
 navigation__icon_box =
-    Style.class "navigation__icon_box"
+    Style.el "navigation__icon_box"
         [ Style.rule "display" "inline-block"
         , Style.rule "margin-right" "4px"
         , Style.rule "width" "18px"
@@ -132,9 +118,9 @@ navigation__icon_box =
         ]
 
 
-navigation__label : Style.Selector
+navigation__label : Style.Element
 navigation__label =
-    Style.class "navigation__label"
+    Style.el "navigation__label"
         [ Style.rule "padding" "4px 12px 5px 8px"
         , Style.rule "color" Palette.dark05
         , Style.rule "font-weight" "bold"
@@ -143,9 +129,9 @@ navigation__label =
         ]
 
 
-navigation__item : Style.Selector
+navigation__item : Style.Element
 navigation__item =
-    Style.class "navigation__item"
+    Style.el "navigation__item"
         [ Style.rule "display" "block"
         , Style.rule "padding" "4px 12px 4px 8px"
         , Style.rule "text-decoration" "none"
@@ -154,26 +140,38 @@ navigation__item =
         ]
 
 
-navigation__item_interactive : Style.Selector
-navigation__item_interactive =
-    Style.class "navigation__item_interactive"
-        [ Style.rule "cursor" "pointer"
-        ]
+navigation__item__interactive : Style.Element
+navigation__item__interactive =
+    [ Style.rule "cursor" "pointer"
+    ]
+        |> Style.mod navigation__item "interactive"
+        |> Style.hover
+            [ Style.rule "background" Palette.smoke
+            ]
+        |> Style.focusVisible
+            [ Style.rule "background" Palette.smoke
+            ]
 
 
-navigation__item_active : Style.Selector
-navigation__item_active =
-    Style.class "navigation__item_active"
-        [ Style.rule "background" Palette.blue
-        , Style.rule "color" Palette.white
-        , Style.rule "font-weight" "bold"
-        , Style.rule "cursor" "pointer"
-        ]
+navigation__item__active : Style.Element
+navigation__item__active =
+    [ Style.rule "background" Palette.blue
+    , Style.rule "color" Palette.white
+    , Style.rule "font-weight" "bold"
+    , Style.rule "cursor" "pointer"
+    ]
+        |> Style.mod navigation__item "active"
+        |> Style.hover
+            [ Style.rule "background" Palette.blueDark
+            ]
+        |> Style.focusVisible
+            [ Style.rule "background" Palette.blueDark
+            ]
 
 
-navigation__header : Style.Selector
+navigation__header : Style.Element
 navigation__header =
-    Style.class "navigation__header"
+    Style.el "navigation__header"
         [ Style.rule "flex" "0 0 auto"
         , Style.rule "padding" "16px 12px 16px 48px"
         , Style.rule "background" Palette.white
@@ -186,26 +184,26 @@ navigation__header =
         ]
 
 
-navigation__container : Style.Selector
+navigation__container : Style.Element
 navigation__container =
-    Style.class "navigation__container"
+    Style.el "navigation__container"
         [ Style.rule "flex" "1 0 0"
         , Style.rule "padding" "8px 0 20px"
         ]
 
 
-navigation__scroller : Style.Selector
+navigation__scroller : Style.Element
 navigation__scroller =
-    Style.class "navigation__scroller"
+    Style.el "navigation__scroller"
         [ Style.rule "display" "flex"
         , Style.rule "width" "100%"
         , Style.rule "overflow" "auto"
         ]
 
 
-navigation__root : Style.Selector
+navigation__root : Style.Element
 navigation__root =
-    Style.class "navigation__root"
+    Style.el "navigation__root"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "display" "flex"
         , Style.rule "flex-direction" "column"
@@ -234,7 +232,7 @@ viewSpacer : Int -> Html msg
 viewSpacer n =
     if n > 0 then
         span
-            [ Style.className navigation__spacer
+            [ Style.class navigation__spacer
             , Attributes.style "width" (px (n * 22))
             ]
             []
@@ -245,13 +243,13 @@ viewSpacer n =
 
 viewIconBox : Html msg -> Html msg
 viewIconBox =
-    span [ Style.className navigation__icon_box ] << List.singleton
+    span [ Style.class navigation__icon_box ] << List.singleton
 
 
 viewLabel : String -> Int -> Html msg
 viewLabel title indent =
     div
-        [ Style.className navigation__label
+        [ Style.class navigation__label
         ]
         [ viewSpacer indent
         , text (String.toUpper title)
@@ -268,7 +266,7 @@ viewLabelItem title path =
 viewTodo : String -> Int -> Html msg
 viewTodo title indent =
     div
-        [ Style.className navigation__item
+        [ Style.class navigation__item
         , Attributes.tabindex -1
         ]
         [ viewSpacer indent
@@ -287,8 +285,8 @@ viewTodoItem title path =
 viewStory : Bool -> String -> Int -> String -> String -> Html (Story.Path -> Msg)
 viewStory active title indent url tooltip =
     a
-        [ Style.className navigation__item
-        , Style.className (ifelse active navigation__item_active navigation__item_interactive)
+        [ Style.class navigation__item
+        , Style.class (ifelse active navigation__item__active navigation__item__interactive)
         , Attributes.rel "noopener noreferrer"
         , Attributes.tabindex 0
         , Attributes.title tooltip
@@ -336,8 +334,8 @@ viewMakeFolder :
     -> Html msg
 viewMakeFolder { title, indent, active, tooltip, icon, onClick } =
     div
-        [ Style.className navigation__item
-        , Style.className (ifelse active navigation__item_active navigation__item_interactive)
+        [ Style.class navigation__item
+        , Style.class (ifelse active navigation__item__active navigation__item__interactive)
         , Attributes.attribute "role" "button"
         , Attributes.tabindex 0
         , Attributes.title tooltip
@@ -449,18 +447,18 @@ viewItem path current model story =
 view : Story.Path -> Story view -> Model -> Html Msg
 view current story model =
     div
-        [ Style.className navigation__root
+        [ Style.class navigation__root
         ]
         [ header
-            [ Style.className navigation__header
+            [ Style.class navigation__header
             ]
             [ text "BULLETPROOF"
             ]
         , div
-            [ Style.className navigation__scroller
+            [ Style.class navigation__scroller
             ]
             [ Keyed.node "div"
-                [ Style.className navigation__container
+                [ Style.class navigation__container
                 ]
                 (viewItem [] current model story)
             ]

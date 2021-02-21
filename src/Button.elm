@@ -10,17 +10,14 @@ import Utils exposing (onSpaceOrEnter)
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ button__root
-        , Style.focusVisible button__root
-            [ Style.rule "box-shadow" ("0 0 0 2px " ++ Palette.gray05)
-            ]
         ]
 
 
-button__root : Style.Selector
+button__root : Style.Element
 button__root =
-    Style.class "button__root"
+    Style.el "button__root"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "display" "inline-flex"
         , Style.rule "align-items" "center"
@@ -36,12 +33,15 @@ button__root =
         , Style.rule "cursor" "pointer"
         , Style.rule "user-select" "none"
         ]
+        |> Style.focusVisible
+            [ Style.rule "box-shadow" ("0 0 0 2px " ++ Palette.gray05)
+            ]
 
 
 button : msg -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 button onPress attributes =
     div
-        (Style.className button__root
+        (Style.class button__root
             :: Attributes.attribute "role" "button"
             :: Attributes.tabindex 0
             :: Events.onClick onPress

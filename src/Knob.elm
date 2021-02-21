@@ -373,15 +373,12 @@ update msg state =
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ knob__root
         , knob__empty
         , knob__bool
         , knob__input
         , knob__select
-        , Style.focusVisible knob__input
-            [ Style.rule "box-shadow" ("0 0 0 2px " ++ Palette.gray05)
-            ]
         , knob__radio_group
         , knob__radio_label
         , knob__radio_input
@@ -391,9 +388,9 @@ css =
         ]
 
 
-knob__root : Style.Selector
+knob__root : Style.Element
 knob__root =
-    Style.class "knob__root"
+    Style.el "knob__root"
         [ Style.rule "width" "100%"
         , Style.rule "vertical-align" "middle"
         , Style.rule "border-collapse" "collapse"
@@ -403,9 +400,9 @@ knob__root =
         ]
 
 
-knob__empty : Style.Selector
+knob__empty : Style.Element
 knob__empty =
-    Style.class "knob__empty"
+    Style.el "knob__empty"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "display" "flex"
         , Style.rule "justify-content" "center"
@@ -418,23 +415,23 @@ knob__empty =
         ]
 
 
-knob__bool : Style.Selector
+knob__bool : Style.Element
 knob__bool =
-    Style.class "knob__bool"
+    Style.el "knob__bool"
         [ Style.rule "margin" "0"
         ]
 
 
-knob__select : Style.Selector
+knob__select : Style.Element
 knob__select =
-    Style.class "knob__select"
+    Style.el "knob__select"
         [ Style.rule "-webkit-appearance" "menulist"
         ]
 
 
-knob__input : Style.Selector
+knob__input : Style.Element
 knob__input =
-    Style.class "knob__input"
+    Style.el "knob__input"
         [ Style.rule "-webkit-appearance" "none"
         , Style.rule "box-sizing" "border-box"
         , Style.rule "display" "block"
@@ -451,11 +448,14 @@ knob__input =
         , Style.rule "font-family" "inherit"
         , Style.rule "outline" "none"
         ]
+        |> Style.focusVisible
+            [ Style.rule "box-shadow" ("0 0 0 2px " ++ Palette.gray05)
+            ]
 
 
-knob__radio_group : Style.Selector
+knob__radio_group : Style.Element
 knob__radio_group =
-    Style.class "knob__radio_group"
+    Style.el "knob__radio_group"
         [ Style.rule "display" "flex"
         , Style.rule "flex-direction" "column"
         , Style.rule "align-items" "flex-start"
@@ -463,9 +463,9 @@ knob__radio_group =
         ]
 
 
-knob__radio_label : Style.Selector
+knob__radio_label : Style.Element
 knob__radio_label =
-    Style.class "knob__radio_label"
+    Style.el "knob__radio_label"
         [ Style.rule "display" "flex"
         , Style.rule "align-items" "center"
         , Style.rule "margin-top" "8px"
@@ -474,23 +474,23 @@ knob__radio_label =
         ]
 
 
-knob__radio_input : Style.Selector
+knob__radio_input : Style.Element
 knob__radio_input =
-    Style.class "knob__radio_text"
+    Style.el "knob__radio_text"
         [ Style.rule "margin" "0 8px 0 0"
         ]
 
 
-knob__row : Style.Selector
+knob__row : Style.Element
 knob__row =
-    Style.class "knob__row"
+    Style.el "knob__row"
         [ Style.rule "border-bottom" ("1px solid " ++ Palette.smoke)
         ]
 
 
-knob__row_name : Style.Selector
+knob__row_name : Style.Element
 knob__row_name =
-    Style.class "knob__row_name"
+    Style.el "knob__row_name"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "min-width" "100px"
         , Style.rule "height" "40px"
@@ -500,9 +500,9 @@ knob__row_name =
         ]
 
 
-knob__row_knob : Style.Selector
+knob__row_knob : Style.Element
 knob__row_knob =
-    Style.class "knob__row_knob"
+    Style.el "knob__row_knob"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "width" "100%"
         , Style.rule "height" "40px"
@@ -513,7 +513,7 @@ knob__row_knob =
 viewKnobBool : String -> Bool -> Html Msg
 viewKnobBool name checked =
     input
-        [ Style.className knob__bool
+        [ Style.class knob__bool
         , Attributes.type_ "checkbox"
         , Attributes.name name
         , Attributes.checked checked
@@ -525,7 +525,7 @@ viewKnobBool name checked =
 viewKnobString : String -> String -> Html Msg
 viewKnobString name value =
     textarea
-        [ Style.className knob__input
+        [ Style.class knob__input
         , Attributes.name name
         , Attributes.value value
         , Attributes.tabindex 0
@@ -542,7 +542,7 @@ viewKnobNumber :
     -> Html String
 viewKnobNumber numToString name limits value =
     input
-        (Style.className knob__input
+        (Style.class knob__input
             :: Attributes.type_ "number"
             :: Attributes.name name
             :: Attributes.value (numToString value)
@@ -560,10 +560,10 @@ viewKnobNumber numToString name limits value =
 viewKnobRadioOption : Bool -> String -> String -> Html Msg
 viewKnobRadioOption checked name value =
     label
-        [ Style.className knob__radio_label
+        [ Style.class knob__radio_label
         ]
         [ input
-            [ Style.className knob__radio_input
+            [ Style.class knob__radio_input
             , Attributes.type_ "radio"
             , Attributes.name name
             , Attributes.value value
@@ -579,7 +579,7 @@ viewKnobRadioOption checked name value =
 viewKnobRadio : String -> List String -> String -> Html Msg
 viewKnobRadio name options selected =
     Keyed.node "div"
-        [ Style.className knob__radio_group
+        [ Style.class knob__radio_group
         ]
         (List.map
             (\value ->
@@ -604,8 +604,8 @@ viewKnobSelectOption value =
 viewKnobSelect : String -> List String -> String -> Html Msg
 viewKnobSelect name options selected =
     Keyed.node "select"
-        [ Style.className knob__input
-        , Style.className knob__select
+        [ Style.class knob__input
+        , Style.class knob__select
         , Attributes.name name
         , Attributes.tabindex 0
         , Attributes.value selected
@@ -624,7 +624,7 @@ viewKnobSelect name options selected =
 viewKnobColor : String -> String -> Html Msg
 viewKnobColor name color =
     input
-        [ Style.className knob__input
+        [ Style.class knob__input
         , Attributes.type_ "color"
         , Attributes.name name
         , Attributes.value color
@@ -637,7 +637,7 @@ viewKnobColor name color =
 viewKnobDate : String -> String -> Html Msg
 viewKnobDate name date =
     input
-        [ Style.className knob__input
+        [ Style.class knob__input
         , Attributes.type_ "date"
         , Attributes.name name
         , Attributes.value date
@@ -650,7 +650,7 @@ viewKnobDate name date =
 viewKnobTime : String -> String -> Html Msg
 viewKnobTime name time =
     input
-        [ Style.className knob__input
+        [ Style.class knob__input
         , Attributes.type_ "time"
         , Attributes.name name
         , Attributes.value time
@@ -690,10 +690,10 @@ viewKnobRow : Viewport -> String -> Knob -> Maybe KnobValue -> ( String, Html Ms
 viewKnobRow globalViewport name knob value =
     ( name
     , tr
-        [ Style.className knob__row
+        [ Style.class knob__row
         ]
-        [ td [ Style.className knob__row_name ] [ text name ]
-        , td [ Style.className knob__row_knob ] [ Lazy.lazy4 viewKnob globalViewport name knob value ]
+        [ td [ Style.class knob__row_name ] [ text name ]
+        , td [ Style.class knob__row_knob ] [ Lazy.lazy4 viewKnob globalViewport name knob value ]
         ]
     )
 
@@ -827,7 +827,7 @@ viewKnob globalViewport name knob value =
 viewEmpty : Html msg
 viewEmpty =
     div
-        [ Style.className knob__empty
+        [ Style.class knob__empty
         ]
         [ text "There are not declared Knobs to use."
         ]
@@ -839,7 +839,7 @@ viewRoot globalViewport knobs state =
         |> List.map
             (\( name, knob ) -> viewKnobRow globalViewport name knob (Dict.get name state))
         |> List.reverse
-        |> Keyed.node "table" [ Style.className knob__root ]
+        |> Keyed.node "table" [ Style.class knob__root ]
 
 
 view : Viewport -> State -> List ( String, Knob ) -> Html Msg

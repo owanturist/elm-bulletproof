@@ -358,27 +358,36 @@ screenY =
 
 cssGlobal : Style.Sheet
 cssGlobal =
-    Style.sheet
+    Style.batch
         [ Style.selector "body"
             [ Style.rule "background" Palette.cloud
             ]
 
         --
-        , Style.each
-            [ Style.selector "html"
-            , Style.selector "body"
-            ]
+        , Style.selector "html, body"
             [ Style.rule "margin" "0"
             , Style.rule "padding" "0"
             , Style.rule "min-height" "100%"
             , Style.rule "height" "100%"
+            ]
+
+        --
+        , Style.selector ("." ++ Style.className main__root__resizing__horizontal ++ " *")
+            [ Style.rule "user-select" "none"
+            , Style.rule "cursor" "ew-resize !important"
+            ]
+
+        --
+        , Style.selector ("." ++ Style.className main__root__resizing__vertical ++ " *")
+            [ Style.rule "user-select" "none"
+            , Style.rule "cursor" "ns-resize !important"
             ]
         ]
 
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ main__story_scroller
         , main__story_scroller__animated
         , main__story_container
@@ -397,36 +406,28 @@ css =
         , main__menu
         , main__navigation
         , main__root
-        , Style.selector ("." ++ Style.classNameString main__root__resizing__horizontal ++ " *")
-            [ Style.rule "user-select" "none"
-            , Style.rule "cursor" "ew-resize !important"
-            ]
-        , Style.selector ("." ++ Style.classNameString main__root__resizing__vertical ++ " *")
-            [ Style.rule "user-select" "none"
-            , Style.rule "cursor" "ns-resize !important"
-            ]
         ]
 
 
-main__story_scroller : Style.Selector
+main__story_scroller : Style.Element
 main__story_scroller =
-    Style.class "main__story_scroller"
+    Style.el "main__story_scroller"
         [ Style.rule "display" "flex"
         , Style.rule "flex-direction" "column"
         , Style.rule "overflow" "auto"
         ]
 
 
-main__story_scroller__animated : Style.Selector
+main__story_scroller__animated : Style.Element
 main__story_scroller__animated =
-    Style.class "main__story_scroller__animated"
-        [ Style.rule "transition" "width 150ms, height 150ms"
-        ]
+    [ Style.rule "transition" "width 150ms, height 150ms"
+    ]
+        |> Style.mod main__story_scroller "animated"
 
 
-main__story_container : Style.Selector
+main__story_container : Style.Element
 main__story_container =
-    Style.class "main__story_container"
+    Style.el "main__story_container"
         [ Style.rule "all" "initial"
         , Style.rule "display" "block"
         , Style.rule "flex" "1 0 auto"
@@ -435,23 +436,23 @@ main__story_container =
         ]
 
 
-main__story_container__with_paddings : Style.Selector
+main__story_container__with_paddings : Style.Element
 main__story_container__with_paddings =
-    Style.class "main__story_container__with_paddings"
-        [ Style.rule "padding" (px paddingSize)
-        ]
+    [ Style.rule "padding" (px paddingSize)
+    ]
+        |> Style.mod main__story_container "with_paddings"
 
 
-main__story_container__dark_background : Style.Selector
+main__story_container__dark_background : Style.Element
 main__story_container__dark_background =
-    Style.class "main__story_container__dark_background"
-        [ Style.rule "background" Palette.dark
-        ]
+    [ Style.rule "background" Palette.dark
+    ]
+        |> Style.mod main__story_container "dark_background"
 
 
-main__dragger : Style.Selector
+main__dragger : Style.Element
 main__dragger =
-    Style.class "main__dragger"
+    Style.el "main__dragger"
         [ Style.rule "position" "absolute"
         , Style.rule "top" "0"
         , Style.rule "left" "0"
@@ -459,46 +460,46 @@ main__dragger =
         ]
 
 
-main__dragger__horizontal : Style.Selector
+main__dragger__horizontal : Style.Element
 main__dragger__horizontal =
-    Style.class "main__dragger__horizontal"
-        [ Style.rule "right" "0"
-        , Style.rule "height" "2px"
-        , Style.rule "cursor" "ns-resize"
-        , Style.rule "padding" "2px 0"
-        ]
+    [ Style.rule "right" "0"
+    , Style.rule "height" "2px"
+    , Style.rule "cursor" "ns-resize"
+    , Style.rule "padding" "2px 0"
+    ]
+        |> Style.mod main__dragger "horizontal"
 
 
-main__dragger__vertical : Style.Selector
+main__dragger__vertical : Style.Element
 main__dragger__vertical =
-    Style.class "main__dragger__vertical"
-        [ Style.rule "bottom" "0"
-        , Style.rule "width" "2px"
-        , Style.rule "cursor" "ew-resize"
-        , Style.rule "padding" "0 2px"
-        ]
+    [ Style.rule "bottom" "0"
+    , Style.rule "width" "2px"
+    , Style.rule "cursor" "ew-resize"
+    , Style.rule "padding" "0 2px"
+    ]
+        |> Style.mod main__dragger "vertical"
 
 
-main__dragger__high : Style.Selector
+main__dragger__high : Style.Element
 main__dragger__high =
-    Style.class "main__dragger__high"
-        [ Style.rule "z-index" "2"
-        , Style.rule "left" "auto"
-        , Style.rule "right" "0"
-        ]
+    [ Style.rule "z-index" "2"
+    , Style.rule "left" "auto"
+    , Style.rule "right" "0"
+    ]
+        |> Style.mod main__dragger "high"
 
 
-main__dragger_line : Style.Selector
+main__dragger_line : Style.Element
 main__dragger_line =
-    Style.class "main__dragger_line"
+    Style.el "main__dragger_line"
         [ Style.rule "height" "100%"
         , Style.rule "background" Palette.smoke
         ]
 
 
-main__dock : Style.Selector
+main__dock : Style.Element
 main__dock =
-    Style.class "main__dock"
+    Style.el "main__dock"
         [ Style.rule "position" "relative"
         , Style.rule "flex" "1 1 0"
         , Style.rule "background" Palette.white
@@ -506,19 +507,19 @@ main__dock =
         ]
 
 
-main__dock_scroller : Style.Selector
+main__dock_scroller : Style.Element
 main__dock_scroller =
-    Style.class "main__dock_scroller"
-        [ Style.rule "display" "flex"
-        , Style.rule "width" "100%"
-        , Style.rule "height" "100%"
-        , Style.rule "overflow" "auto"
-        ]
+    [ Style.rule "display" "flex"
+    , Style.rule "width" "100%"
+    , Style.rule "height" "100%"
+    , Style.rule "overflow" "auto"
+    ]
+        |> Style.mod main__dock "scroller"
 
 
-main__workspace : Style.Selector
+main__workspace : Style.Element
 main__workspace =
-    Style.class "main__workspace"
+    Style.el "main__workspace"
         [ Style.rule "position" "relative"
         , Style.rule "display" "flex"
         , Style.rule "flex-direction" "row"
@@ -526,23 +527,23 @@ main__workspace =
         ]
 
 
-main__workspace__horizontal : Style.Selector
+main__workspace__horizontal : Style.Element
 main__workspace__horizontal =
-    Style.class "main__workspace__horizontal"
-        [ Style.rule "flex-direction" "column"
-        ]
+    [ Style.rule "flex-direction" "column"
+    ]
+        |> Style.mod main__workspace "horizontal"
 
 
-main__workspace__animated : Style.Selector
+main__workspace__animated : Style.Element
 main__workspace__animated =
-    Style.class "main__workspace__animated"
-        [ Style.rule "transition" "width 150ms"
-        ]
+    [ Style.rule "transition" "width 150ms"
+    ]
+        |> Style.mod main__workspace "animated"
 
 
-main__menu : Style.Selector
+main__menu : Style.Element
 main__menu =
-    Style.class "main__menu"
+    Style.el "main__menu"
         [ Style.rule "position" "absolute"
         , Style.rule "z-index" "2"
         , Style.rule "top" "0"
@@ -551,18 +552,18 @@ main__menu =
         ]
 
 
-main__navigation : Style.Selector
+main__navigation : Style.Element
 main__navigation =
-    Style.class "main__navigation"
+    Style.el "main__navigation"
         [ Style.rule "position" "relative"
         , Style.rule "flex" "1 1 0"
         , Style.rule "overflow" "hidden"
         ]
 
 
-main__root : Style.Selector
+main__root : Style.Element
 main__root =
-    Style.class "main__root"
+    Style.el "main__root"
         [ Style.rule "position" "relative"
         , Style.rule "display" "flex"
         , Style.rule "flex-direction" "row"
@@ -574,14 +575,14 @@ main__root =
         ]
 
 
-main__root__resizing__horizontal : Style.Selector
+main__root__resizing__horizontal : Style.Element
 main__root__resizing__horizontal =
-    Style.class "main__root__resizing__horizontal" []
+    Style.mod main__root "horizontal" []
 
 
-main__root__resizing__vertical : Style.Selector
+main__root__resizing__vertical : Style.Element
 main__root__resizing__vertical =
-    Style.class "main__root__resizing__vertical" []
+    Style.mod main__root "vertical" []
 
 
 linearGradient : Float -> String -> String
@@ -637,15 +638,15 @@ cssGrid settings =
 viewDragger : List (Html.Attribute msg) -> Html msg
 viewDragger attributes =
     div
-        (Style.className main__dragger :: attributes)
-        [ div [ Style.className main__dragger_line ] []
+        (Style.class main__dragger :: attributes)
+        [ div [ Style.class main__dragger_line ] []
         ]
 
 
 viewStoryScroller : Viewport -> Bool -> List (Html msg) -> Html msg
 viewStoryScroller storyViewport noDragging =
     div
-        [ Style.classNames
+        [ Style.classList
             [ ( main__story_scroller, True )
             , ( main__story_scroller__animated, noDragging )
             ]
@@ -657,7 +658,7 @@ viewStoryScroller storyViewport noDragging =
 viewStoryContainer : Settings -> List (Html msg) -> Html msg
 viewStoryContainer settings =
     div
-        (Style.classNames
+        (Style.classList
             [ ( main__story_container, True )
             , ( main__story_container__with_paddings, settings.addPaddings )
             , ( main__story_container__dark_background, settings.darkBackground )
@@ -669,16 +670,16 @@ viewStoryContainer settings =
 viewDock : Orientation -> Html Msg -> Html Msg
 viewDock dockOrientation knobs =
     div
-        [ Style.className main__dock
+        [ Style.class main__dock
         ]
         [ viewDragger
             [ ifelse (Settings.isHorizontal dockOrientation)
                 main__dragger__horizontal
                 main__dragger__horizontal
-                |> Style.className
+                |> Style.class
             , Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
             ]
-        , div [ Style.className main__dock_scroller ] [ knobs ]
+        , div [ Style.class main__dock_scroller ] [ knobs ]
         ]
 
 
@@ -689,7 +690,7 @@ styledWorkspace settings { viewport, dragging } =
             viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
     in
     div
-        [ Style.classNames
+        [ Style.classList
             [ ( main__workspace, True )
             , ( main__workspace__horizontal, Settings.isHorizontal settings.dockOrientation )
             , ( main__workspace__animated, isNoDragging dragging )
@@ -753,6 +754,7 @@ viewStyle =
     , NotFound.css
     , css
     ]
+        |> Style.batch
         |> Style.render
         |> Html.text
         |> List.singleton
@@ -768,7 +770,7 @@ viewRoot dockOrientation dragging children =
                     []
 
                 NavigationResizing _ _ ->
-                    [ Style.className main__root__resizing__horizontal
+                    [ Style.class main__root__resizing__horizontal
                     , Events.on "mousemove" (Decode.map Drag screenX)
                     , Events.on "mouseup" (Decode.succeed DragEnd)
                     , Events.on "mouseleave" (Decode.succeed DragEnd)
@@ -783,14 +785,14 @@ viewRoot dockOrientation dragging children =
                             else
                                 ( main__root__resizing__horizontal, screenX )
                     in
-                    [ Style.className classSelector
+                    [ Style.class classSelector
                     , Events.on "mousemove" (Decode.map Drag positionDecoder)
                     , Events.on "mouseup" (Decode.succeed DragEnd)
                     , Events.on "mouseleave" (Decode.succeed DragEnd)
                     ]
     in
     div
-        (Style.className main__root :: attributes)
+        (Style.class main__root :: attributes)
         (viewStyle :: SyntaxHighlight.useTheme SyntaxHighlight.gitHub :: children)
 
 
@@ -821,7 +823,7 @@ viewBulletproof story { settings, state, knobs } =
             actualSettings.dockOrientation
             state.dragging
             [ div
-                [ Style.className main__menu
+                [ Style.class main__menu
                 ]
                 [ Lazy.lazy2 Menu.view
                     state.menuOpened
@@ -831,11 +833,11 @@ viewBulletproof story { settings, state, knobs } =
 
             --
             , nav
-                [ Style.className main__navigation
+                [ Style.class main__navigation
                 ]
                 [ viewDragger
-                    [ Style.className main__dragger__vertical
-                    , Style.className main__dragger__high
+                    [ Style.class main__dragger__vertical
+                    , Style.class main__dragger__high
                     , Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
                     ]
                 , Lazy.lazy3 Navigation.view

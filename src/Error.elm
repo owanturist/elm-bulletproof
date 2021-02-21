@@ -1159,7 +1159,7 @@ reasonToExplanation reason =
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ error__root
         , error__container
         , error__error
@@ -1170,9 +1170,9 @@ css =
         ]
 
 
-error__root : Style.Selector
+error__root : Style.Element
 error__root =
-    Style.class "error__root"
+    Style.el "error__root"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "display" "flex"
         , Style.rule "flex-direction" "column"
@@ -1189,17 +1189,17 @@ error__root =
         ]
 
 
-error__container : Style.Selector
+error__container : Style.Element
 error__container =
-    Style.class "error__container"
+    Style.el "error__container"
         [ Style.rule "width" "600px"
         , Style.rule "max-width" "100%"
         ]
 
 
-error__error : Style.Selector
+error__error : Style.Element
 error__error =
-    Style.class "error__error"
+    Style.el "error__error"
         [ Style.rule "margin" "8px 0"
         , Style.rule "padding" "12px 16px 8px"
         , Style.rule "background" Palette.white
@@ -1207,9 +1207,9 @@ error__error =
         ]
 
 
-error__path : Style.Selector
+error__path : Style.Element
 error__path =
-    Style.class "error__path"
+    Style.el "error__path"
         [ Style.rule "padding" "2px 4px"
         , Style.rule "background" Palette.smoke
         , Style.rule "color" Palette.gray
@@ -1220,9 +1220,9 @@ error__path =
         ]
 
 
-error__label : Style.Selector
+error__label : Style.Element
 error__label =
-    Style.class "error__label"
+    Style.el "error__label"
         [ Style.rule "margin-top" "6px"
         , Style.rule "font-weight" "bold"
         , Style.rule "font-size" "14px"
@@ -1230,17 +1230,17 @@ error__label =
         ]
 
 
-error__description : Style.Selector
+error__description : Style.Element
 error__description =
-    Style.class "error__description"
+    Style.el "error__description"
         [ Style.rule "margin" "8px 0 0"
         , Style.rule "font-size" "13px"
         ]
 
 
-error__code_example : Style.Selector
+error__code_example : Style.Element
 error__code_example =
-    Style.class "error__code_example"
+    Style.el "error__code_example"
         [ Style.rule "margin" "12px -8px 0"
         , Style.rule "padding" "0 8px"
         , Style.rule "border" ("1px solid " ++ Palette.smoke)
@@ -1252,7 +1252,7 @@ error__code_example =
 viewPath : List String -> Html msg
 viewPath path =
     code
-        [ Style.className error__path
+        [ Style.class error__path
         , Attributes.title "Location"
         ]
         [ text ("/ " ++ String.join " / " path)
@@ -1262,7 +1262,7 @@ viewPath path =
 viewCodeExample : String -> List Diff -> Html msg
 viewCodeExample exampleCode diffs =
     div
-        [ Style.className error__code_example
+        [ Style.class error__code_example
         ]
         [ case SyntaxHighlight.elm (String.trim exampleCode) of
             Err _ ->
@@ -1281,11 +1281,11 @@ viewError error =
             reasonToExplanation error.reason
     in
     div
-        [ Style.className error__error
+        [ Style.class error__error
         ]
         [ viewPath error.path
-        , div [ Style.className error__label ] explanation.label
-        , p [ Style.className error__description ] explanation.description
+        , div [ Style.class error__label ] explanation.label
+        , p [ Style.class error__description ] explanation.description
         , viewCodeExample explanation.code explanation.diffs
         ]
 
@@ -1293,7 +1293,7 @@ viewError error =
 view : List Error -> Html msg
 view errors =
     div
-        [ Style.className error__root
+        [ Style.class error__root
         ]
-        [ div [ Style.className error__container ] (List.map viewError errors)
+        [ div [ Style.class error__container ] (List.map viewError errors)
         ]

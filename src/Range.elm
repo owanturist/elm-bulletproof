@@ -9,16 +9,16 @@ import Style
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ range__root
         , range__border
         , range__input
         ]
 
 
-range__root : Style.Selector
+range__root : Style.Element
 range__root =
-    Style.class "range__root"
+    Style.el "range__root"
         [ Style.rule "display" "flex"
         , Style.rule "align-items" "center"
         , Style.rule "width" "100%"
@@ -26,18 +26,18 @@ range__root =
         ]
 
 
-range__border : Style.Selector
+range__border : Style.Element
 range__border =
-    Style.class "range__border"
+    Style.el "range__border"
         [ Style.rule "padding" "0 5px"
         , Style.rule "font-size" "12px"
         , Style.rule "white-space" "no-wrap"
         ]
 
 
-range__input : Style.Selector
+range__input : Style.Element
 range__input =
-    Style.class "range__input"
+    Style.el "range__input"
         [ Style.rule "box-sizing" "border-box"
         , Style.rule "display" "table-cell"
         , Style.rule "flex-grow" "1"
@@ -68,13 +68,13 @@ trailingZeros step value =
 rangeHelp : String -> String -> String -> String -> String -> Html String
 rangeHelp name min max step value =
     div
-        [ Style.className range__root ]
+        [ Style.class range__root ]
         [ span
-            [ Style.className range__border ]
+            [ Style.class range__border ]
             [ text (trailingZeros step min)
             ]
         , input
-            [ Style.className range__input
+            [ Style.class range__input
             , Attributes.type_ "range"
             , Attributes.tabindex 0
             , Attributes.name name
@@ -86,7 +86,7 @@ rangeHelp name min max step value =
             ]
             []
         , span
-            [ Style.className range__border ]
+            [ Style.class range__border ]
             [ text (trailingZeros step value ++ " / " ++ trailingZeros step max)
             ]
         ]

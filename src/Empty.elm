@@ -37,16 +37,16 @@ story =
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ empty__root
         , empty__container
         , empty__title
         ]
 
 
-empty__root : Style.Selector
+empty__root : Style.Element
 empty__root =
-    Style.class "empty__root"
+    Style.el "empty__root"
         [ Style.rule "display" "flex"
         , Style.rule "align-items" "center"
         , Style.rule "justify-content" "center"
@@ -61,17 +61,17 @@ empty__root =
         ]
 
 
-empty__container : Style.Selector
+empty__container : Style.Element
 empty__container =
-    Style.class "empty__container"
+    Style.el "empty__container"
         [ Style.rule "min-width" "0"
         , Style.rule "padding" "12px 24px"
         ]
 
 
-empty__title : Style.Selector
+empty__title : Style.Element
 empty__title =
-    Style.class "empty__title"
+    Style.el "empty__title"
         [ Style.rule "margin-bottom" "1em"
         , Style.rule "font-size" "2.5em"
         ]
@@ -80,13 +80,13 @@ empty__title =
 view : Html msg
 view =
     div
-        [ Style.className empty__root
+        [ Style.class empty__root
         ]
         [ div
-            [ Style.className empty__container
+            [ Style.class empty__container
             ]
             [ div
-                [ Style.className empty__title
+                [ Style.class empty__title
                 ]
                 [ text "Don't know where to start?"
                 , br [] []

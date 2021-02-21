@@ -8,16 +8,16 @@ import Style
 
 css : Style.Sheet
 css =
-    Style.sheet
+    Style.elements
         [ not_found__path
         , not_found__message
         , not_found__root
         ]
 
 
-not_found__path : Style.Selector
+not_found__path : Style.Element
 not_found__path =
-    Style.class "not_found__path"
+    Style.el "not_found__path"
         [ Style.rule "display" "inline-block"
         , Style.rule "padding" "4px 12px"
         , Style.rule "background" Palette.gray05
@@ -27,16 +27,16 @@ not_found__path =
         ]
 
 
-not_found__message : Style.Selector
+not_found__message : Style.Element
 not_found__message =
-    Style.class "not_found__message"
+    Style.el "not_found__message"
         [ Style.rule "padding" "12px 24px"
         ]
 
 
-not_found__root : Style.Selector
+not_found__root : Style.Element
 not_found__root =
-    Style.class "not_found__root"
+    Style.el "not_found__root"
         [ Style.rule "display" "flex"
         , Style.rule "align-items" "center"
         , Style.rule "justify-content" "center"
@@ -54,17 +54,17 @@ not_found__root =
 view : Story.Path -> Html msg
 view path =
     div
-        [ Style.className not_found__root
+        [ Style.class not_found__root
         ]
         [ div
-            [ Style.className not_found__message
+            [ Style.class not_found__message
             ]
             [ text "Ooops..."
             , br [] []
             , text "There is no Story at this path:"
             , br [] []
             , code
-                [ Style.className not_found__path ]
+                [ Style.class not_found__path ]
                 [ text ("/ " ++ String.join " / " path) ]
             , br [] []
             , text "I suggest you to choose an existing one from the sidebar 😉"

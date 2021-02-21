@@ -1,27 +1,29 @@
 module Style exposing
-    ( Rule
-    , Selector
+    ( Element
+    , Rule
     , Sheet
+    , batch
     , class
+    , classList
     , className
-    , classNameString
-    , classNames
     , each
+    , el
+    , elements
     , focusVisible
     , hover
+    , mod
     , render
     , rule
     , selector
-    , sheet
     )
 
 import Html
 import Html.Attributes as Attributes
 
 
-unpack : (a -> String) -> List a -> String
-unpack stringify items =
-    String.join "" (List.map stringify items)
+renderDefinition : String -> List Rule -> String
+renderDefinition cssSelector rules =
+    cssSelector ++ "{" ++ String.join "" (List.map unpackRule rules) ++ "}"
 
 
 type Rule
@@ -38,87 +40,113 @@ rule property value =
     Rule (property ++ ":" ++ value ++ ";")
 
 
-type Selector
-    = Selector String String String
+type Target
+    = Class (List Rule)
+    | PseudoClass String (List Rule)
 
 
-unpackSelector : Selector -> String
-unpackSelector (Selector prefix name rules) =
-    prefix ++ name ++ "{" ++ rules ++ "}"
+renderTarget : String -> Target -> String
+renderTarget name target =
+    case target of
+        Class rules ->
+            renderDefinition ("." ++ name) rules
+
+        PseudoClass pseudo rules ->
+            renderDefinition ("." ++ name ++ ":" ++ pseudo) rules
 
 
-class : String -> List Rule -> Selector
-class name rules =
-    Selector "." ("_bp__" ++ name) (unpack unpackRule rules)
+type Element
+    = Element String (List Target)
 
 
-pseudoClass : String -> Selector -> List Rule -> Selector
-pseudoClass pseudo (Selector prefix name _) rules =
-    Selector prefix (name ++ ":" ++ pseudo) (unpack unpackRule rules)
+renderElement : Element -> List String
+renderElement (Element name targets) =
+    List.map (renderTarget name) targets
 
 
-hover : Selector -> List Rule -> Selector
+el : String -> List Rule -> Element
+el name rules =
+    Element ("_bp_" ++ name) [ Class rules ]
+
+
+mod : Element -> String -> List Rule -> Element
+mod (Element name _) modificator rules =
+    el (name ++ "__" ++ modificator) rules
+
+
+pseudoClass : String -> List Rule -> Element -> Element
+pseudoClass pseudo rules (Element name targets) =
+    Element name (PseudoClass pseudo rules :: targets)
+
+
+hover : List Rule -> Element -> Element
 hover =
     pseudoClass "hover"
 
 
-focusVisible : Selector -> List Rule -> Selector
+focusVisible : List Rule -> Element -> Element
 focusVisible =
     pseudoClass "focus-visible"
 
 
-selector : String -> List Rule -> Selector
-selector cssSelector rules =
-    Selector "" cssSelector (unpack unpackRule rules)
 
-
-each : List (List Rule -> Selector) -> List Rule -> Selector
-each selectors rules =
-    let
-        allSelectors =
-            selectors
-                |> List.map ((|>) [] >> withPrefix)
-                |> String.join ","
-    in
-    Selector "" allSelectors (unpack unpackRule rules)
-
-
-withPrefix : Selector -> String
-withPrefix (Selector prefix name _) =
-    prefix ++ name
-
-
-classNameString : Selector -> String
-classNameString (Selector _ name _) =
-    name
-
-
-className : Selector -> Html.Attribute msg
-className =
-    Attributes.class << classNameString
-
-
-classNames : List ( Selector, Bool ) -> Html.Attribute msg
-classNames selectors =
-    selectors
-        |> List.map (Tuple.mapFirst classNameString)
-        |> Attributes.classList
+-- S H E E T
 
 
 type Sheet
-    = Sheet String
+    = Sheet (List String)
 
 
-unpackSheet : Sheet -> String
-unpackSheet (Sheet str) =
-    str
+unpackSheet : Sheet -> List String
+unpackSheet (Sheet strings) =
+    strings
 
 
-sheet : List Selector -> Sheet
-sheet selectors =
-    Sheet (unpack unpackSelector selectors)
+elements : List Element -> Sheet
+elements =
+    Sheet << List.concatMap renderElement
 
 
-render : List Sheet -> String
-render sheets =
-    unpack unpackSheet sheets
+each : List (List Rule -> Element) -> List Rule -> Sheet
+each makeElements rules =
+    let
+        classNames =
+            makeElements
+                |> List.map ((|>) [] >> className >> (++) ".")
+                |> String.join ","
+    in
+    Sheet [ renderDefinition classNames rules ]
+
+
+selector : String -> List Rule -> Sheet
+selector cssSelector rules =
+    Sheet [ renderDefinition cssSelector rules ]
+
+
+batch : List Sheet -> Sheet
+batch sheets =
+    Sheet (List.concatMap unpackSheet sheets)
+
+
+render : Sheet -> String
+render (Sheet strings) =
+    String.join "" strings
+
+
+
+-- A T T R I B U T E S
+
+
+className : Element -> String
+className (Element name _) =
+    name
+
+
+class : Element -> Html.Attribute msg
+class =
+    Attributes.class << className
+
+
+classList : List ( Element, Bool ) -> Html.Attribute msg
+classList =
+    Attributes.classList << List.map (Tuple.mapFirst className)
