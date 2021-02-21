@@ -1,5 +1,6 @@
 module Icon exposing
     ( bars
+    , css
     , elm
     , folder
     , folderEmpty
@@ -8,20 +9,30 @@ module Icon exposing
     , tools
     )
 
-import Css
-import Svg.Styled as Svg exposing (Svg, path, styled, svg)
-import Svg.Styled.Attributes as Attributes
+import Style
+import Svg exposing (Svg, path, svg)
+import Svg.Attributes as Attributes
 
 
-styledIcon : List (Svg.Attribute msg) -> List (Svg msg) -> Svg msg
-styledIcon =
-    styled svg [ Css.height (Css.px 14) ]
+css : Style.Sheet
+css =
+    Style.elements
+        [ icon__root
+        ]
+
+
+icon__root : Style.Element
+icon__root =
+    Style.el "icon__root"
+        [ Style.rule "height" "14px"
+        ]
 
 
 viewIcon : Int -> Int -> Int -> Int -> String -> Svg msg
 viewIcon minX minY width height d =
-    styledIcon
-        [ Attributes.fill "currentColor"
+    svg
+        [ Attributes.class (Style.className icon__root)
+        , Attributes.fill "currentColor"
         , [ minX, minY, width, height ]
             |> List.map String.fromInt
             |> String.join " "

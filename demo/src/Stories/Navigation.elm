@@ -2,8 +2,8 @@ module Stories.Navigation exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Css
-import Html.Styled exposing (Html, div, styled, text)
+import Html exposing (Html, div, text)
+import Html.Attributes exposing (style)
 import Navigation
 import Set
 
@@ -18,7 +18,7 @@ story =
     Bulletproof.folder "Navigation"
         [ Bulletproof.story "Empty"
             (Navigation.view [] (Bulletproof.batch []) Navigation.initial)
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+            |> Bulletproof.html
 
         --
         , Bulletproof.story "Overflow"
@@ -33,13 +33,12 @@ story =
                     )
                     Navigation.initial
                     |> List.singleton
-                    |> styled div
-                        [ Css.width (Css.px 150)
-                        , Css.height (Css.px 300)
-                        , Css.border3 (Css.px 1) Css.solid (Css.hex "#444")
-                        , Css.overflow Css.auto
+                    |> div
+                        [ style "width" "150px"
+                        , style "height" "300px"
+                        , style "border" "1px solid #444"
+                        , style "overflow" "auto"
                         ]
-                        []
             )
             |> Bulletproof.Knob.string "Stories prefix" "SuperLongStoryTitle"
             |> Bulletproof.Knob.int "Amount of Stories"
@@ -48,7 +47,7 @@ story =
                 , Bulletproof.Knob.min 1
                 , Bulletproof.Knob.max 100
                 ]
-            |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+            |> Bulletproof.html
 
         --
         , storyStories
@@ -91,7 +90,7 @@ storyStories =
                 , Bulletproof.Knob.max 50
                 ]
         ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 storyFolders : Bulletproof.Story
@@ -199,7 +198,7 @@ storyFolders =
                 , ( "Inactive", -1 )
                 ]
         ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 storyTodo : Bulletproof.Story
@@ -268,7 +267,7 @@ storyTodo =
             )
             |> Bulletproof.Knob.bool "Open Folder #5" False
         ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 storyLabels : Bulletproof.Story
@@ -337,4 +336,4 @@ storyLabels =
             )
             |> Bulletproof.Knob.bool "Open Folder #5" False
         ]
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html

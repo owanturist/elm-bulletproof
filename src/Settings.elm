@@ -5,12 +5,12 @@ module Settings exposing
     , default
     , encoder
     , isHorizontal
-    , isVertical
     , minDockHeight
     , minDockWidth
     , minNavigationWidth
     , minStoryHeight
     , minStoryWidth
+    , paddingSize
     )
 
 import Json.Decode as Decode exposing (Decoder)
@@ -25,11 +25,6 @@ type Orientation
 isHorizontal : Orientation -> Bool
 isHorizontal =
     (==) Horizontal
-
-
-isVertical : Orientation -> Bool
-isVertical =
-    (==) Vertical
 
 
 orientationEncoder : Orientation -> Value
@@ -143,3 +138,8 @@ minStoryWidth =
 minStoryHeight : Int
 minStoryHeight =
     200
+
+
+paddingSize : Int
+paddingSize =
+    10

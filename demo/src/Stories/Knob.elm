@@ -2,11 +2,12 @@ module Stories.Knob exposing (story)
 
 import Bulletproof
 import Bulletproof.Knob
-import Css
 import Date
 import Dict
-import Html.Styled exposing (div, styled)
+import Html exposing (div)
+import Html.Attributes exposing (style)
 import Knob
+import Utils exposing (px)
 
 
 viewport : Bulletproof.Knob.Viewport
@@ -40,7 +41,7 @@ generalStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 boolStory : Bulletproof.Story
@@ -65,7 +66,7 @@ boolStory =
         |> Bulletproof.Knob.bool "Value" True
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 stringStory : Bulletproof.Story
@@ -116,7 +117,7 @@ stringStory =
         |> Bulletproof.Knob.string "Value" "First line\nSecond line"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 intStory : Bulletproof.Story
@@ -178,7 +179,7 @@ intStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 floatStory : Bulletproof.Story
@@ -240,7 +241,7 @@ floatStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 radioStory : Bulletproof.Story
@@ -280,11 +281,10 @@ radioStory =
     --
     , Bulletproof.story "Radio with long options"
         (\title longString n width ->
-            styled div
-                [ Css.width (Css.px (toFloat width))
-                , Css.backgroundColor (Css.hex "#ccc")
+            div
+                [ style "width" (px width)
+                , style "background" "#ccc"
                 ]
-                []
                 [ ( title
                   , Knob.Radio
                         [ "Option #1"
@@ -310,7 +310,7 @@ radioStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 selectStory : Bulletproof.Story
@@ -350,11 +350,10 @@ selectStory =
     --
     , Bulletproof.story "Select with long options"
         (\title longString n width ->
-            styled div
-                [ Css.width (Css.px (toFloat width))
-                , Css.backgroundColor (Css.hex "#ccc")
+            div
+                [ style "width" (px width)
+                , style "background" "#ccc"
                 ]
-                []
                 [ ( title
                   , Knob.Select
                         [ "Option #1"
@@ -380,7 +379,7 @@ selectStory =
             ]
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 colorStory : Bulletproof.Story
@@ -405,7 +404,7 @@ colorStory =
         |> Bulletproof.Knob.color "Value" "#1ea5fd"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 dateStory : Bulletproof.Story
@@ -430,7 +429,7 @@ dateStory =
         |> Bulletproof.Knob.date "Value" "1993-02-09"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 timeStory : Bulletproof.Story
@@ -455,7 +454,7 @@ timeStory =
         |> Bulletproof.Knob.time "Value" "06:38"
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 filesStory : Bulletproof.Story
@@ -467,7 +466,7 @@ filesStory =
                 |> Knob.view viewport Knob.initial
         )
         |> Bulletproof.Knob.string "Title" "Files"
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 viewportStory : Bulletproof.Story
@@ -499,7 +498,7 @@ viewportStory =
         |> Bulletproof.Knob.viewport
     ]
         |> Bulletproof.batch
-        |> Bulletproof.htmlFrom Html.Styled.toUnstyled
+        |> Bulletproof.html
 
 
 story : Bulletproof.Story

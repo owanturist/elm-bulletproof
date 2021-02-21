@@ -1,16 +1,17 @@
-module Navigation exposing (Model, Msg, initial, open, update, view)
+module Navigation exposing (Model, Msg, css, initial, open, update, view)
 
-import Css
-import Html.Styled as Html exposing (Html, a, div, header, span, styled, text)
-import Html.Styled.Attributes as Attributes exposing (css)
-import Html.Styled.Events as Events
-import Html.Styled.Keyed as Keyed
+import Html exposing (Html, a, div, header, span, text)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Html.Keyed as Keyed
+import Html.Lazy as Lazy
 import Icon
 import Palette
 import Router
 import Set exposing (Set)
 import Story exposing (Story(..))
-import Utils exposing (ifelse, onSpaceOrEnter)
+import Style
+import Utils exposing (ifelse, onSpaceOrEnter, px)
 
 
 
@@ -76,132 +77,315 @@ update key msg model =
 -- V I E W
 
 
-toKey : Story.Path -> String
-toKey =
-    String.join "<-@->"
+css : Style.Sheet
+css =
+    Style.batch
+        [ Style.elements
+            [ navigation__spacer
+            , navigation__icon_box
+            , navigation__label
+            , navigation__item
+            , navigation__item__active
+            , navigation__item__interactive
+            , navigation__header
+            , navigation__container
+            , navigation__scroller
+            , navigation__root
+            ]
+
+        --
+        , Style.selector ("* + ." ++ Style.className navigation__label)
+            [ Style.rule "margin-top" "8px"
+            ]
+        ]
+
+
+navigation__spacer : Style.Element
+navigation__spacer =
+    Style.el "navigation__spacer"
+        [ Style.rule "display" "inline-block"
+        ]
+
+
+navigation__icon_box : Style.Element
+navigation__icon_box =
+    Style.el "navigation__icon_box"
+        [ Style.rule "display" "inline-block"
+        , Style.rule "margin-right" "4px"
+        , Style.rule "width" "18px"
+        , Style.rule "vertical-align" "middle"
+        ]
+
+
+navigation__label : Style.Element
+navigation__label =
+    Style.el "navigation__label"
+        [ Style.rule "padding" "4px 12px 5px 8px"
+        , Style.rule "color" Palette.dark05
+        , Style.rule "font-weight" "bold"
+        , Style.rule "font-size" "12px"
+        , Style.rule "letter-spacing" "0.25em"
+        ]
+
+
+navigation__item : Style.Element
+navigation__item =
+    Style.el "navigation__item"
+        [ Style.rule "display" "block"
+        , Style.rule "padding" "4px 12px 4px 8px"
+        , Style.rule "text-decoration" "none"
+        , Style.rule "outline" "none"
+        , Style.rule "color" "inherit"
+        ]
+
+
+navigation__item__interactive : Style.Element
+navigation__item__interactive =
+    [ Style.rule "cursor" "pointer"
+    ]
+        |> Style.mod navigation__item "interactive"
+        |> Style.hover
+            [ Style.rule "background" Palette.smoke
+            ]
+        |> Style.focusVisible
+            [ Style.rule "background" Palette.smoke
+            ]
+
+
+navigation__item__active : Style.Element
+navigation__item__active =
+    [ Style.rule "background" Palette.blue
+    , Style.rule "color" Palette.white
+    , Style.rule "font-weight" "bold"
+    , Style.rule "cursor" "pointer"
+    ]
+        |> Style.mod navigation__item "active"
+        |> Style.hover
+            [ Style.rule "background" Palette.blueDark
+            ]
+        |> Style.focusVisible
+            [ Style.rule "background" Palette.blueDark
+            ]
+
+
+navigation__header : Style.Element
+navigation__header =
+    Style.el "navigation__header"
+        [ Style.rule "flex" "0 0 auto"
+        , Style.rule "padding" "16px 12px 16px 48px"
+        , Style.rule "background" Palette.white
+        , Style.rule "font-weight" "bold"
+        , Style.rule "font-size" "16px"
+        , Style.rule "line-height" "1"
+        , Style.rule "letter-spacing" "0.05em"
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke)
+        , Style.rule "overflow" "hidden"
+        ]
+
+
+navigation__container : Style.Element
+navigation__container =
+    Style.el "navigation__container"
+        [ Style.rule "flex" "1 0 0"
+        , Style.rule "padding" "8px 0 20px"
+        ]
+
+
+navigation__scroller : Style.Element
+navigation__scroller =
+    Style.el "navigation__scroller"
+        [ Style.rule "display" "flex"
+        , Style.rule "width" "100%"
+        , Style.rule "overflow" "auto"
+        ]
+
+
+navigation__root : Style.Element
+navigation__root =
+    Style.el "navigation__root"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "flex"
+        , Style.rule "flex-direction" "column"
+        , Style.rule "width" "100%"
+        , Style.rule "height" "100%"
+        , Style.rule "white-space" "nowrap"
+        , Style.rule "user-select" "none"
+        , Style.rule "color" Palette.dark
+        , Style.rule "background" Palette.cloud
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-family" Palette.font
+        ]
+
+
+toKey : String -> String -> String
+toKey left right =
+    left ++ "|" ++ right
+
+
+stringifyPath : Story.Path -> String
+stringifyPath =
+    String.join " / "
 
 
 viewSpacer : Int -> Html msg
 viewSpacer n =
     if n > 0 then
-        styled span
-            [ Css.display Css.inlineBlock
-            , Css.width (Css.px (toFloat n * 22))
+        span
+            [ Style.class navigation__spacer
+            , Attributes.style "width" (px (n * 22))
             ]
-            []
             []
 
     else
         text ""
 
 
-styledIconHolder : List (Html msg) -> Html msg
-styledIconHolder =
-    styled span
-        [ Css.display Css.inlineBlock
-        , Css.marginRight (Css.px 4)
-        , Css.width (Css.px 18)
-        , Css.verticalAlign Css.middle
-        ]
-        []
+viewIconBox : Html msg -> Html msg
+viewIconBox =
+    span [ Style.class navigation__icon_box ] << List.singleton
 
 
-viewTodo : Story.Path -> String -> Html msg
-viewTodo path title =
+viewLabel : String -> Int -> Html msg
+viewLabel title indent =
     div
-        [ css (cssStaticItem False)
-        , Attributes.tabindex -1
+        [ Style.class navigation__label
         ]
-        [ viewSpacer (List.length path)
-        , styledIconHolder [ Icon.tools ]
-        , text title
-        ]
-
-
-styledLabel : List (Html msg) -> Html msg
-styledLabel =
-    styled div
-        [ Css.marginTop (Css.px 8)
-        , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 5) (Css.px 8)
-        , Css.color Palette.dark50
-        , Css.fontSize (Css.px 12)
-        , Css.fontWeight Css.bold
-        , Css.letterSpacing (Css.em 0.25)
-        , Css.firstChild
-            [ Css.marginTop Css.zero
-            ]
-        ]
-        []
-
-
-viewLabel : Story.Path -> String -> Html msg
-viewLabel path title =
-    styledLabel
-        [ viewSpacer (List.length path)
+        [ viewSpacer indent
         , text (String.toUpper title)
         ]
 
 
-cssStaticItem : Bool -> List Css.Style
-cssStaticItem active =
-    [ Css.display Css.block
-    , Css.padding4 (Css.px 4) (Css.px 12) (Css.px 4) (Css.px 8)
-    , Css.textDecoration Css.none
-    , Css.outline Css.none
-    , Css.color Css.inherit
-    , if active then
-        Css.batch
-            [ Css.backgroundColor Palette.blue
-            , Css.color Palette.white
-            , Css.fontWeight Css.bold
-            ]
-
-      else
-        Css.batch []
-    ]
+viewLabelItem : String -> Story.Path -> ( String, Html msg )
+viewLabelItem title path =
+    ( toKey "LABEL" title
+    , Lazy.lazy2 viewLabel title (List.length path)
+    )
 
 
-cssItem : Bool -> List Css.Style
-cssItem active =
-    Css.focus
-        [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
+viewTodo : String -> Int -> Html msg
+viewTodo title indent =
+    div
+        [ Style.class navigation__item
+        , Attributes.tabindex -1
         ]
-        :: Css.hover
-            [ Css.backgroundColor (ifelse active Palette.blueDark Palette.smoke)
-            ]
-        :: cssStaticItem active
-
-
-viewStoryLink : Bool -> Story.Path -> String -> Html Msg
-viewStoryLink active path title =
-    let
-        storyPath =
-            title :: path
-
-        exactStoryPath =
-            List.reverse storyPath
-    in
-    a
-        [ css (cssItem active)
-        , Attributes.rel "noopener noreferrer"
-        , Attributes.tabindex 0
-        , Attributes.title (String.join " / " exactStoryPath)
-        , Attributes.href (Router.toString exactStoryPath)
-        , onSpaceOrEnter (GoToStory exactStoryPath)
-        ]
-        [ viewSpacer (List.length path)
-        , styledIconHolder [ Icon.elm ]
+        [ viewSpacer indent
+        , viewIconBox Icon.tools
         , text title
         ]
 
 
-styledFolder : Bool -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledFolder active =
-    styled div (Css.cursor Css.pointer :: cssItem active)
+viewTodoItem : String -> Story.Path -> ( String, Html msg )
+viewTodoItem title path =
+    ( toKey "STORY" title
+    , Lazy.lazy2 viewTodo title (List.length path)
+    )
 
 
-viewFolderTree : Model -> Story.Path -> Story.Path -> String -> Story (Html ()) -> List ( String, Html Msg )
-viewFolderTree model current path title story =
+viewStory : Bool -> String -> Int -> String -> String -> Html (Story.Path -> Msg)
+viewStory active title indent url tooltip =
+    a
+        [ Style.class navigation__item
+        , Style.class (ifelse active navigation__item__active navigation__item__interactive)
+        , Attributes.rel "noopener noreferrer"
+        , Attributes.tabindex 0
+        , Attributes.title tooltip
+        , Attributes.href url
+        , onSpaceOrEnter GoToStory
+        ]
+        [ viewSpacer indent
+        , viewIconBox Icon.elm
+        , text title
+        ]
+
+
+viewStoryItem : String -> Story.Path -> Story.Path -> ( String, Html Msg )
+viewStoryItem title path current =
+    let
+        storyPath =
+            List.reverse (title :: path)
+
+        active =
+            current == [ title ]
+
+        url =
+            Router.toString storyPath
+
+        indent =
+            List.length path
+
+        tooltip =
+            stringifyPath storyPath
+    in
+    ( toKey "STORY" title
+    , Lazy.lazy5 viewStory active title indent url tooltip
+        |> Html.map ((|>) storyPath)
+    )
+
+
+viewMakeFolder :
+    { title : String
+    , indent : Int
+    , active : Bool
+    , tooltip : String
+    , icon : Html msg
+    , onClick : msg
+    }
+    -> Html msg
+viewMakeFolder { title, indent, active, tooltip, icon, onClick } =
+    div
+        [ Style.class navigation__item
+        , Style.class (ifelse active navigation__item__active navigation__item__interactive)
+        , Attributes.attribute "role" "button"
+        , Attributes.tabindex 0
+        , Attributes.title tooltip
+        , Events.onClick onClick
+        , onSpaceOrEnter onClick
+        ]
+        [ viewSpacer indent
+        , viewIconBox icon
+        , text title
+        ]
+
+
+viewEmptyFolder : Bool -> String -> Int -> String -> Html (Story.Path -> Msg)
+viewEmptyFolder opened title indent tooltip =
+    viewMakeFolder
+        { title = title
+        , indent = indent
+        , active = False
+        , tooltip = tooltip
+        , icon = ifelse opened Icon.folderEmptyOpen Icon.folderEmpty
+        , onClick = Toggle
+        }
+
+
+viewFolder : Bool -> Bool -> String -> Int -> String -> Html (Story.Path -> Msg)
+viewFolder opened active title indent tooltip =
+    viewMakeFolder
+        { title = title
+        , indent = indent
+        , active = active
+        , tooltip = tooltip
+        , icon = ifelse opened Icon.folderOpen Icon.folder
+        , onClick = Toggle
+        }
+
+
+viewFolderTree : String -> Story.Path -> Story.Path -> Model -> Story view -> List ( String, Html Msg )
+viewFolderTree title path current =
+    let
+        nextCurrent =
+            if List.head current == Just title then
+                List.drop 1 current
+
+            else
+                []
+    in
+    viewItem (title :: path) nextCurrent
+
+
+viewFolderItem : String -> Story.Path -> Story.Path -> Model -> Story view -> List ( String, Html Msg )
+viewFolderItem title path current model story =
     let
         folderPath =
             title :: path
@@ -209,139 +393,72 @@ viewFolderTree model current path title story =
         opened =
             Set.member folderPath model
 
-        ( active, nextCurrent ) =
-            case current of
-                [] ->
-                    ( False, [] )
+        indent =
+            List.length path
 
-                fragmentID :: rest ->
-                    if fragmentID == title then
-                        ( not opened, rest )
-
-                    else
-                        ( False, [] )
-
-        stories =
-            if opened then
-                viewItem model nextCurrent folderPath story
-
-            else
-                []
+        tooltip =
+            stringifyPath (List.reverse folderPath)
     in
-    ( toKey ("FOLDER" :: folderPath)
-    , styledFolder active
-        [ Attributes.attribute "role" "button"
-        , Attributes.tabindex 0
-        , Attributes.title (String.join " / " (List.reverse folderPath))
-        , Events.onClick (Toggle folderPath)
-        , onSpaceOrEnter (Toggle folderPath)
+    if Story.isEmpty story then
+        [ ( toKey "FOLDER" title
+          , Lazy.lazy4 viewEmptyFolder opened title indent tooltip
+                |> Html.map ((|>) folderPath)
+          )
         ]
-        [ viewSpacer (List.length path)
-        , styledIconHolder
-            [ if opened then
-                ifelse (Story.isEmpty story) Icon.folderEmptyOpen Icon.folderOpen
 
-              else
-                ifelse (Story.isEmpty story) Icon.folderEmpty Icon.folder
-            ]
-        , text title
+    else if opened then
+        [ ( toKey "FOLDER" title
+          , Lazy.lazy5 viewFolder True False title indent tooltip
+                |> Html.map ((|>) folderPath)
+          )
+        , ( toKey "FOLDER_TREE" title
+          , Keyed.node "div" [] (viewFolderTree title path current model story)
+          )
         ]
-    )
-        :: stories
+
+    else
+        [ ( toKey "FOLDER" title
+          , Lazy.lazy5 viewFolder False (List.head current == Just title) title indent tooltip
+                |> Html.map ((|>) folderPath)
+          )
+        ]
 
 
-viewItem : Model -> Story.Path -> Story.Path -> Story (Html ()) -> List ( String, Html Msg )
-viewItem model current path story =
+viewItem : Story.Path -> Story.Path -> Model -> Story view -> List ( String, Html Msg )
+viewItem path current model story =
     case story of
         Story.Label title ->
-            [ ( toKey ("LABEL" :: title :: path)
-              , viewLabel path title
-              )
-            ]
+            [ viewLabelItem title path ]
 
         Story.Todo title ->
-            [ ( toKey ("TODO" :: title :: path)
-              , viewTodo path title
-              )
-            ]
+            [ viewTodoItem title path ]
 
         Story.Single title _ ->
-            [ ( toKey ("STORY" :: title :: path)
-              , viewStoryLink (current == [ title ]) path title
-              )
-            ]
+            [ viewStoryItem title path current ]
 
         Story.Folder title substory ->
-            viewFolderTree model current path title substory
+            viewFolderItem title path current model substory
 
         Story.Batch stories ->
-            List.concatMap (viewItem model current path) stories
+            List.concatMap (viewItem path current model) stories
 
 
-styledHeader : List (Html msg) -> Html msg
-styledHeader =
-    styled header
-        [ Css.position Css.absolute
-        , Css.top Css.zero
-        , Css.right Css.zero
-        , Css.left Css.zero
-        , Css.padding4 (Css.px 16) (Css.px 12) (Css.px 16) (Css.px 48)
-        , Css.backgroundColor Palette.white
-        , Css.fontWeight Css.bold
-        , Css.fontSize (Css.px 16)
-        , Css.lineHeight (Css.int 1)
-        , Css.letterSpacing (Css.em 0.05)
-        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        ]
-        []
-
-
-cssContainer : List Css.Style
-cssContainer =
-    [ Css.flex3 (Css.int 1) Css.zero Css.zero
-    , Css.padding3 (Css.px 8) Css.zero (Css.px 20)
-    ]
-
-
-styledScroller : List (Html msg) -> Html msg
-styledScroller =
-    styled div
-        [ Css.displayFlex
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.overflow Css.auto
-        ]
-        []
-
-
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.position Css.relative
-        , Css.paddingTop (Css.px 48)
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.whiteSpace Css.noWrap
-        , Css.property "user-select" "none"
-        , Css.backgroundColor Palette.cloud
-        , Css.color Palette.dark
-        , Css.fontFamilies Palette.font
-        , Css.fontSize (Css.px 13)
-        ]
-        []
-
-
-view : Story.Path -> Story (Html ()) -> Model -> Html Msg
+view : Story.Path -> Story view -> Model -> Html Msg
 view current story model =
-    styledRoot
-        [ styledHeader
+    div
+        [ Style.class navigation__root
+        ]
+        [ header
+            [ Style.class navigation__header
+            ]
             [ text "BULLETPROOF"
             ]
-        , styledScroller
+        , div
+            [ Style.class navigation__scroller
+            ]
             [ Keyed.node "div"
-                [ css cssContainer
+                [ Style.class navigation__container
                 ]
-                (viewItem model current [] story)
+                (viewItem [] current model story)
             ]
         ]

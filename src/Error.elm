@@ -1,18 +1,19 @@
-module Error exposing (Error, Reason(..), validateStories, view)
+module Error exposing (Error, Reason(..), css, validateStories, view)
 
 import Color
-import Css
 import Date
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, code, div, p, pre, styled, text)
-import Html.Styled.Attributes as Attributes
+import Html exposing (Html, code, div, p, pre, text)
+import Html.Attributes as Attributes
 import Knob exposing (Knob)
 import List
 import Palette
 import Story exposing (Story)
+import Style
 import SyntaxHighlight
+import TextCode exposing (textCode)
 import Tuple
-import Utils exposing (ifelse, textCode)
+import Utils exposing (ifelse)
 
 
 type Reason
@@ -320,11 +321,26 @@ validateStories =
     validateStoriesHelp []
 
 
+type Diff
+    = Add Int Int
+    | Del Int Int
+
+
+applyDiff : Diff -> SyntaxHighlight.HCode -> SyntaxHighlight.HCode
+applyDiff diff hcode =
+    case diff of
+        Add start end ->
+            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Add) start end hcode
+
+        Del start end ->
+            SyntaxHighlight.highlightLines (Just SyntaxHighlight.Del) start end hcode
+
+
 type alias Explanation msg =
     { label : List (Html msg)
     , description : List (Html msg)
     , code : String
-    , diffs : List ( SyntaxHighlight.Highlight, Int, Int )
+    , diffs : List Diff
     }
 
 
@@ -345,10 +361,10 @@ explanationEmptyLabelTitle =
 , Bulletproof.label "Not blank title"
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -369,10 +385,10 @@ explanationEmptyTodoTitle =
 , Bulletproof.todo "Not blank title"
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -393,10 +409,10 @@ explanationEmptyStoryTitle =
 , Bulletproof.story "Not blank title" burgerIcon
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -417,10 +433,10 @@ explanationEmptyFolderTitle =
 , Bulletproof.folder "Not blank title" []
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -440,10 +456,10 @@ explanationDuplicateLabels title n =
 , Bulletproof.label "Project Components"
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
         ]
 
 
@@ -470,12 +486,12 @@ explanationDuplicateStories title n =
 , Bulletproof.story "Icon burger" burgerIcon
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
-        , ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
+        , Del 8 9
+        , Add 9 10
         ]
 
 
@@ -506,12 +522,12 @@ explanationDuplicateFolders title n =
     ]
 ]
 """
-        [ ( SyntaxHighlight.Del, 0, 1 )
-        , ( SyntaxHighlight.Add, 1, 2 )
-        , ( SyntaxHighlight.Del, 4, 5 )
-        , ( SyntaxHighlight.Add, 5, 6 )
-        , ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ Del 0 1
+        , Add 1 2
+        , Del 4 5
+        , Add 5 6
+        , Del 11 12
+        , Add 12 13
         ]
 
 
@@ -537,10 +553,10 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.int "  " 0
     |> Bulletproof.Knob.int "Not blank knob" 0
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
-        , ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 8 9
+        , Add 9 10
+        , Del 10 11
+        , Add 11 12
         ]
 
 
@@ -566,10 +582,10 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.int "Property" 0
     |> Bulletproof.Knob.int "Tab Index" 0
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
-        , ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 8 9
+        , Add 9 10
+        , Del 10 11
+        , Add 11 12
         ]
 
 
@@ -599,8 +615,8 @@ Bulletproof.story "Button"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 14 )
+        [ Del 9 10
+        , Add 10 14
         ]
 
 
@@ -629,7 +645,7 @@ Bulletproof.story "Button"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Add, 10, 12 )
+        [ Add 10 12
         ]
 
 
@@ -661,8 +677,8 @@ Bulletproof.story "Input"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 9, 11 )
-        , ( SyntaxHighlight.Add, 11, 15 )
+        [ Del 9 11
+        , Add 11 15
         ]
 
 
@@ -694,8 +710,8 @@ Bulletproof.story "Input"
 """
             |> String.replace "${knob}" choice
         )
-        [ ( SyntaxHighlight.Del, 8, 11 )
-        , ( SyntaxHighlight.Add, 11, 14 )
+        [ Del 8 11
+        , Add 11 14
         ]
 
 
@@ -724,8 +740,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ Del 11 12
+        , Add 12 13
         ]
 
 
@@ -755,8 +771,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -786,8 +802,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 10 11
+        , Add 11 12
         ]
 
 
@@ -818,8 +834,8 @@ Bulletproof.story "Input"
         , Bulletproof.Knob.step 10
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -848,8 +864,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 11, 12 )
-        , ( SyntaxHighlight.Add, 12, 13 )
+        [ Del 11 12
+        , Add 12 13
         ]
 
 
@@ -879,8 +895,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -910,8 +926,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 10, 11 )
-        , ( SyntaxHighlight.Add, 11, 12 )
+        [ Del 10 11
+        , Add 11 12
         ]
 
 
@@ -942,8 +958,8 @@ Bulletproof.story "Progressbar"
         , Bulletproof.Knob.step 0.01
         ]
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -971,8 +987,8 @@ Bulletproof.story "Colored Button"
     |> Bulletproof.Knob.color "Button color" "#cc0f"
     |> Bulletproof.Knob.color "Button color" "#cc0"
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
+        [ Del 8 9
+        , Add 9 10
         ]
 
 
@@ -1003,8 +1019,8 @@ Bulletproof.story "Date show"
     |> Bulletproof.Knob.date "Show date" "32-13-2020"
     |> Bulletproof.Knob.date "Show date" "29-02-2020"
 """
-        [ ( SyntaxHighlight.Del, 9, 10 )
-        , ( SyntaxHighlight.Add, 10, 11 )
+        [ Del 9 10
+        , Add 10 11
         ]
 
 
@@ -1030,8 +1046,8 @@ Bulletproof.story "Time show"
     |> Bulletproof.Knob.time "Show time" "24:00"
     |> Bulletproof.Knob.time "Show time" "00:00"
 """
-        [ ( SyntaxHighlight.Del, 8, 9 )
-        , ( SyntaxHighlight.Add, 9, 10 )
+        [ Del 8 9
+        , Add 9 10
         ]
 
 
@@ -1056,9 +1072,9 @@ Bulletproof.story "Button"
     |> Bulletproof.Knob.viewport
     |> Bulletproof.Knob.viewport
 """
-        [ ( SyntaxHighlight.Del, 1, 2 )
-        , ( SyntaxHighlight.Add, 2, 3 )
-        , ( SyntaxHighlight.Del, 10, 11 )
+        [ Del 1 2
+        , Add 2 3
+        , Del 10 11
         ]
 
 
@@ -1141,86 +1157,121 @@ reasonToExplanation reason =
             explanationDuplicateStoryViewport n
 
 
-styledLabel : List (Html msg) -> Html msg
-styledLabel =
-    styled div
-        [ Css.marginTop (Css.px 6)
-        , Css.fontWeight Css.bold
-        , Css.fontSize (Css.px 14)
-        , Css.lineHeight (Css.px 24)
+css : Style.Sheet
+css =
+    Style.elements
+        [ error__root
+        , error__container
+        , error__error
+        , error__path
+        , error__label
+        , error__description
+        , error__code_example
         ]
-        []
 
 
-styledDescription : List (Html msg) -> Html msg
-styledDescription =
-    styled p
-        [ Css.margin3 (Css.px 8) Css.zero Css.zero
-        , Css.fontSize (Css.px 13)
+error__root : Style.Element
+error__root =
+    Style.el "error__root"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "flex"
+        , Style.rule "flex-direction" "column"
+        , Style.rule "align-items" "center"
+        , Style.rule "padding" "0 8px"
+        , Style.rule "width" "100%"
+        , Style.rule "max-width" "100%"
+        , Style.rule "min-height" "100%"
+        , Style.rule "background" Palette.cloud
+        , Style.rule "color" Palette.dark
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-family" Palette.font
+        , Style.rule "word-break" "break-word"
         ]
-        []
 
 
-styledPath : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledPath =
-    styled code
-        [ Css.padding2 (Css.px 2) (Css.px 4)
-        , Css.backgroundColor Palette.smoke
-        , Css.color Palette.gray
-        , Css.borderRadius (Css.px 3)
-        , Css.fontFamily Css.monospace
-        , Css.fontSize (Css.px 10)
-        , Css.lineHeight (Css.int 2)
+error__container : Style.Element
+error__container =
+    Style.el "error__container"
+        [ Style.rule "width" "600px"
+        , Style.rule "max-width" "100%"
+        ]
+
+
+error__error : Style.Element
+error__error =
+    Style.el "error__error"
+        [ Style.rule "margin" "8px 0"
+        , Style.rule "padding" "12px 16px 8px"
+        , Style.rule "background" Palette.white
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke)
+        ]
+
+
+error__path : Style.Element
+error__path =
+    Style.el "error__path"
+        [ Style.rule "padding" "2px 4px"
+        , Style.rule "background" Palette.smoke
+        , Style.rule "color" Palette.gray
+        , Style.rule "border-radius" "3px"
+        , Style.rule "font-size" "10px"
+        , Style.rule "font-family" "monospace"
+        , Style.rule "line-height" "2"
+        ]
+
+
+error__label : Style.Element
+error__label =
+    Style.el "error__label"
+        [ Style.rule "margin-top" "6px"
+        , Style.rule "font-weight" "bold"
+        , Style.rule "font-size" "14px"
+        , Style.rule "line-height" "24px"
+        ]
+
+
+error__description : Style.Element
+error__description =
+    Style.el "error__description"
+        [ Style.rule "margin" "8px 0 0"
+        , Style.rule "font-size" "13px"
+        ]
+
+
+error__code_example : Style.Element
+error__code_example =
+    Style.el "error__code_example"
+        [ Style.rule "margin" "12px -8px 0"
+        , Style.rule "padding" "0 8px"
+        , Style.rule "border" ("1px solid " ++ Palette.smoke)
+        , Style.rule "border-radius" "3px"
+        , Style.rule "overflow" "auto"
         ]
 
 
 viewPath : List String -> Html msg
 viewPath path =
-    styledPath
-        [ Attributes.title "Location"
+    code
+        [ Style.class error__path
+        , Attributes.title "Location"
         ]
         [ text ("/ " ++ String.join " / " path)
         ]
 
 
-styledCodeExample : List (Html msg) -> Html msg
-styledCodeExample =
-    styled div
-        [ Css.margin3 (Css.px 12) (Css.px -8) Css.zero
-        , Css.padding2 Css.zero (Css.px 8)
-        , Css.border3 (Css.px 1) Css.solid Palette.smoke
-        , Css.borderRadius (Css.px 3)
-        , Css.overflow Css.auto
-        ]
-        []
-
-
-viewCodeExample : String -> List ( SyntaxHighlight.Highlight, Int, Int ) -> Html msg
+viewCodeExample : String -> List Diff -> Html msg
 viewCodeExample exampleCode diffs =
-    styledCodeExample
+    div
+        [ Style.class error__code_example
+        ]
         [ case SyntaxHighlight.elm (String.trim exampleCode) of
             Err _ ->
                 pre [] [ text (String.trim exampleCode) ]
 
             Ok elmCode ->
-                List.foldl
-                    (\( highlight, start, end ) code -> SyntaxHighlight.highlightLines (Just highlight) start end code)
-                    elmCode
-                    diffs
+                List.foldl applyDiff elmCode diffs
                     |> SyntaxHighlight.toBlockHtml Nothing
-                    |> Html.fromUnstyled
         ]
-
-
-styledError : List (Html msg) -> Html msg
-styledError =
-    styled div
-        [ Css.margin2 (Css.px 8) Css.zero
-        , Css.padding3 (Css.px 12) (Css.px 16) (Css.px 8)
-        , Css.backgroundColor Palette.white
-        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        ]
-        []
 
 
 viewError : Error -> Html msg
@@ -1229,46 +1280,20 @@ viewError error =
         explanation =
             reasonToExplanation error.reason
     in
-    styledError
+    div
+        [ Style.class error__error
+        ]
         [ viewPath error.path
-        , styledLabel explanation.label
-        , styledDescription explanation.description
+        , div [ Style.class error__label ] explanation.label
+        , p [ Style.class error__description ] explanation.description
         , viewCodeExample explanation.code explanation.diffs
         ]
 
 
-styledContainer : List (Html msg) -> Html msg
-styledContainer =
-    styled div
-        [ Css.width (Css.px 600)
-        , Css.maxWidth (Css.pct 100)
-        ]
-        []
-
-
-styledRoot : List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.boxSizing Css.borderBox
-        , Css.displayFlex
-        , Css.flexDirection Css.column
-        , Css.alignItems Css.center
-        , Css.padding2 Css.zero (Css.px 8)
-        , Css.width (Css.pct 100)
-        , Css.maxWidth (Css.pct 100)
-        , Css.minHeight (Css.pct 100)
-        , Css.backgroundColor Palette.cloud
-        , Css.property "word-break" "break-word"
-        , Css.color Palette.dark
-        , Css.fontSize (Css.px 13)
-        , Css.fontFamilies Palette.font
-        ]
-        []
-
-
 view : List Error -> Html msg
 view errors =
-    styledRoot
-        [ Html.fromUnstyled (SyntaxHighlight.useTheme SyntaxHighlight.gitHub)
-        , styledContainer (List.map viewError errors)
+    div
+        [ Style.class error__root
+        ]
+        [ div [ Style.class error__container ] (List.map viewError errors)
         ]

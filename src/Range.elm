@@ -1,9 +1,53 @@
-module Range exposing (range)
+module Range exposing (css, range)
 
-import Css
-import Html.Styled as Html exposing (Html, div, input, span, styled, text)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
+import Html exposing (Html, div, input, span, text)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Html.Lazy as Lazy
+import Style
+
+
+css : Style.Sheet
+css =
+    Style.elements
+        [ range__root
+        , range__border
+        , range__input
+        ]
+
+
+range__root : Style.Element
+range__root =
+    Style.el "range__root"
+        [ Style.rule "display" "flex"
+        , Style.rule "align-items" "center"
+        , Style.rule "width" "100%"
+        , Style.rule "font-family" "monospace"
+        ]
+
+
+range__border : Style.Element
+range__border =
+    Style.el "range__border"
+        [ Style.rule "padding" "0 5px"
+        , Style.rule "font-size" "12px"
+        , Style.rule "white-space" "no-wrap"
+        ]
+
+
+range__input : Style.Element
+range__input =
+    Style.el "range__input"
+        [ Style.rule "box-sizing" "border-box"
+        , Style.rule "display" "table-cell"
+        , Style.rule "flex-grow" "1"
+        , Style.rule "padding" "5px"
+        , Style.rule "height" "11px"
+        , Style.rule "border" "1px solid #f7f4f4"
+        , Style.rule "border-radius" "2px"
+        , Style.rule "color" "#444"
+        , Style.rule "outline" "none"
+        ]
 
 
 trailingZeros : String -> String -> String
@@ -21,47 +65,35 @@ trailingZeros step value =
             value
 
 
-styledContainer : List (Html msg) -> Html msg
-styledContainer =
-    styled div
-        [ Css.displayFlex
-        , Css.alignItems Css.center
-        , Css.width (Css.pct 100)
-        , Css.fontFamily Css.monospace
+rangeHelp : String -> String -> String -> String -> String -> Html String
+rangeHelp name min max step value =
+    div
+        [ Style.class range__root ]
+        [ span
+            [ Style.class range__border ]
+            [ text (trailingZeros step min)
+            ]
+        , input
+            [ Style.class range__input
+            , Attributes.type_ "range"
+            , Attributes.tabindex 0
+            , Attributes.name name
+            , Attributes.min min
+            , Attributes.max max
+            , Attributes.step step
+            , Attributes.value value
+            , Events.onInput identity
+            ]
+            []
+        , span
+            [ Style.class range__border ]
+            [ text (trailingZeros step value ++ " / " ++ trailingZeros step max)
+            ]
         ]
-        []
-
-
-styledBorder : List (Html msg) -> Html msg
-styledBorder =
-    styled span
-        [ Css.padding2 Css.zero (Css.px 5)
-        , Css.fontSize (Css.px 12)
-        , Css.whiteSpace Css.noWrap
-        ]
-        []
-
-
-styledInput : List (Html.Attribute msg) -> Html msg
-styledInput attributes =
-    styled input
-        [ Css.boxSizing Css.borderBox
-        , Css.display Css.tableCell
-        , Css.flexGrow (Css.int 1)
-        , Css.padding (Css.px 5)
-        , Css.height (Css.px 11)
-        , Css.border3 (Css.px 1) Css.solid (Css.hex "#f7f4f4")
-        , Css.borderRadius (Css.px 2)
-        , Css.color (Css.hex "#444")
-        , Css.outline Css.none
-        ]
-        attributes
-        []
 
 
 range :
-    (String -> msg)
-    -> String
+    String
     -> (number -> String)
     ->
         { min : number
@@ -69,30 +101,11 @@ range :
         , step : number
         , value : number
         }
-    -> Html msg
-range msg name numToString { min, max, step, value } =
-    let
-        ( minStr, maxStr, stepStr ) =
-            ( numToString min, numToString max, numToString step )
-
-        valueStr =
-            numToString (clamp min max value)
-    in
-    styledContainer
-        [ styledBorder
-            [ text (trailingZeros stepStr minStr)
-            ]
-        , styledInput
-            [ Attributes.type_ "range"
-            , Attributes.tabindex 0
-            , Attributes.name name
-            , Attributes.min minStr
-            , Attributes.max maxStr
-            , Attributes.step stepStr
-            , Attributes.value valueStr
-            , Events.onInput msg
-            ]
-        , styledBorder
-            [ text (trailingZeros stepStr valueStr ++ " / " ++ trailingZeros stepStr maxStr)
-            ]
-        ]
+    -> Html String
+range name numToString { min, max, step, value } =
+    Lazy.lazy5 rangeHelp
+        name
+        (numToString min)
+        (numToString max)
+        (numToString step)
+        (numToString (clamp min max value))

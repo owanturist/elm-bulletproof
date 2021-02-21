@@ -4,15 +4,15 @@ import Browser
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation
-import Css
-import Css.Global exposing (global)
-import Css.Transitions exposing (transition)
+import Button
 import Dict exposing (Dict)
 import Empty
 import Error exposing (Error)
-import Html.Styled as Html exposing (Html, div, nav, styled)
-import Html.Styled.Attributes as Attributes
-import Html.Styled.Events as Events
+import Html exposing (Html, div, nav)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Html.Lazy as Lazy
+import Icon
 import Json.Decode as Decode exposing (Decoder, decodeString)
 import Json.Encode exposing (encode)
 import Knob
@@ -20,17 +20,16 @@ import Menu
 import Navigation
 import NotFound
 import Palette
+import Range
 import Router
-import Settings exposing (Orientation(..), Settings)
+import Settings exposing (Orientation(..), Settings, paddingSize)
 import Story exposing (Story(..))
+import Style
+import SyntaxHighlight
 import Task
+import TextCode
 import Url exposing (Url)
 import Utils exposing (Viewport, ifelse, px)
-
-
-paddingSize : Int
-paddingSize =
-    10
 
 
 
@@ -41,6 +40,11 @@ type Dragging
     = NoDragging
     | NavigationResizing Int Int
     | DockResizing Int Int
+
+
+isNoDragging : Dragging -> Bool
+isNoDragging =
+    (==) NoDragging
 
 
 type alias State =
@@ -352,45 +356,233 @@ screenY =
     Decode.field "screenY" Decode.int
 
 
-styledStoryScroller : Viewport -> Bool -> List (Html msg) -> Html msg
-styledStoryScroller storyViewport isDragging =
-    styled div
-        [ Css.displayFlex
-        , Css.flexDirection Css.column
-        , Css.overflow Css.auto
+cssGlobal : Style.Sheet
+cssGlobal =
+    Style.batch
+        [ Style.selector "body"
+            [ Style.rule "background" Palette.cloud
+            ]
 
         --
-        , if isDragging then
-            Css.batch []
+        , Style.selector "html, body"
+            [ Style.rule "margin" "0"
+            , Style.rule "padding" "0"
+            , Style.rule "min-height" "100%"
+            , Style.rule "height" "100%"
+            ]
 
-          else
-            transition
-                [ Css.Transitions.width 150
-                , Css.Transitions.height 150
-                ]
+        --
+        , Style.selector ("." ++ Style.className main__root__resizing__horizontal ++ " *")
+            [ Style.rule "user-select" "none"
+            , Style.rule "cursor" "ew-resize !important"
+            ]
+
+        --
+        , Style.selector ("." ++ Style.className main__root__resizing__vertical ++ " *")
+            [ Style.rule "user-select" "none"
+            , Style.rule "cursor" "ns-resize !important"
+            ]
         ]
-        [ Attributes.style "width" (px storyViewport.width)
-        , Attributes.style "height" (px storyViewport.height)
+
+
+css : Style.Sheet
+css =
+    Style.elements
+        [ main__story_scroller
+        , main__story_scroller__animated
+        , main__story_container
+        , main__story_container__with_paddings
+        , main__story_container__dark_background
+        , main__dragger
+        , main__dragger__horizontal
+        , main__dragger__vertical
+        , main__dragger__high
+        , main__dragger_line
+        , main__dock
+        , main__dock_scroller
+        , main__workspace
+        , main__workspace__horizontal
+        , main__workspace__animated
+        , main__menu
+        , main__navigation
+        , main__root
         ]
 
 
-styledStoryContainer : Settings -> List (Html msg) -> Html msg
-styledStoryContainer settings =
-    styled div
-        [ Css.all Css.initial
-        , Css.flex2 (Css.int 1) Css.zero
-        , Css.flexBasis Css.auto
-        , Css.display Css.block
-        , Css.position Css.relative
-        , Css.padding (Css.px (ifelse settings.addPaddings (toFloat paddingSize) 0))
-        , Css.backgroundColor (ifelse settings.darkBackground Palette.dark Palette.white)
-        , if settings.showGrid then
-            Css.batch (cssGrid settings)
-
-          else
-            Css.batch []
+main__story_scroller : Style.Element
+main__story_scroller =
+    Style.el "main__story_scroller"
+        [ Style.rule "display" "flex"
+        , Style.rule "flex-direction" "column"
+        , Style.rule "overflow" "auto"
         ]
-        []
+
+
+main__story_scroller__animated : Style.Element
+main__story_scroller__animated =
+    [ Style.rule "transition" "width 150ms, height 150ms"
+    ]
+        |> Style.mod main__story_scroller "animated"
+
+
+main__story_container : Style.Element
+main__story_container =
+    Style.el "main__story_container"
+        [ Style.rule "all" "initial"
+        , Style.rule "display" "block"
+        , Style.rule "flex" "1 0 auto"
+        , Style.rule "position" "relative"
+        , Style.rule "background" Palette.white
+        ]
+
+
+main__story_container__with_paddings : Style.Element
+main__story_container__with_paddings =
+    [ Style.rule "padding" (px paddingSize)
+    ]
+        |> Style.mod main__story_container "with_paddings"
+
+
+main__story_container__dark_background : Style.Element
+main__story_container__dark_background =
+    [ Style.rule "background" Palette.dark
+    ]
+        |> Style.mod main__story_container "dark_background"
+
+
+main__dragger : Style.Element
+main__dragger =
+    Style.el "main__dragger"
+        [ Style.rule "position" "absolute"
+        , Style.rule "top" "0"
+        , Style.rule "left" "0"
+        , Style.rule "margin" "-2px"
+        ]
+
+
+main__dragger__horizontal : Style.Element
+main__dragger__horizontal =
+    [ Style.rule "right" "0"
+    , Style.rule "height" "2px"
+    , Style.rule "cursor" "ns-resize"
+    , Style.rule "padding" "2px 0"
+    ]
+        |> Style.mod main__dragger "horizontal"
+
+
+main__dragger__vertical : Style.Element
+main__dragger__vertical =
+    [ Style.rule "bottom" "0"
+    , Style.rule "width" "2px"
+    , Style.rule "cursor" "ew-resize"
+    , Style.rule "padding" "0 2px"
+    ]
+        |> Style.mod main__dragger "vertical"
+
+
+main__dragger__high : Style.Element
+main__dragger__high =
+    [ Style.rule "z-index" "2"
+    , Style.rule "left" "auto"
+    , Style.rule "right" "0"
+    ]
+        |> Style.mod main__dragger "high"
+
+
+main__dragger_line : Style.Element
+main__dragger_line =
+    Style.el "main__dragger_line"
+        [ Style.rule "height" "100%"
+        , Style.rule "background" Palette.smoke
+        ]
+
+
+main__dock : Style.Element
+main__dock =
+    Style.el "main__dock"
+        [ Style.rule "position" "relative"
+        , Style.rule "flex" "1 1 0"
+        , Style.rule "background" Palette.white
+        , Style.rule "overflow" "hidden"
+        ]
+
+
+main__dock_scroller : Style.Element
+main__dock_scroller =
+    [ Style.rule "display" "flex"
+    , Style.rule "width" "100%"
+    , Style.rule "height" "100%"
+    , Style.rule "overflow" "auto"
+    ]
+        |> Style.mod main__dock "scroller"
+
+
+main__workspace : Style.Element
+main__workspace =
+    Style.el "main__workspace"
+        [ Style.rule "position" "relative"
+        , Style.rule "display" "flex"
+        , Style.rule "flex-direction" "row"
+        , Style.rule "box-shadow" ("0 0 10px " ++ Palette.smoke)
+        ]
+
+
+main__workspace__horizontal : Style.Element
+main__workspace__horizontal =
+    [ Style.rule "flex-direction" "column"
+    ]
+        |> Style.mod main__workspace "horizontal"
+
+
+main__workspace__animated : Style.Element
+main__workspace__animated =
+    [ Style.rule "transition" "width 150ms"
+    ]
+        |> Style.mod main__workspace "animated"
+
+
+main__menu : Style.Element
+main__menu =
+    Style.el "main__menu"
+        [ Style.rule "position" "absolute"
+        , Style.rule "z-index" "2"
+        , Style.rule "top" "0"
+        , Style.rule "left" "0"
+        , Style.rule "margin" "12px"
+        ]
+
+
+main__navigation : Style.Element
+main__navigation =
+    Style.el "main__navigation"
+        [ Style.rule "position" "relative"
+        , Style.rule "flex" "1 1 0"
+        , Style.rule "overflow" "hidden"
+        ]
+
+
+main__root : Style.Element
+main__root =
+    Style.el "main__root"
+        [ Style.rule "position" "relative"
+        , Style.rule "display" "flex"
+        , Style.rule "flex-direction" "row"
+        , Style.rule "flex-wrap" "nowrap"
+        , Style.rule "width" "100%"
+        , Style.rule "height" "100%"
+        , Style.rule "font-size" "13px"
+        , Style.rule "font-family" Palette.font
+        ]
+
+
+main__root__resizing__horizontal : Style.Element
+main__root__resizing__horizontal =
+    Style.mod main__root "horizontal" []
+
+
+main__root__resizing__vertical : Style.Element
+main__root__resizing__vertical =
+    Style.mod main__root "vertical" []
 
 
 linearGradient : Float -> String -> String
@@ -408,7 +600,7 @@ linearGradient angle color =
         |> String.concat
 
 
-cssGrid : Settings -> List Css.Style
+cssGrid : Settings -> List (Html.Attribute msg)
 cssGrid settings =
     let
         ( smallColor, bigColor ) =
@@ -419,9 +611,9 @@ cssGrid settings =
                 ( "#eee", "#ccc" )
 
         shift =
-            ifelse settings.addPaddings 10 0
+            ifelse settings.addPaddings paddingSize 0
     in
-    [ Css.backgroundPosition2 (Css.px (toFloat shift)) (Css.px (toFloat shift))
+    [ Attributes.style "background-position" (px shift ++ " " ++ px shift)
 
     --
     , [ "100px 100px"
@@ -430,7 +622,7 @@ cssGrid settings =
       , "10px 10px"
       ]
         |> String.join ","
-        |> Css.property "background-size"
+        |> Attributes.style "background-size"
 
     --
     , [ linearGradient 0 bigColor
@@ -439,77 +631,55 @@ cssGrid settings =
       , linearGradient 270 smallColor
       ]
         |> String.join ","
-        |> Css.property "background-image"
+        |> Attributes.style "background-image"
     ]
 
 
-viewDragger : Orientation -> List Css.Style -> List (Html.Attribute msg) -> Html msg
-viewDragger orientation styles attributes =
-    styled div
-        [ Css.position Css.absolute
-        , Css.margin (Css.px -2)
-        , case orientation of
-            Horizontal ->
-                Css.batch
-                    [ Css.top Css.zero
-                    , Css.right Css.zero
-                    , Css.left Css.zero
-                    , Css.height (Css.px 2)
-                    , Css.cursor Css.nsResize
-                    , Css.padding2 (Css.px 2) Css.zero
-                    ]
-
-            Vertical ->
-                Css.batch
-                    [ Css.top Css.zero
-                    , Css.bottom Css.zero
-                    , Css.left Css.zero
-                    , Css.width (Css.px 2)
-                    , Css.cursor Css.ewResize
-                    , Css.padding2 Css.zero (Css.px 2)
-                    ]
-        , Css.batch styles
+viewDragger : List (Html.Attribute msg) -> Html msg
+viewDragger attributes =
+    div
+        (Style.class main__dragger :: attributes)
+        [ div [ Style.class main__dragger_line ] []
         ]
-        attributes
-        [ styled div
-            [ Css.backgroundColor Palette.smoke
-            , Css.height (Css.pct 100)
+
+
+viewStoryScroller : Viewport -> Bool -> List (Html msg) -> Html msg
+viewStoryScroller storyViewport noDragging =
+    div
+        [ Style.classList
+            [ ( main__story_scroller, True )
+            , ( main__story_scroller__animated, noDragging )
             ]
-            []
-            []
+        , Attributes.style "width" (px storyViewport.width)
+        , Attributes.style "height" (px storyViewport.height)
         ]
 
 
-styledDockScroller : List (Html msg) -> Html msg
-styledDockScroller =
-    styled div
-        [ Css.displayFlex
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.overflow Css.auto
-        ]
-        []
-
-
-styledDock : List (Html msg) -> Html msg
-styledDock =
-    styled div
-        [ Css.position Css.relative
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.backgroundColor Palette.white
-        , Css.overflow Css.hidden
-        ]
-        []
-
-
-viewDock : Settings -> Html Msg -> Html Msg
-viewDock settings knobs =
-    styledDock
-        [ viewDragger settings.dockOrientation
-            []
-            [ Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
+viewStoryContainer : Settings -> List (Html msg) -> Html msg
+viewStoryContainer settings =
+    div
+        (Style.classList
+            [ ( main__story_container, True )
+            , ( main__story_container__with_paddings, settings.addPaddings )
+            , ( main__story_container__dark_background, settings.darkBackground )
             ]
-        , styledDockScroller [ knobs ]
+            :: ifelse settings.showGrid (cssGrid settings) []
+        )
+
+
+viewDock : Orientation -> Html Msg -> Html Msg
+viewDock dockOrientation knobs =
+    div
+        [ Style.class main__dock
+        ]
+        [ viewDragger
+            [ ifelse (Settings.isHorizontal dockOrientation)
+                main__dragger__horizontal
+                main__dragger__horizontal
+                |> Style.class
+            , Events.on "mousedown" (Decode.map2 StartDockResizing screenX screenY)
+            ]
+        , div [ Style.class main__dock_scroller ] [ knobs ]
         ]
 
 
@@ -519,23 +689,26 @@ styledWorkspace settings { viewport, dragging } =
         width =
             viewport.width - ifelse settings.navigationVisible settings.navigationWidth 0
     in
-    styled div
-        [ Css.position Css.relative
-        , Css.displayFlex
-        , Css.boxShadow4 Css.zero Css.zero (Css.px 10) Palette.smoke
-        , Css.flexDirection (ifelse (Settings.isHorizontal settings.dockOrientation) Css.column Css.row)
-
-        --
-        , if dragging == NoDragging then
-            transition
-                [ Css.Transitions.width 150
-                ]
-
-          else
-            Css.batch []
+    div
+        [ Style.classList
+            [ ( main__workspace, True )
+            , ( main__workspace__horizontal, Settings.isHorizontal settings.dockOrientation )
+            , ( main__workspace__animated, isNoDragging dragging )
+            ]
+        , Attributes.style "width" (px width)
         ]
-        [ Attributes.style "width" (px width)
-        ]
+
+
+viewStoryWorkspace : Int -> Int -> Knob.State -> (Knob.Payload -> Maybe (Html ())) -> Html ()
+viewStoryWorkspace width height knobs workspaceView =
+    Knob.Payload knobs (Viewport width height)
+        |> workspaceView
+        |> Maybe.withDefault (Html.text "")
+
+
+viewStoryKnobs : Int -> Int -> Knob.State -> List ( String, Knob.Knob ) -> Html Knob.Msg
+viewStoryKnobs width height knobs workspaceKnobs =
+    Knob.view (Viewport width height) knobs workspaceKnobs
 
 
 viewWorkspace : Story.Workspace (Html ()) -> Settings -> State -> Knob.State -> Html Msg
@@ -544,123 +717,83 @@ viewWorkspace workspace settings state knobs =
         viewport =
             calcViewport settings state.viewport
 
-        storyViewport =
+        { width, height } =
             reducePaddingsForViewport settings.addPaddings viewport
     in
     styledWorkspace
         settings
         state
-        [ styledStoryScroller
+        [ viewStoryScroller
             viewport
-            (state.dragging /= NoDragging)
-            [ styledStoryContainer settings
-                [ Knob.Payload knobs storyViewport
-                    |> workspace.view
-                    |> Maybe.withDefault (Html.text "")
+            (isNoDragging state.dragging)
+            [ viewStoryContainer settings
+                [ Lazy.lazy4 viewStoryWorkspace width height knobs workspace.view
                     |> Html.map (always NoOp)
                 ]
             ]
 
         --
-        , Knob.view storyViewport knobs workspace.knobs
+        , Lazy.lazy4 viewStoryKnobs width height knobs workspace.knobs
             |> Html.map (KnobMsg state.current)
-            |> viewDock settings
+            |> viewDock settings.dockOrientation
         ]
 
 
-styledGlobal : Settings -> Dragging -> Html msg
-styledGlobal settings dragging =
-    global
-        [ Css.Global.body
-            [ Css.backgroundColor Palette.cloud
-            ]
-        , Css.Global.each
-            [ Css.Global.html
-            , Css.Global.body
-            ]
-            [ Css.margin Css.zero
-            , Css.padding Css.zero
-            , Css.minHeight (Css.pct 100)
-            , Css.height (Css.pct 100)
-            ]
-        , case dragging of
-            NoDragging ->
-                Css.Global.everything []
+viewStyle : Html msg
+viewStyle =
+    [ cssGlobal
+    , Range.css
+    , Button.css
+    , Empty.css
+    , Error.css
+    , Icon.css
+    , Knob.css
+    , Menu.css
+    , TextCode.css
+    , Navigation.css
+    , NotFound.css
+    , css
+    ]
+        |> Style.batch
+        |> Style.render
+        |> Html.text
+        |> List.singleton
+        |> Html.node "style" []
 
-            NavigationResizing _ _ ->
-                Css.Global.everything
-                    [ Css.property "user-select" "none !important"
-                    , Css.cursor Css.ewResize |> Css.important
+
+viewRoot : Orientation -> Dragging -> List (Html Msg) -> Html Msg
+viewRoot dockOrientation dragging children =
+    let
+        attributes =
+            case dragging of
+                NoDragging ->
+                    []
+
+                NavigationResizing _ _ ->
+                    [ Style.class main__root__resizing__horizontal
+                    , Events.on "mousemove" (Decode.map Drag screenX)
+                    , Events.on "mouseup" (Decode.succeed DragEnd)
+                    , Events.on "mouseleave" (Decode.succeed DragEnd)
                     ]
 
-            DockResizing _ _ ->
-                Css.Global.everything
-                    [ Css.property "user-select" "none !important"
-                    , ifelse (Settings.isHorizontal settings.dockOrientation) Css.nsResize Css.ewResize
-                        |> Css.cursor
-                        |> Css.important
+                DockResizing _ _ ->
+                    let
+                        ( classSelector, positionDecoder ) =
+                            if Settings.isHorizontal dockOrientation then
+                                ( main__root__resizing__vertical, screenY )
+
+                            else
+                                ( main__root__resizing__horizontal, screenX )
+                    in
+                    [ Style.class classSelector
+                    , Events.on "mousemove" (Decode.map Drag positionDecoder)
+                    , Events.on "mouseup" (Decode.succeed DragEnd)
+                    , Events.on "mouseleave" (Decode.succeed DragEnd)
                     ]
-        ]
-
-
-styledMenu : List (Html msg) -> Html msg
-styledMenu =
-    styled div
-        [ Css.position Css.absolute
-        , Css.top Css.zero
-        , Css.left Css.zero
-        , Css.zIndex (Css.int 2)
-        , Css.margin (Css.px 12)
-        ]
-        []
-
-
-styledNavigation : List (Html msg) -> Html msg
-styledNavigation =
-    styled nav
-        [ Css.position Css.relative
-        , Css.flex3 (Css.int 1) (Css.int 1) Css.zero
-        , Css.overflow Css.hidden
-        ]
-        []
-
-
-styledRoot : List (Html.Attribute msg) -> List (Html msg) -> Html msg
-styledRoot =
-    styled div
-        [ Css.position Css.relative
-        , Css.displayFlex
-        , Css.flexDirection Css.row
-        , Css.flexWrap Css.noWrap
-        , Css.width (Css.pct 100)
-        , Css.height (Css.pct 100)
-        , Css.fontFamilies Palette.font
-        , Css.fontSize (Css.px 13)
-        ]
-
-
-viewRoot : Settings -> Dragging -> List (Html Msg) -> Html Msg
-viewRoot settings dragging children =
-    styledRoot
-        (case dragging of
-            NoDragging ->
-                []
-
-            NavigationResizing _ _ ->
-                [ Events.on "mousemove" (Decode.map Drag screenX)
-                , Events.on "mouseup" (Decode.succeed DragEnd)
-                , Events.on "mouseleave" (Decode.succeed DragEnd)
-                ]
-
-            DockResizing _ _ ->
-                [ ifelse (Settings.isHorizontal settings.dockOrientation) screenY screenX
-                    |> Decode.map Drag
-                    |> Events.on "mousemove"
-                , Events.on "mouseup" (Decode.succeed DragEnd)
-                , Events.on "mouseleave" (Decode.succeed DragEnd)
-                ]
-        )
-        (styledGlobal settings dragging :: children)
+    in
+    div
+        (Style.class main__root :: attributes)
+        (viewStyle :: SyntaxHighlight.useTheme SyntaxHighlight.gitHub :: children)
 
 
 viewBulletproof : Story (Html ()) -> Model -> Browser.Document Msg
@@ -682,66 +815,56 @@ viewBulletproof story { settings, state, knobs } =
                     , knobs
                         |> Dict.get state.current
                         |> Maybe.withDefault Knob.initial
-                        |> viewWorkspace workspace settings state
+                        |> Lazy.lazy4 viewWorkspace workspace settings state
                     )
     in
     Browser.Document ("Bulletproof | " ++ String.join " / " state.current)
         [ viewRoot
-            actualSettings
+            actualSettings.dockOrientation
             state.dragging
-            [ styledMenu
-                [ Html.map
-                    (MenuMsg story)
-                    (Menu.view state.menuOpened actualSettings)
+            [ div
+                [ Style.class main__menu
+                ]
+                [ Lazy.lazy2 Menu.view
+                    state.menuOpened
+                    actualSettings
+                    |> Html.map (MenuMsg story)
                 ]
 
             --
-            , styledNavigation
-                [ viewDragger Vertical
-                    [ Css.zIndex (Css.int 2)
-                    , Css.left Css.auto
-                    , Css.right Css.zero
+            , nav
+                [ Style.class main__navigation
+                ]
+                [ viewDragger
+                    [ Style.class main__dragger__vertical
+                    , Style.class main__dragger__high
+                    , Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
                     ]
-                    [ Events.on "mousedown" (Decode.map StartNavigationResizing screenX)
-                    ]
-                , Html.map
-                    NavigationMsg
-                    (Navigation.view state.current story state.navigation)
+                , Lazy.lazy3 Navigation.view
+                    state.current
+                    story
+                    state.navigation
+                    |> Html.map NavigationMsg
                 ]
 
             --
             , workspaceView
             ]
-            |> Html.toUnstyled
         ]
 
 
-viewError : List Error -> Browser.Document msg
-viewError errors =
+viewError : List Error -> Model -> Browser.Document Msg
+viewError errors { settings, state } =
     Browser.Document "Bulletproof | Error"
-        [ styledRoot
-            []
-            [ styledGlobal Settings.default NoDragging
-            , Error.view errors
-            ]
-            |> Html.toUnstyled
+        [ viewRoot settings.dockOrientation state.dragging [ Error.view errors ]
         ]
 
 
-viewEmpty : Browser.Document msg
-viewEmpty =
+viewEmpty : Model -> Browser.Document Msg
+viewEmpty { settings, state } =
     Browser.Document "Bulletproof"
-        [ styledRoot
-            []
-            [ styledGlobal Settings.default NoDragging
-            , Empty.view
-            ]
-            |> Html.toUnstyled
+        [ viewRoot settings.dockOrientation state.dragging [ Empty.view ]
         ]
-
-
-type alias Program flags =
-    Platform.Program flags Model Msg
 
 
 document : Story (Html ()) -> Model -> Browser.Document Msg
@@ -751,13 +874,17 @@ document story model =
             Error.validateStories story
     in
     if Story.isEmpty story then
-        viewEmpty
+        viewEmpty model
 
     else if List.isEmpty errors then
         viewBulletproof story model
 
     else
-        viewError errors
+        viewError errors model
+
+
+type alias Program flags =
+    Platform.Program flags Model Msg
 
 
 run :

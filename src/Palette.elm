@@ -1,77 +1,78 @@
 module Palette exposing
-    ( black
-    , blue
+    ( blue
     , blueDark
     , cloud
     , dark
-    , dark50
+    , dark05
     , font
     , gray
-    , gray50
+    , gray05
     , smoke
-    , transparent
     , white
     )
 
-import Css
+
+joinComma : List Int -> String
+joinComma =
+    String.join "," << List.map String.fromInt
 
 
-transparent : Css.Color
-transparent =
-    Css.rgba 0 0 0 0
+rgb : Int -> Int -> Int -> String
+rgb r g b =
+    "rgb(" ++ joinComma [ r, g, b ] ++ ")"
 
 
-blue : Css.Color
+rgba : Int -> Int -> Int -> Float -> String
+rgba r g b a =
+    "rgba(" ++ joinComma [ r, g, b ] ++ "," ++ String.fromFloat a ++ ")"
+
+
+blue : String
 blue =
-    Css.rgb 30 165 253
+    rgb 30 165 253
 
 
-blueDark : Css.Color
+blueDark : String
 blueDark =
-    Css.rgb 8 155 251
+    rgb 8 155 251
 
 
-cloud : Css.Color
+cloud : String
 cloud =
-    Css.hex "#f6f9fc"
+    rgb 246 249 252
 
 
-dark : Css.Color
+dark : String
 dark =
-    Css.rgb 51 51 51
+    rgb 51 51 51
 
 
-dark50 : Css.Color
-dark50 =
-    Css.rgba 51 51 51 0.5
+dark05 : String
+dark05 =
+    rgba 51 51 51 0.5
 
 
-gray : Css.Color
+gray : String
 gray =
-    Css.rgb 153 153 153
+    rgb 153 153 153
 
 
-gray50 : Css.Color
-gray50 =
-    Css.rgba 153 153 153 0.5
+gray05 : String
+gray05 =
+    rgba 153 153 153 0.5
 
 
-smoke : Css.Color
+smoke : String
 smoke =
-    Css.rgba 0 0 0 0.05
+    rgba 0 0 0 0.05
 
 
-black : Css.Color
-black =
-    Css.hex "#000"
-
-
-white : Css.Color
+white : String
 white =
-    Css.hex "#fff"
+    rgb 255 255 255
 
 
-font : List String
+font : String
 font =
     [ "\"Nunito Sans\""
     , "-apple-system"
@@ -84,3 +85,4 @@ font =
     , "Arial"
     , "sans-serif"
     ]
+        |> String.join ","
