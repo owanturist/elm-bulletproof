@@ -5,7 +5,6 @@ module Settings exposing
     , default
     , encoder
     , isHorizontal
-    , isVertical
     , minDockHeight
     , minDockWidth
     , minNavigationWidth
@@ -26,11 +25,6 @@ type Orientation
 isHorizontal : Orientation -> Bool
 isHorizontal =
     (==) Horizontal
-
-
-isVertical : Orientation -> Bool
-isVertical =
-    (==) Vertical
 
 
 orientationEncoder : Orientation -> Value

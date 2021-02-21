@@ -103,13 +103,6 @@ range :
         }
     -> Html String
 range name numToString { min, max, step, value } =
-    let
-        ( minStr, maxStr, stepStr ) =
-            ( numToString min, numToString max, numToString step )
-
-        valueStr =
-            numToString (clamp min max value)
-    in
     Lazy.lazy5 rangeHelp
         name
         (numToString min)

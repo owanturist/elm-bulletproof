@@ -1,6 +1,5 @@
 module Navigation exposing (Model, Msg, css, initial, open, update, view)
 
-import Array exposing (length)
 import Html exposing (Html, a, div, header, span, text)
 import Html.Attributes as Attributes
 import Html.Events as Events
