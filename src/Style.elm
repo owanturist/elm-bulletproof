@@ -6,7 +6,6 @@ module Style exposing
     , class
     , classList
     , className
-    , each
     , el
     , elements
     , focusVisible
@@ -105,17 +104,6 @@ unpackSheet (Sheet strings) =
 elements : List Element -> Sheet
 elements =
     Sheet << List.concatMap renderElement
-
-
-each : List (List Rule -> Element) -> List Rule -> Sheet
-each makeElements rules =
-    let
-        classNames =
-            makeElements
-                |> List.map ((|>) [] >> className >> (++) ".")
-                |> String.join ","
-    in
-    Sheet [ renderDefinition classNames rules ]
 
 
 selector : String -> List Rule -> Sheet
